@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<section class="hero" style="text-align: center; margin-bottom: 40px;">
+    <h1 style="font-family: var(--font-serif); color: var(--accent-color); font-size: 3rem;">Bem-vindo à YasMimos</h1>
+    <p style="font-size: 1.2rem;">Doces artesanais feitos com amor para você.</p>
+</section>
+
+<div class="categories" style="text-align: center; margin-bottom: 30px;">
+    <a href="{% url 'products:product_list' %}" class="btn btn-category {% if not category %}active{% endif %}">Todos</a>
+    {% for c in categories %}
+        <a href="{% url 'products:product_list_by_category' c.slug %}" class="btn btn-category {% if category.slug == c.slug %}active{% endif %}">{{ c.name }}</a>
+    {% endfor %}
+</div>
+
+<div class="product-grid" id="product-grid">
+    {% include 'produtos/parcial_grade_produtos.html' %}
+</div>
+
+<script>
+    function updateProductGrid() {
+        fetch("{% url 'products:product_grid_api' %}")
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('product-grid').innerHTML = html;
+            })
+            .catch(error => console.error('Erro ao atualizar vitrine:', error));
+    }
+    // Atualiza a cada 5 segundos
+    setInterval(updateProductGrid, 5000);
+</script>
+{% endblock %}

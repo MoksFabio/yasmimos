@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h1 style="font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 30px;">Finalizar Pedido</h1>
+<div class="order-summary" style="background: var(--white); padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+    <h2 style="margin-bottom: 20px;">Resumo do Pedido</h2>
+    <ul style="margin-bottom: 20px;">
+        {% for item in cart %}
+            <li style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                <span>{{ item.quantity }}x {{ item.product.name }}</span>
+                <span>R$ {{ item.total_price }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+    <div class="total" style="text-align: right; font-size: 1.2rem; font-weight: bold; margin-bottom: 30px;">
+        Total: R$ {{ cart.get_total_price }}
+    </div>
+    
+    <div class="payment-info" style="background: #e3f2fd; padding: 20px; border-radius: 10px; margin-bottom: 30px; color: #0d47a1;">
+        <h3><i class="fas fa-info-circle"></i> Informação de Pagamento</h3>
+        <p>O pagamento é realizado via <strong>PIX</strong>.</p>
+        <p>Ao clicar em "Confirmar Pedido", você será redirecionado para o WhatsApp para enviar o comprovante.</p>
+    </div>
+
+    <form action="{% url 'orders:order_create' %}" method="post">
+        {% csrf_token %}
+        
+        {% if not user.is_authenticated %}
+        <div class="guest-info" style="margin-bottom: 25px; padding: 20px; background-color: #f8f9fa; border-radius: 10px; border: 1px solid #eee;">
+            <h3 style="margin-bottom: 15px; font-size: 1.1em; color: var(--text-color);"><i class="fas fa-user-circle"></i> Seus Dados (Obrigatório)</h3>
+            <div style="margin-bottom: 15px;">
+                <label for="guest_name" style="display: block; margin-bottom: 5px; font-weight: 500;">Nome Completo</label>
+                <input type="text" name="name" id="guest_name" required class="form-control" placeholder="Ex: Maria Silva" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+            <div>
+                <label for="guest_phone" style="display: block; margin-bottom: 5px; font-weight: 500;">WhatsApp (com DDD)</label>
+                <input type="tel" name="phone" id="guest_phone" required class="form-control" placeholder="Ex: 81 99999-9999" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+        </div>
+        {% endif %}
+        <button type="submit" class="btn" style="width: 100%; font-size: 1.2rem;">Confirmar Pedido</button>
+    </form>
+</div>
+{% endblock %}

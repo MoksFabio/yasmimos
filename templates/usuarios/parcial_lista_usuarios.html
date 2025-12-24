@@ -1,0 +1,17 @@
+{% for u in users %}
+<tr>
+    <td style="font-weight: 500;">{{ u.username }}</td>
+    <td>{{ u.phone_number }}</td>
+    <td>{{ u.date_joined|date:"d/m/Y" }}</td>
+    <td>
+        <div class="action-buttons">
+            <a href="https://wa.me/55{{ u.phone_number|cut:' '|cut:'-'|cut:'('|cut:')' }}" target="_blank" class="btn-action btn-ship" title="Conversar no WhatsApp" style="background-color: #25d366; color: white;"><i class="fab fa-whatsapp"></i></a>
+            <a href="javascript:void(0);" data-id="{{ u.id }}" onclick="deleteUser(this.dataset.id)" class="btn-action btn-delete-permanent" title="Excluir Cliente" style="background-color: #ffcdd2; color: #b71c1c;"><i class="fas fa-trash"></i></a>
+        </div>
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="4" style="padding: 20px; text-align: center; color: #999;">Nenhum cliente cadastrado.</td>
+</tr>
+{% endfor %}

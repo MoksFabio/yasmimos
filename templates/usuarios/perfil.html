@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; background: var(--white); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+    <h1 style="font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 30px;">Minha Conta</h1>
+    <p style="font-size: 1.2rem; margin-bottom: 20px;">Bem-vindo, <strong>{{ user.username }}</strong></p>
+    
+    <div style="display: flex; flex-direction: column; gap: 15px;">
+        <a href="{% url 'users:password_change' %}" class="btn" style="background-color: var(--primary-color); color: var(--accent-color);">Alterar Senha</a>
+        {% if not user.is_superuser %}
+        <a href="{% url 'users:delete_account' %}" class="btn" style="background-color: #ffebee; color: red; border: 1px solid red;">Excluir Conta</a>
+        {% endif %}
+    </div>
+    
+    <h2 style="margin-top: 40px; margin-bottom: 20px; font-family: var(--font-serif); color: var(--accent-color);">Meus Pedidos</h2>
+    {% if user.orders.all %}
+        <ul style="list-style: none;">
+            {% for order in user.orders.all %}
+                <li style="background: #f9f9f9; padding: 15px; margin-bottom: 10px; border-radius: 8px;">
+                    <strong>Pedido #{{ order.id }}</strong> - {{ order.created|date:"d/m/Y" }} - R$ {{ order.total_amount }} - {{ order.get_status_display }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Você ainda não fez nenhum pedido.</p>
+    {% endif %}
+</div>
+{% endblock %}

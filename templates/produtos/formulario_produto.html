@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h1>{{ title }}</h1>
+        <p>Preencha as informações do produto abaixo</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="modern-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="error-banner">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Section 1: Basic Info -->
+        <div class="form-section">
+            <h2 class="section-title"><i class="fas fa-info-circle"></i> Informações Básicas</h2>
+            
+            <div class="form-grid">
+                <!-- Name (Full Width) -->
+                <div class="form-group full-width">
+                    <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                    {{ form.name }}
+                    {{ form.name.errors }}
+                </div>
+
+                <!-- Category -->
+                <div class="form-group">
+                    <label for="{{ form.category.id_for_label }}">
+                        {{ form.category.label }}
+                        <a href="#" onclick="openCategoryModal(event)" style="font-size: 0.8em; color: var(--primary-color); margin-left: 10px; text-decoration: none;">
+                            <i class="fas fa-cog"></i> Gerenciar Categorias
+                        </a>
+                    </label>
+                    <div style="display: flex; gap: 10px;">
+                        {{ form.category }}
+                        <button type="button" onclick="openCategoryModal(event)" style="background: var(--primary-color); color: white; border: none; border-radius: 5px; width: 40px; cursor: pointer;">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    {{ form.category.errors }}
+                </div>
+
+                <!-- Price -->
+                <div class="form-group">
+                    <label for="{{ form.price.id_for_label }}">{{ form.price.label }}</label>
+                    {{ form.price }}
+                    {{ form.price.errors }}
+                </div>
+
+                <!-- Stock -->
+                <div class="form-group">
+                    <label for="{{ form.stock.id_for_label }}">{{ form.stock.label }}</label>
+                    {{ form.stock }}
+                    {{ form.stock.errors }}
+                </div>
+
+                <!-- Available Toggle -->
+                <div class="form-group checkbox-group">
+                    <label for="{{ form.available.id_for_label }}">{{ form.available.label }}</label>
+                    <label class="toggle-switch">
+                        {{ form.available }}
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Details -->
+        <div class="form-section">
+            <h2 class="section-title"><i class="fas fa-align-left"></i> Detalhes</h2>
+            <div class="form-group full-width">
+                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                {{ form.description }}
+                <small class="help-text">Descreva os detalhes, ingredientes e diferenciais do seu doce.</small>
+                {{ form.description.errors }}
+            </div>
+        </div>
+
+        <!-- Section 3: Images -->
+        <div class="form-section">
+            <h2 class="section-title"><i class="fas fa-images"></i> Galeria de Produtos</h2>
+            <p class="section-subtitle">Adicione até 5 fotos. A primeira será a principal.</p>
+            
+            <div class="image-grid">
+                <!-- Image 1 (Main) -->
+                <div class="image-card main-image-card">
+                    <div class="card-header"><i class="fas fa-star"></i> Principal</div>
+                    <div class="card-body">
+                        {{ form.image }}
+                        {% if form.instance.image %}
+                            <div class="image-preview">
+                                <img src="{{ form.instance.image.url }}" alt="Principal">
+                                <label class="remove-btn">
+                                    <input type="checkbox" name="remove_image"> <i class="fas fa-trash"></i> Remover
+                                </label>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Image 2 -->
+                <div class="image-card">
+                    <div class="card-header">Foto 2</div>
+                    <div class="card-body">
+                        {{ form.image2 }}
+                        {% if form.instance.image2 %}
+                            <div class="image-preview">
+                                <img src="{{ form.instance.image2.url }}" alt="Img 2">
+                                <label class="remove-btn">
+                                    <input type="checkbox" name="remove_image2"> <i class="fas fa-trash"></i>
+                                </label>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Image 3 -->
+                <div class="image-card">
+                    <div class="card-header">Foto 3</div>
+                    <div class="card-body">
+                        {{ form.image3 }}
+                        {% if form.instance.image3 %}
+                            <div class="image-preview">
+                                <img src="{{ form.instance.image3.url }}" alt="Img 3">
+                                <label class="remove-btn">
+                                    <input type="checkbox" name="remove_image3"> <i class="fas fa-trash"></i>
+                                </label>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Image 4 -->
+                <div class="image-card">
+                    <div class="card-header">Foto 4</div>
+                    <div class="card-body">
+                        {{ form.image4 }}
+                        {% if form.instance.image4 %}
+                            <div class="image-preview">
+                                <img src="{{ form.instance.image4.url }}" alt="Img 4">
+                                <label class="remove-btn">
+                                    <input type="checkbox" name="remove_image4"> <i class="fas fa-trash"></i>
+                                </label>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Image 5 -->
+                <div class="image-card">
+                    <div class="card-header">Foto 5</div>
+                    <div class="card-body">
+                        {{ form.image5 }}
+                        {% if form.instance.image5 %}
+                            <div class="image-preview">
+                                <img src="{{ form.instance.image5.url }}" alt="Img 5">
+                                <label class="remove-btn">
+                                    <input type="checkbox" name="remove_image5"> <i class="fas fa-trash"></i>
+                                </label>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+            <a href="{% url 'products:manage_products' %}" class="btn-cancel">Cancelar</a>
+            <button type="submit" class="btn-save">Salvar Produto</button>
+        </div>
+    </form>
+</div>
+
+<style>
+/* Container & Header */
+.form-container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+.form-header { text-align: center; margin-bottom: 40px; }
+.form-header h1 { font-family: var(--font-serif); color: var(--accent-color); font-size: 2.5rem; margin-bottom: 5px; }
+.form-header p { color: #666; font-size: 1.1rem; }
+
+/* Sections */
+.form-section { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-bottom: 30px; }
+.section-title { font-size: 1.3rem; color: #444; margin-bottom: 25px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+.section-subtitle { color: #888; font-size: 0.95rem; margin-top: -15px; margin-bottom: 25px; }
+
+/* Form Grid */
+.form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.full-width { grid-column: 1 / -1; }
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-group label { font-weight: 600; color: #555; }
+.form-group input, .form-group select, .form-group textarea { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; transition: border 0.3s; width: 100%; box-sizing: border-box; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 3px rgba(248, 187, 208, 0.3); }
+
+/* Toggle Switch */
+.checkbox-group { align-items: flex-start; }
+.toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--primary-dark); }
+input:checked + .slider:before { transform: translateX(24px); }
+
+/* Image Grid */
+.image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
+.image-card { border: 1px solid #eee; border-radius: 12px; overflow: hidden; background: #fafafa; }
+.main-image-card { border-color: var(--primary-color); background: #fff5f8; grid-row: span 1; }
+.card-header { padding: 8px 12px; background: #eee; font-size: 0.85rem; font-weight: bold; color: #555; display: flex; align-items: center; gap: 5px; }
+.main-image-card .card-header { background: var(--primary-color); color: white; }
+.card-body { padding: 15px; text-align: center; }
+.image-card input[type="file"] { font-size: 0.8rem; width: 100%; overflow: hidden; }
+
+.image-preview { margin-top: 10px; border-top: 1px dashed #ddd; padding-top: 10px; }
+.image-preview img { width: 100%; height: 100px; object-fit: contain; border-radius: 5px; margin-bottom: 5px; background: white; }
+.remove-btn { display: inline-flex; align-items: center; gap: 5px; color: #d32f2f; font-size: 0.8rem; cursor: pointer; padding: 4px 8px; background: #ffebee; border-radius: 4px; border: 1px solid #ffcdd2; transition: all 0.2s; }
+.remove-btn:hover { background: #ffcdd2; }
+.remove-btn input { display: none; } /* Hide the actual checkbox */
+.remove-btn input:checked + i { color: black; } /* If I could style parent based on checked... JS better if needed, but visual feedback that it IS checked is tough with pure css on label click unless we show checkbox. Let's make checkbox visible but small */
+.remove-btn input { display: inline-block; width: auto; margin-right: 5px; pointer-events: none; } /* Show it so user knows state */
+
+/* Actions */
+.form-actions { display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px; margin-bottom: 50px; }
+.btn-save { background: var(--primary-dark); color: white; border: none; padding: 12px 30px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(240, 98, 146, 0.4); transition: transform 0.2s; }
+.btn-save:hover { transform: translateY(-2px); background: var(--accent-color); }
+.btn-cancel { background: white; color: #666; border: 1px solid #ddd; padding: 12px 25px; border-radius: 30px; font-weight: 600; transition: all 0.2s; display: flex; align-items: center; }
+.btn-cancel:hover { background: #f5f5f5; color: #333; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .image-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-header h1 { font-size: 2rem; }
+    .form-actions { flex-direction: column-reverse; }
+    .btn-save, .btn-cancel { width: 100%; justify-content: center; }
+}
+</style>
+
+<!-- Category Management Modal -->
+<div id="categoryModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <span class="close" onclick="closeCategoryModal()">&times;</span>
+        <h2 style="color: var(--primary-color);">Gerenciar Categorias</h2>
+        
+        <!-- Add New -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <input type="text" id="newCategoryInput" placeholder="Nova Categoria..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            <button onclick="addCategory()" style="background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- List -->
+        <div id="categoryList" style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px;">
+            <!-- Categories will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script>
+function openCategoryModal(e) {
+    if(e) e.preventDefault();
+    document.getElementById('categoryModal').style.display = 'block';
+    loadCategories();
+}
+
+function closeCategoryModal() {
+    document.getElementById('categoryModal').style.display = 'none';
+}
+
+function loadCategories() {
+    fetch('{% url "products:api_list_categories" %}')
+    .then(response => response.json())
+    .then(data => {
+        const list = document.getElementById('categoryList');
+        const select = document.getElementById('{{ form.category.id_for_label }}');
+        const currentValue = select.value;
+        
+        list.innerHTML = '';
+        select.innerHTML = '<option value="">Selecione...</option>';
+        
+        data.categories.forEach(cat => {
+            // Update Modal List
+            const item = document.createElement('div');
+            item.style.padding = '10px';
+            item.style.borderBottom = '1px solid #eee';
+            item.style.display = 'flex';
+            item.style.justifyContent = 'space-between';
+            item.style.alignItems = 'center';
+            
+            const name = document.createElement('span');
+            name.textContent = cat.name;
+            
+            const btn = document.createElement('button');
+            btn.innerHTML = '<i class="fas fa-times"></i>';
+            btn.style.color = 'red';
+            btn.style.background = 'none';
+            btn.style.border = 'none';
+            btn.style.cursor = 'pointer';
+            btn.onclick = () => deleteCategory(cat.id);
+            
+            item.appendChild(name);
+            item.appendChild(btn);
+            list.appendChild(item);
+
+            // Update Select Dropdown
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name;
+            if (cat.id == currentValue) option.selected = true;
+            select.appendChild(option);
+        });
+    });
+}
+
+function addCategory() {
+    const input = document.getElementById('newCategoryInput');
+    const name = input.value;
+    if (!name) return;
+
+    fetch('{% url "products:api_add_category" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({name: name})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            input.value = '';
+            loadCategories(); // Reload list
+            
+            // Auto Select the new one
+            setTimeout(() => {
+                const select = document.getElementById('{{ form.category.id_for_label }}');
+                select.value = data.id;
+            }, 500);
+        } else {
+            alert('Erro ao criar categoria.');
+        }
+    });
+}
+
+function deleteCategory(id) {
+    if (!confirm('Tem certeza? Categorias com produtos não podem ser excluídas.')) return;
+
+    // Use a placeholder that we replace with the actual ID
+    // Note: '0' is a dummy ID for the URL reversal to work
+    const urlPattern = '{% url "products:api_delete_category" 0 %}';
+    const finalUrl = urlPattern.replace('0', id);
+
+    fetch(finalUrl, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            loadCategories();
+        } else {
+            alert(data.error || 'Erro ao excluir.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Erro ao excluir categoria.');
+    });
+}
+</script>
+<script>
+    // Separate script block or merge, but keeping clean logic.
+    // Handle click outside to close
+    window.addEventListener('click', function(e) {
+        const modal = document.getElementById('categoryModal');
+        if (e.target == modal) {
+            modal.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

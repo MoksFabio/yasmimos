@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div style="text-align: center; padding: 50px 0;">
+    <i class="fas fa-check-circle" style="font-size: 4rem; color: #4caf50; margin-bottom: 20px;"></i>
+    <h1 style="font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 20px;">Pedido Realizado com Sucesso!</h1>
+    <p style="font-size: 1.2rem; margin-bottom: 30px;">Seu pedido #{{ order.id }} foi registrado.</p>
+    
+    <div style="background: var(--white); padding: 30px; border-radius: 15px; max-width: 600px; margin: 0 auto; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);">
+        <h2 style="color: var(--text-color); margin-bottom: 20px;">Valor Total: R$ {{ order.total_amount }}</h2>
+        
+        <div id="qr-code-section" class="{% if order.status != 'pending' %}d-none{% endif %}">
+            <p style="margin-bottom: 10px;">Escaneie o QR Code abaixo para pagar:</p>
+            <!-- QR Code generated via API -->
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ pix_copia_cola|urlencode }}" alt="QR Code Pix" style="margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 10px;">
+            
+            <p style="margin-bottom: 10px; font-size: 0.9rem; color: #666;">Ou copie e cole o código abaixo:</p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 30px; align-items: center;">
+                <input type="text" id="pixCode" value="{{ pix_copia_cola }}" readonly style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; background-color: #f9f9f9;">
+                <button onclick="copyPixCode('pixCode')" class="btn" style="padding: 12px 20px; white-space: nowrap; background-color: var(--accent-color); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    <i class="far fa-copy"></i> Copiar
+                </button>
+            </div>
+        </div>
+
+        <div id="payment-status" class="{% if order.status == 'pending' %}status-flex{% else %}d-none{% endif %}" style="margin-bottom: 20px; padding: 15px; border-radius: 10px; background-color: #fff3cd; color: #856404; font-size: 0.95rem;">
+            <div class="loader" style="border: 3px solid #f3f3f3; border-top: 3px solid #856404; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite;"></div>
+            <span>Aguardando confirmação do pagamento...</span>
+        </div>
+
+        <div id="payment-success" class="{% if order.status == 'paid' or order.status == 'shipped' or order.status == 'completed' %}{% else %}d-none{% endif %}" style="margin-bottom: 30px; padding: 20px; border-radius: 10px; background-color: #d4edda; color: #155724; text-align: center;">
+            <i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 10px;"></i>
+            <h3 style="margin: 0;">Pagamento Concluído!</h3>
+            <p style="margin-top: 5px;">Seu pedido foi processado com sucesso.</p>
+        </div>
+
+        <div id="payment-refunded" class="{% if order.status != 'refunded' %}d-none{% endif %}" style="margin-bottom: 30px; padding: 20px; border-radius: 10px; background-color: #f3e5f5; color: #6a1b9a; text-align: center;">
+            <i class="fas fa-undo-alt" style="font-size: 3rem; margin-bottom: 10px;"></i>
+            <h3 style="margin: 0;">Pedido Reembolsado</h3>
+            <p style="margin-top: 5px;">O valor deste pedido foi reembolsado.</p>
+        </div>
+
+        <div id="payment-cancelled" class="{% if order.status != 'cancelled' %}d-none{% endif %}" style="margin-bottom: 30px; padding: 20px; border-radius: 10px; background-color: #f8d7da; color: #721c24; text-align: center;">
+            <i class="fas fa-times-circle" style="font-size: 3rem; margin-bottom: 10px;"></i>
+            <h3 style="margin: 0;">Pedido Cancelado</h3>
+            <p style="margin-top: 5px;">Este pedido foi cancelado.</p>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+        <p style="margin-bottom: 20px;">Você também pode enviar o comprovante manualmente:</p>
+        
+        <a href="{{ whatsapp_url }}" target="_blank" class="btn" style="background-color: #25d366; color: white;">
+            <i class="fab fa-whatsapp"></i> Enviar Comprovante
+        </a>
+    </div>
+</div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.d-none { display: none; }
+.status-flex {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+</style>
+
+<script>
+function copyPixCode(elementId) {
+    if (!elementId) elementId = "pixCode";
+    var copyText = document.getElementById(elementId);
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); /* For mobile devices */
+    
+    try {
+        if(navigator.clipboard) {
+            navigator.clipboard.writeText(copyText.value).then(() => {
+                alert("Código Pix copiado!");
+            });
+        } else {
+            document.execCommand("copy");
+            alert("Código Pix copiado!");
+        }
+    } catch(err) {
+        alert("Erro ao copiar. Por favor selecione e copie manualmente.");
+    }
+}
+
+// Polling for Payment Status
+const orderId = "{{ order.id }}";
+const statusUrl = "/orders/status/" + orderId + "/";
+
+function checkStatus() {
+    fetch(statusUrl)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'paid' || data.status === 'shipped' || data.status === 'completed') {
+                // Payment Confirmed
+                document.getElementById('payment-status').style.display = 'none';
+                document.getElementById('payment-success').style.display = 'block';
+                document.getElementById('payment-cancelled').style.display = 'none';
+                
+                // Hide QR Code section
+                const qrSection = document.getElementById('qr-code-section');
+                if (qrSection) qrSection.style.display = 'none';
+                
+                // NOT stopping polling here anymore to handle post-payment cancellation
+                // clearInterval(pollingInterval);
+            } else if (data.status === 'cancelled') {
+                // Payment Cancelled
+                document.getElementById('payment-status').style.display = 'none';
+                document.getElementById('payment-success').style.display = 'none';
+                document.getElementById('payment-cancelled').style.display = 'block';
+
+                // Hide QR Code section
+                const qrSection = document.getElementById('qr-code-section');
+                if (qrSection) qrSection.style.display = 'none';
+
+                // Stop polling only on final cancelled state (or you could keep it running, but cancelled is usually final)
+                clearInterval(pollingInterval);
+            } else if (data.status === 'refunded') {
+                // Payment Refunded
+                document.getElementById('payment-status').style.display = 'none';
+                document.getElementById('payment-success').style.display = 'none';
+                document.getElementById('payment-cancelled').style.display = 'none';
+                document.getElementById('payment-refunded').style.display = 'block';
+
+                const qrSection = document.getElementById('qr-code-section');
+                if (qrSection) qrSection.style.display = 'none';
+                
+                clearInterval(pollingInterval);
+            }
+        })
+        .catch(err => console.error("Error checking status:", err));
+}
+
+// Check every 5 seconds
+const pollingInterval = setInterval(checkStatus, 5000);
+</script>
+{% endblock %}

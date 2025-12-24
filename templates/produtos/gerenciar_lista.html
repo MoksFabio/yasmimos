@@ -1,0 +1,748 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container main-container">
+    
+    <!-- Header Principal -->
+    <div class="header-section">
+        <h1 class="page-title">Gerenciar Loja</h1>
+        <p class="page-subtitle">Painel Administrativo YasMimos</p>
+        
+        <!-- Store Status Controls -->
+        <div id="store-status-controls" class="store-controls">
+            <button onclick="toggleStoreStatus(true)" id="btn-open-store" class="status-btn" style="opacity: 0.5;">
+                <i class="fas fa-door-open"></i> Loja Aberta
+            </button>
+            <button onclick="toggleStoreStatus(false)" id="btn-close-store" class="status-btn" style="opacity: 0.5;">
+                <i class="fas fa-door-closed"></i> Loja Fechada
+            </button>
+        </div>
+    </div>
+
+    <!-- Dashboard Financeiro -->
+    <div class="dashboard-section section-margin">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-chart-pie" style="margin-right: 10px; color: var(--primary-color);"></i>
+                Painel Financeiro
+            </h2>
+        </div>
+        
+        <div class="financial-grid">
+            <!-- Card 1: Faturamento Real -->
+            <div class="fin-card card-green">
+                <div class="card-label">Faturamento Real (Pago)</div>
+                <div class="card-value">R$ {{ total_sold|floatformat:2 }}</div>
+                <i class="fas fa-check-circle card-icon"></i>
+            </div>
+            
+            <!-- Card 2: Em Estoque -->
+            <div class="fin-card card-orange">
+                <div class="card-label">Potencial em Estoque</div>
+                <div class="card-value">R$ {{ total_stock|floatformat:2 }}</div>
+                <i class="fas fa-boxes card-icon"></i>
+            </div>
+            
+            <!-- Card 3: Projeção Total -->
+            <div class="fin-card card-purple">
+                <div class="card-label">Projeção Total</div>
+                <div class="card-value">R$ {{ total_projected|floatformat:2 }}</div>
+                <i class="fas fa-chart-line card-icon"></i>
+            </div>
+
+            <!-- Card 4: Ticket Médio -->
+            <div class="fin-card card-blue">
+                <div class="card-label">Ticket Médio</div>
+                <div class="card-value">R$ {{ avg_ticket|floatformat:2 }}</div>
+                <i class="fas fa-receipt card-icon"></i>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar" id="salesProgressBar" data-width="{{ progress_percentage|stringformat:'f' }}">
+                <span class="progress-text">{{ progress_percentage|floatformat:1 }}% da Meta</span>
+            </div>
+        </div>
+        <script>
+            // Set width via JS to avoid inline style linter errors
+            document.addEventListener('DOMContentLoaded', function() {
+                var bar = document.getElementById('salesProgressBar');
+                if(bar) bar.style.width = bar.dataset.width + '%';
+            });
+        </script>
+        <p style="text-align: right; color: #888; font-size: 0.85em; margin-top: 8px;">Progresso de Vendas (Realizado vs Total)</p>
+    </div>
+
+    <hr class="separator">
+
+    <!-- Seção Gerenciar Usuários -->
+    <div class="users-section section-margin">
+        <div class="section-header">
+            <div class="section-title-wrapper">
+                <h2 class="section-title">
+                    <i class="fas fa-users" style="margin-right: 10px; color: var(--primary-color);"></i>
+                    Gerenciar Clientes
+                </h2>
+
+            </div>
+            
+            <div class="search-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="userSearchInput" placeholder="Nome ou Telefone..." class="search-input">
+            </div>
+        </div>
+        
+        <div class="table-card">
+            <table class="premium-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Telefone</th>
+                        <th>Cadastrado em</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table-body">
+                    {% for u in users %}
+                    <tr>
+                        <td style="font-weight: 500;">{{ u.username }}</td>
+                        <td>{{ u.phone_number }}</td>
+                        <td>{{ u.date_joined|date:"d/m/Y" }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="https://wa.me/55{{ u.phone_number|cut:' '|cut:'-'|cut:'('|cut:')' }}" target="_blank" class="btn-action btn-ship" title="Conversar no WhatsApp" style="background-color: #25d366; color: white;"><i class="fab fa-whatsapp"></i></a>
+                                <a href="javascript:void(0);" data-id="{{ u.id }}" onclick="deleteUser(this.dataset.id)" class="btn-action btn-delete-permanent" title="Excluir Cliente" style="background-color: #ffcdd2; color: #b71c1c;"><i class="fas fa-trash"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="padding: 20px; text-align: center; color: #999;">Nenhum cliente cadastrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr class="separator">
+
+    <!-- Seção Gerenciar Pedidos -->
+    <div class="orders-section section-margin">
+        <div class="section-header">
+            <div class="section-title-wrapper">
+                <h2 class="section-title">
+                    <i class="fas fa-clipboard-list" style="margin-right: 10px; color: var(--primary-color);"></i>
+                    Gerenciar Pedidos
+                </h2>
+
+            </div>
+            
+            <div class="header-actions">
+                <!-- Date Filter -->
+                <div class="date-filter-wrapper" style="display: flex; align-items: center; gap: 5px; margin-right: 10px;">
+                    <input type="date" id="orderDateFilter" style="padding: 8px; border: 1px solid #ddd; border-radius: 20px; outline: none; color: #555; background: #fff;" onchange="filterOrders(this.value)">
+                    <button onclick="resetOrderDate()" title="Voltar para Hoje" style="padding: 8px 12px; background: var(--primary-color); color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px;">
+                        <i class="fas fa-calendar-day"></i> Hoje
+                    </button>
+                </div>
+
+                <!-- Search Box -->
+                <div class="search-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="orderSearchInput" placeholder="Buscar pedidos..." class="search-input">
+                </div>
+
+                <a href="{% url 'orders:clear_all_orders' %}" class="btn-danger-outline" onclick="return confirm('ATENÇÃO: Tem certeza absoluta? Isso apagará TODOS os pedidos do banco de dados e não pode ser desfeito.')">
+                    <i class="fas fa-trash-alt"></i> Limpar Todos
+                </a>
+            </div>
+        </div>
+        
+        <div class="table-card">
+            <table class="premium-table">
+                <thead>
+                    <tr>
+                        <th width="80">ID</th>
+                        <th>Cliente</th>
+                        <th>Itens</th>
+                        <th>Data</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="orders-table-body">
+                    {% include 'pedidos/parcial_lista_pedidos.html' %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Seção Gerenciar Produtos -->
+    <div class="products-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-tags" style="margin-right: 10px; color: var(--primary-color);"></i>
+                Gerenciar Produtos
+            </h2>
+            <a href="{% url 'products:add_product' %}" class="btn-primary-add">
+                <i class="fas fa-plus"></i> Novo Produto
+            </a>
+        </div>
+        
+        <div class="table-card">
+            <table class="premium-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Preço</th>
+                        <th>Estoque</th>
+                        <th>Categoria</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="products-table-body">
+                    {% include 'produtos/parcial_linha_produto.html' %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr class="separator">
+
+
+
+</div>
+
+<style>
+/* Responsive Core Styles */
+.main-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.header-section { text-align: center; margin-bottom: 40px; }
+.page-title { font-family: var(--font-serif); color: var(--accent-color); font-size: 2.5em; margin-bottom: 10px; }
+.page-subtitle { color: #666; font-size: 1.1em; margin-bottom: 20px; }
+.store-controls { display: flex; justify-content: center; gap: 15px; }
+.section-margin { margin-bottom: 50px; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.section-title { font-family: var(--font-serif); color: #444; margin: 0; font-size: 1.8em; }
+.section-title-wrapper { display: flex; align-items: center; }
+.header-actions { display: flex; gap: 15px; align-items: center; }
+
+.search-wrapper { position: relative; }
+.search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa; }
+.search-input { padding: 10px 15px 10px 40px; border-radius: 20px; border: 1px solid #ddd; outline: none; width: 250px; font-size: 0.9em; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+
+
+/* Dashboard Styles */
+.financial-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+.fin-card {
+    position: relative;
+    padding: 25px;
+    border-radius: 16px;
+    color: white;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+}
+.fin-card:hover {
+    transform: translateY(-5px);
+}
+.card-green { background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%); box-shadow: 0 8px 15px rgba(67, 160, 71, 0.2); }
+.card-orange { background: linear-gradient(135deg, #fb8c00 0%, #ffa726 100%); box-shadow: 0 8px 15px rgba(251, 140, 0, 0.2); }
+.card-purple { background: linear-gradient(135deg, #8e24aa 0%, #ab47bc 100%); box-shadow: 0 8px 15px rgba(142, 36, 170, 0.2); }
+.card-blue { background: linear-gradient(135deg, #039be5 0%, #29b6f6 100%); box-shadow: 0 8px 15px rgba(3, 155, 229, 0.2); }
+
+.card-label { font-size: 0.9em; opacity: 0.9; margin-bottom: 8px; font-weight: 500; }
+.card-value { font-size: 1.8em; font-weight: 700; letter-spacing: -0.5px; }
+.card-icon { position: absolute; right: 20px; top: 20px; font-size: 2.5em; opacity: 0.15; transform: rotate(-10deg); }
+
+.progress-container {
+    background-color: #e9ecef;
+    border-radius: 50px;
+    height: 24px;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+.progress-bar {
+    background: linear-gradient(90deg, #4caf50, #8bc34a);
+    height: 100%;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 15px;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.progress-text {
+    color: white;
+    font-weight: 700;
+    font-size: 0.8em;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    white-space: nowrap;
+}
+
+/* Premium Table Styles */
+.table-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    overflow: hidden;
+    border: 1px solid #eee;
+}
+.premium-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.premium-table thead {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+}
+.premium-table th {
+    padding: 18px 24px;
+    text-align: left;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    color: #6c757d;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+.premium-table td {
+    padding: 18px 24px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f3f5;
+    color: #495057;
+}
+.premium-table tr:last-child td { border-bottom: none; }
+.premium-table tr:hover { background-color: #fafbfc; }
+
+/* Badges & Pills */
+.status-pill {
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 0.85em;
+    font-weight: 600;
+    display: inline-block;
+}
+.status-paid { background-color: #e8f5e9; color: #2e7d32; }
+.status-pending { background-color: #fff3e0; color: #ef6c00; }
+.status-shipped { background-color: #e3f2fd; color: #1565c0; }
+.status-cancelled { background-color: #ffebee; color: #c62828; }
+.status-refunded { background-color: #f3e5f5; color: #7b1fa2; } /* Purple/Violet */
+
+.id-badge {
+    background-color: #f1f3f5;
+    color: #495057;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.95em;
+}
+.stock-badge {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+.stock-in { background-color: #e8f5e9; color: #2e7d32; }
+.stock-out { background-color: #ffebee; color: #c62828; }
+
+.category-tag {
+    background-color: #e0f2f1;
+    color: #00695c;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
+/* Actions and Buttons */
+.action-buttons { display: flex; gap: 8px; }
+.btn-action {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+.btn-approve { background-color: #e8f5e9; color: #2e7d32; }
+.btn-approve:hover { background-color: #2e7d32; color: white; transform: translateY(-2px); }
+.btn-ship { background-color: #e3f2fd; color: #1565c0; }
+.btn-ship:hover { background-color: #1565c0; color: white; transform: translateY(-2px); }
+.btn-cancel { background-color: #ffebee; color: #c62828; }
+.btn-cancel:hover { background-color: #c62828; color: white; transform: translateY(-2px); }
+
+.text-action { font-size: 0.9em; font-weight: 500; margin-right: 15px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+.text-edit { color: var(--primary-dark); }
+.text-delete { color: #dc3545; }
+.text-action:hover { text-decoration: underline; }
+
+.btn-primary-add {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: all 0.2s;
+}
+.btn-primary-add:hover { background-color: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+
+.btn-danger-outline {
+    border: 1px solid #ffcdd2;
+    color: #e53935;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: all 0.2s;
+    background: transparent;
+}
+.btn-danger-outline:hover { background-color: #ffebee; border-color: #e53935; }
+
+/* Live Indicator */
+.live-badge {
+    background-color: #fbe9e7;
+    color: #d84315;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 600;
+    margin-left: 15px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #ff3d00;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 61, 0, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 61, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 61, 0, 0); }
+}
+.separator { border: 0; border-top: 1px dashed #e0e0e0; margin: 40px 0; }
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+    .main-container { padding: 10px; }
+    .header-section { margin-bottom: 25px; }
+    .page-title { font-size: 2em; }
+    .section-margin { margin-bottom: 30px; }
+    
+    .section-header { flex-direction: column; align-items: stretch; gap: 15px; text-align: center; }
+    .section-title-wrapper { justify-content: center; flex-wrap: wrap; gap: 10px; }
+    .section-title { font-size: 1.5em; }
+    
+    .live-badge { margin-left: 0; justify-content: center; margin-top: 5px; }
+    
+    .header-actions { flex-direction: column; width: 100%; gap: 10px; }
+    .search-wrapper { width: 100%; }
+    .search-input { width: 100%; box-sizing: border-box; }
+    
+    .store-controls { flex-wrap: wrap; }
+    .status-btn { width: 100%; justify-content: center; }
+    
+    .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    /* Ensure table doesn't shrink aggressively */
+    .premium-table { min-width: 600px; } 
+
+    .btn-primary-add, .btn-danger-outline { width: 100%; text-align: center; display: block; box-sizing: border-box; }
+    .btn-danger-outline { margin-top: 5px; }
+    
+    /* Finance Cards Grid on generic mobile */
+    .financial-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<script>
+    let currentSearchTerm = '';
+
+    // User Search Logic
+    function filterUsers() {
+        let input = document.getElementById('userSearchInput');
+        if (!input) return;
+        let filter = input.value.toUpperCase();
+        let tbody = document.getElementById('users-table-body');
+        let tr = tbody.getElementsByTagName('tr');
+
+        for (let i = 0; i < tr.length; i++) {
+            let tds = tr[i].getElementsByTagName('td');
+            if (tds.length > 1) { // Ensure it's not the "No users" row or invalid
+                let name = tds[0].textContent || tds[0].innerText;
+                let phone = tds[1].textContent || tds[1].innerText;
+                if (name.toUpperCase().indexOf(filter) > -1 || phone.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const userSearchInput = document.getElementById('userSearchInput');
+        if (userSearchInput) {
+            userSearchInput.addEventListener('keyup', filterUsers);
+        }
+    });
+    
+    // Auto-update User List
+    function updateUserList() {
+        fetch("{% url 'users:user_list_api' %}")
+            .then(response => response.text())
+            .then(html => {
+                const tbody = document.getElementById('users-table-body');
+                if (tbody.innerHTML !== html) {
+                    tbody.innerHTML = html;
+                    // Re-apply filter if search input has value
+                    const input = document.getElementById('userSearchInput');
+                    if (input && input.value) {
+                         filterUsers();
+                    }
+                }
+            })
+            .catch(error => console.error('Erro ao atualizar clientes:', error));
+    }
+    // Update every 5 seconds
+    setInterval(updateUserList, 5000);
+
+    function updateOrderList() {
+        fetch("{% url 'orders:order_list_api' %}")
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('orders-table-body').innerHTML = html;
+                if (currentSearchTerm) {
+                    filterOrders();
+                }
+            })
+            .catch(error => console.error('Erro ao atualizar pedidos:', error));
+    }
+
+    function filterOrders() {
+        let input = document.getElementById('orderSearchInput');
+        if (!input) return;
+        let filter = input.value.toUpperCase();
+        currentSearchTerm = filter;
+        let tbody = document.getElementById('orders-table-body');
+        let tr = tbody.getElementsByTagName('tr');
+
+        for (let i = 0; i < tr.length; i++) {
+            let found = false;
+            let tds = tr[i].getElementsByTagName('td');
+            if (tds.length < 2) continue; // Skip empty/loading rows if any
+            
+            for (let j = 0; j < tds.length; j++) {
+                if (tds[j].textContent.toUpperCase().indexOf(filter) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+    
+    // Attach listener
+    document.getElementById('orderSearchInput').addEventListener('keyup', filterOrders);
+
+    function updateOrderStatus(event, orderId, newStatus) {
+        event.preventDefault();
+        
+        let confirmMessage = "Tem certeza?";
+        if (newStatus === 'paid') confirmMessage = "Confirmar este pagamento?";
+        if (newStatus === 'shipped') confirmMessage = "Marcar pedido como enviado?";
+        if (newStatus === 'cancelled') confirmMessage = "ATENÇÃO: Deseja realmente CANCELAR este pedido? O estoque será devolvido.";
+
+        if (confirm(confirmMessage)) {
+            // Using a fetch to the existing update view.
+            // Note: The existing view redirects. Fetch follows redirects transparently.
+            // We just need to check if the final response is OK.
+            const url = `/orders/update-status/${orderId}/${newStatus}/`;
+            
+            fetch(url)
+                .then(response => {
+                    if (response.ok) {
+                        // Refresh the table immediately
+                        updateOrderList();
+                    } else {
+                        alert('Erro ao atualizar status. Tente novamente.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Network error:', error);
+                    alert('Erro de conexão.');
+                });
+        }
+    }
+    
+    // Atualizar Lista de Pedidos (5s)
+    setInterval(updateOrderList, 5000);
+
+    // Atualizar Lista de Produtos (3s)
+    function updateProductList() {
+        fetch("{% url 'products:product_list_rows_api' %}")
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('products-table-body').innerHTML = html;
+            })
+            .catch(error => console.error('Erro ao atualizar produtos:', error));
+    }
+    setInterval(updateProductList, 3000);
+    // Store Status Logic
+    function fetchStoreStatus() {
+        fetch("{% url 'core:get_status' %}")
+            .then(res => res.json())
+            .then(data => updateStatusUI(data.is_open));
+    }
+
+    function toggleStoreStatus(targetState) {
+        // Optimistic UI update
+        updateStatusUI(targetState);
+        
+        fetch("{% url 'core:toggle_status' %}", {
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}'}
+        })
+        .then(res => res.json())
+        .then(data => updateStatusUI(data.is_open))
+        .catch(err => {
+            console.error("Error toggling status", err);
+            // Revert on error? For now just fetch actual status
+            fetchStoreStatus();
+        });
+    }
+
+    function updateStatusUI(isOpen) {
+        const btnOpen = document.getElementById('btn-open-store');
+        const btnClose = document.getElementById('btn-close-store');
+        
+        if (isOpen) {
+            btnOpen.style.opacity = '1';
+            btnOpen.style.transform = 'scale(1.05)';
+            btnOpen.style.boxShadow = '0 5px 15px rgba(76, 175, 80, 0.3)';
+            btnOpen.style.background = '#4caf50';
+            btnOpen.style.color = 'white';
+            
+            btnClose.style.opacity = '0.5';
+            btnClose.style.transform = 'scale(1)';
+            btnClose.style.boxShadow = 'none';
+            btnClose.style.background = '#f5f5f5';
+            btnClose.style.color = '#333';
+        } else {
+            btnClose.style.opacity = '1';
+            btnClose.style.transform = 'scale(1.05)';
+            btnClose.style.boxShadow = '0 5px 15px rgba(244, 67, 54, 0.3)';
+            btnClose.style.background = '#f44336';
+            btnClose.style.color = 'white';
+
+            btnOpen.style.opacity = '0.5';
+            btnOpen.style.transform = 'scale(1)';
+            btnOpen.style.boxShadow = 'none';
+            btnOpen.style.background = '#f5f5f5';
+            btnOpen.style.color = '#333';
+        }
+    }
+    
+    // Initial fetch
+    fetchStoreStatus();
+
+    // Delete Order Logic
+    function deleteOrder(orderId) {
+        if (confirm('Tem certeza que deseja excluir este pedido permanentemente?')) {
+            fetch(`/orders/delete/${orderId}/`, {
+                method: 'POST',
+                headers: {'X-CSRFToken': '{{ csrf_token }}'}
+            })
+            .then(response => {
+                if (response.ok) {
+                    updateOrderList();
+                } else {
+                    alert('Erro ao excluir pedido.');
+                }
+            })
+            .catch(error => {
+                console.error('Network error:', error);
+                alert('Erro de conexão.');
+            });
+        }
+    }
+
+    function deleteUser(userId) {
+        if (confirm('Tem certeza que deseja excluir este cliente permanentemente?')) {
+            fetch(`/users/delete-api/${userId}/`, {
+                method: 'POST',
+                headers: {'X-CSRFToken': '{{ csrf_token }}'}
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload(); // Simple reload for user list update
+                } else {
+                    alert('Erro ao excluir usuário.');
+                }
+            })
+            .catch(error => {
+                console.error('Network error:', error);
+                alert('Erro de conexão.');
+            });
+        }
+    }
+
+    function filterOrders(date) {
+        if (!date) return;
+        
+        fetch(`{% url 'products:api_orders_by_date' %}?date=${date}`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('orders-table-body').innerHTML = html;
+        })
+        .catch(err => console.error('Error filtering orders:', err));
+    }
+
+    function resetOrderDate() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('orderDateFilter').value = today;
+        filterOrders(today);
+    }
+
+    // Set default date logic on load
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('orderDateFilter');
+        if (dateInput && !dateInput.value) {
+            dateInput.value = new Date().toISOString().split('T')[0];
+        }
+    });
+</script>
+<style>
+.status-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+}
+</style>
+{% endblock %}

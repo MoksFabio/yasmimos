@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="product-detail" style="display: flex; gap: 40px; flex-wrap: wrap;">
+    <div class="detail-image" style="flex: 1; min-width: 300px;">
+        <!-- Main Image -->
+        <div class="main-image-wrapper" style="position: relative; overflow: hidden; border-radius: 15px; cursor: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\'><path d=\'M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z\'/></svg>') 10 10, zoom-in;" onclick="openLightbox()">
+            {% if product.image %}
+                <img id="currentImage" src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 400px; object-fit: contain; background-color: #fafafa; display: block; transition: transform 0.3s ease;">
+            {% else %}
+                <div style="height: 400px; display: flex; align-items: center; justify-content: center; background: #f0f0f0; color: #ccc;">Sem Imagem</div>
+            {% endif %}
+        </div>
+
+        <!-- Thumbnails -->
+        {% if product.image %}
+        <div class="thumbnails-container" style="display: flex; gap: 10px; margin-top: 15px; overflow-x: auto; padding-bottom: 5px;">
+            <div class="thumb active" onclick="updateMainImage('{{ product.image.url }}', this)">
+                <img src="{{ product.image.url }}" alt="Principal">
+            </div>
+            {% if product.image2 %}
+            <div class="thumb" onclick="updateMainImage('{{ product.image2.url }}', this)">
+                <img src="{{ product.image2.url }}" alt="Imagem 2">
+            </div>
+            {% endif %}
+            {% if product.image3 %}
+            <div class="thumb" onclick="updateMainImage('{{ product.image3.url }}', this)">
+                <img src="{{ product.image3.url }}" alt="Imagem 3">
+            </div>
+            {% endif %}
+            {% if product.image4 %}
+            <div class="thumb" onclick="updateMainImage('{{ product.image4.url }}', this)">
+                <img src="{{ product.image4.url }}" alt="Imagem 4">
+            </div>
+            {% endif %}
+            {% if product.image5 %}
+            <div class="thumb" onclick="updateMainImage('{{ product.image5.url }}', this)">
+                <img src="{{ product.image5.url }}" alt="Imagem 5">
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    <div class="detail-info" style="flex: 1; min-width: 300px;">
+        <h1 style="font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 10px;">{{ product.name }}</h1>
+        <p class="price" style="font-size: 1.5rem; font-weight: bold; margin-bottom: 5px;">R$ {{ product.price }}</p>
+        
+        <p style="margin-bottom: 20px; font-weight: bold; font-size: 0.9rem;">
+            {% if product.stock > 0 %}
+                <span style="color: green;">Estoque: {{ product.stock }} unidades</span>
+            {% else %}
+                <span style="color: red;">Esgotado!</span>
+            {% endif %}
+        </p>
+
+        <div class="description" style="margin-bottom: 30px;">
+            {{ product.description|linebreaks }}
+        </div>
+        
+        {% if product.stock > 0 %}
+        <form action="{% url 'cart:cart_add' product.id %}" method="post">
+            {% csrf_token %}
+            <div class="quantity-selector" style="margin-bottom: 20px;">
+                <label for="quantity">Quantidade:</label>
+                <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd; width: 80px;">
+            </div>
+            <button type="submit" class="btn" style="max-width: 300px;">Adicionar ao Carrinho</button>
+        </form>
+        {% else %}
+            <button class="btn" style="max-width: 300px; background-color: #ccc; cursor: not-allowed;" disabled>Indisponível</button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Lightbox Modal -->
+<div id="lightboxModal" class="lightbox" onclick="closeLightbox()">
+    <span class="close-lightbox">&times;</span>
+    <img class="lightbox-content" id="lightboxImage">
+</div>
+
+<style>
+    .thumb {
+        width: 70px;
+        height: 70px;
+        border-radius: 10px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+    .thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .thumb.active {
+        border-color: var(--accent-color);
+        transform: scale(0.95);
+    }
+    .thumb:hover {
+        opacity: 0.8;
+    }
+
+    /* Lightbox Styles */
+    .lightbox {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        padding-top: 50px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(5px);
+    }
+    .lightbox-content {
+        margin: auto;
+        display: block;
+        width: auto;
+        max-width: 90%;
+        max-height: 85vh;
+        border-radius: 5px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        animation: zoomIn 0.3s;
+    }
+    .close-lightbox {
+        position: absolute;
+        top: 20px;
+        right: 35px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        transition: 0.3s;
+        cursor: pointer;
+    }
+    .close-lightbox:hover,
+    .close-lightbox:focus {
+        color: var(--primary-color);
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    @keyframes zoomIn {
+        from {transform:scale(0)} 
+        to {transform:scale(1)}
+    }
+</style>
+
+<script>
+    function updateMainImage(src, thumbElement) {
+        // Update main image source
+        const mainImg = document.getElementById('currentImage');
+        mainImg.style.opacity = '0.5';
+        
+        setTimeout(() => {
+            mainImg.src = src;
+            mainImg.style.opacity = '1';
+        }, 200);
+
+        // Update active thumbnail
+        document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+        thumbElement.classList.add('active');
+    }
+
+    function openLightbox() {
+        const modal = document.getElementById("lightboxModal");
+        const modalImg = document.getElementById("lightboxImage");
+        const currentSrc = document.getElementById("currentImage").src;
+        
+        modal.style.display = "flex";
+        modal.style.alignItems = "center";
+        modal.style.justifyContent = "center";
+        modalImg.src = currentSrc;
+        
+        // Prevent body scroll
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeLightbox() {
+        const modal = document.getElementById("lightboxModal");
+        modal.style.display = "none";
+        // Restore body scroll
+        document.body.style.overflow = "auto";
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === "Escape") {
+            closeLightbox();
+        }
+    });
+</script>
+{% endblock %}

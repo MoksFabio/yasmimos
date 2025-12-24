@@ -1,0 +1,20 @@
+{% for product in products %}
+<tr>
+    <td style="font-weight: 500;">{{ product.name }}</td>
+    <td>R$ {{ product.price }}</td>
+    <td>
+        {% if product.stock == 0 %}
+            <span class="stock-badge stock-out">Esgotado</span>
+        {% else %}
+            <span class="stock-badge stock-in">{{ product.stock }} un.</span>
+        {% endif %}
+    </td>
+    <td><span class="category-tag">{{ product.category.name }}</span></td>
+    <td>
+        <div class="action-buttons">
+            <a href="{% url 'products:edit_product' product.id %}" class="text-action text-edit"><i class="fas fa-edit"></i> Editar</a>
+            <a href="{% url 'products:delete_product' product.id %}" class="text-action text-delete"><i class="fas fa-trash"></i> Excluir</a>
+        </div>
+    </td>
+</tr>
+{% endfor %}

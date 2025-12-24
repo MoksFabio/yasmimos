@@ -1,0 +1,166 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}YasMimos{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="{% url 'products:product_list' %}" class="logo">YasMimos</a>
+            <div class="menu-toggle" id="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </div>
+            <nav class="nav-menu" id="nav-menu">
+                <ul>
+                    <li><a href="{% url 'products:product_list' %}">Início</a></li>
+                    <li><a href="#" id="about-btn">Sobre Mim</a></li>
+                    <li>
+                        <a href="{% url 'cart:cart_detail' %}">
+                            Carrinho 
+                            {% if cart|length > 0 %}
+                                <span class="badge">{{ cart|length }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        {% if user.is_superuser %}
+                            <li><a href="{% url 'products:manage_products' %}" style="color: var(--accent-color); font-weight: bold;">Gerenciar Loja</a></li>
+                        {% endif %}
+                        <li><a href="{% url 'users:profile' %}">Olá, {{ user.username }}</a></li>
+                        <li><a href="{% url 'users:logout' %}">Sair</a></li>
+                    {% else %}
+                        <li><a href="{% url 'users:login' %}">Entrar</a></li>
+                        <li><a href="{% url 'users:register' %}">Cadastrar</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="delivery-warning">
+        <p><i class="fas fa-exclamation-circle"></i> Não realizamos entregas no momento. Apenas retirada.</p>
+    </div>
+
+    <main class="container">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="social">
+                <a href="https://www.instagram.com/yasmim_francn/" target="_blank"><i class="fab fa-instagram"></i></a>
+            </div>
+            <p>&copy; {% now "Y" %} YasMimos.</p>
+        </div>
+    </footer>
+
+    <!-- About Modal -->
+    <div id="about-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Sobre a YasMimos</h2>
+            <p>Olá! Sou a Yasmim, a confeiteira por trás da YasMimos.</p>
+            <p>Aqui, cada doce é feito com muito carinho e dedicação para tornar seus momentos ainda mais especiais. Especializada em brigadeiros gourmet, brownies e doces artesanais.</p>
+            <p>Obrigada por escolher a YasMimos!</p>
+        </div>
+    </div>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    
+    <!-- Store Status Global Check -->
+    <div id="store-closed-banner" style="display: none; background-color: #d32f2f; color: white; text-align: center; padding: 15px; position: fixed; bottom: 0; left: 0; width: 100%; z-index: 9999; box-shadow: 0 -2px 10px rgba(0,0,0,0.2);">
+        <i class="fas fa-lock" style="margin-right: 10px;"></i> 
+        <strong>A LOJA ESTÁ FECHADA NO MOMENTO.</strong>
+        <span style="font-size: 0.9em; opacity: 0.9; margin-left: 10px;">Não é possível realizar novos pedidos agora.</span>
+    </div>
+
+    <script>
+        function checkStoreStatusGlobal() {
+            // Superusers bypass this check visually (optional, but good for testing if you want to see what users see, maybe keep it running but don't disable if superuser? No, task said superuser manages it. Let's rely on server side bypass for actions, but show banner maybe? Or hide banner? Let's hide banner for superuser to avoid annoyance, or make it subtle.)
+            // Actually request says: "Clientes não podem finalizar". 
+            const isSuperuser = "{{ user.is_superuser|yesno:'true,false' }}" === "true";
+            
+            if (isSuperuser) return; 
+
+            fetch("{% url 'core:get_status' %}")
+            .then(res => res.json())
+            .then(data => {
+                const banner = document.getElementById('store-closed-banner');
+                const checkoutBtns = document.querySelectorAll('.checkout-btn-action'); 
+                
+                if (!data.is_open) {
+                    if (banner) banner.style.display = 'block';
+                    checkoutBtns.forEach(btn => {
+                        if (!btn.classList.contains('disabled')) {
+                            btn.classList.add('disabled');
+                            btn.style.pointerEvents = 'none';
+                            btn.style.backgroundColor = '#ccc';
+                            btn.style.borderColor = '#ccc';
+                            btn.innerHTML = '<i class="fas fa-lock"></i> Loja Fechada';
+                        }
+                    });
+                    
+                    // Also disable the confirm button on order create page if present
+                    const confirmBtn = document.querySelector('form[action*="order_create"] button[type="submit"]');
+                    if (confirmBtn) {
+                        confirmBtn.disabled = true;
+                        confirmBtn.innerHTML = 'Loja Fechada';
+                        confirmBtn.style.backgroundColor = '#ccc';
+                    }
+
+                } else {
+                    if (banner) banner.style.display = 'none';
+                    checkoutBtns.forEach(btn => {
+                        if (btn.classList.contains('disabled')) {
+                            btn.classList.remove('disabled');
+                            btn.style.pointerEvents = 'auto';
+                            btn.style.backgroundColor = ''; // Revert to CSS
+                            btn.style.borderColor = '';
+                            btn.innerHTML = btn.dataset.originalText || 'Finalizar Pedido';
+                        }
+                    });
+                    
+                    const confirmBtn = document.querySelector('form[action*="order_create"] button[type="submit"]');
+                    if (confirmBtn) {
+                        confirmBtn.disabled = false;
+                        confirmBtn.innerHTML = 'Confirmar Pedido';
+                        confirmBtn.style.backgroundColor = '';
+                    }
+                }
+            })
+            .catch(err => console.error("Status check failed", err));
+        }
+        
+        // Mobile Menu Toggle
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const navMenu = document.getElementById('nav-menu');
+        
+        if (menuBtn) {
+            menuBtn.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+                const icon = menuBtn.querySelector('i');
+                if (navMenu.classList.contains('active')) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                } else {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            });
+        }
+
+        // Initial check and interval
+        checkStoreStatusGlobal();
+        setInterval(checkStoreStatusGlobal, 5000);
+    </script>
+</body>
+</html>

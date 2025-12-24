@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h1 style="font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 30px;">Seu Carrinho</h1>
+{% if cart|length > 0 %}
+    <div style="overflow-x: auto;">
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Qtd</th>
+                    <th>Preço Unit.</th>
+                    <th>Total</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart %}
+                    {% with product=item.product %}
+                    <tr>
+                        <td>{{ product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>R$ {{ item.price }}</td>
+                        <td>R$ {{ item.total_price }}</td>
+                        <td>
+                            <form action="{% url 'cart:cart_remove' product.id %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-remove" style="background: none; border: none; color: red; cursor: pointer;"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="cart-total">
+        Total: R$ {{ cart.get_total_price }}
+    </div>
+    <div class="cart-actions" style="display: flex; gap: 20px; justify-content: flex-end; flex-wrap: wrap;">
+        <a href="{% url 'products:product_list' %}" class="btn" style="background-color: #ccc; width: auto;">Continuar Comprando</a>
+        <a href="{% url 'orders:order_create' %}" class="btn checkout-btn-action" data-original-text="Finalizar Pedido" style="width: auto;">Finalizar Pedido</a>
+    </div>
+{% else %}
+    <p>Seu carrinho está vazio.</p>
+    <a href="{% url 'products:product_list' %}" class="btn" style="width: auto; margin-top: 20px;">Ver Produtos</a>
+{% endif %}
+{% endblock %}

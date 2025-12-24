@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 0 auto; background: var(--white); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+    <h1 style="text-align: center; font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 30px;">Entrar</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}
+                    <div style="color: red; font-size: 0.9rem;">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn">Entrar</button>
+    </form>
+    <p style="text-align: center; margin-top: 20px;">Não tem uma conta? <a href="{% url 'users:register' %}" style="color: var(--primary-dark); font-weight: bold;">Cadastre-se</a></p>
+</div>
+<style>
+    input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; }
+</style>
+{% endblock %}

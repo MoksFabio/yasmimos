@@ -1,0 +1,65 @@
+{% for order in orders %}
+<tr>
+    <td><span class="id-badge">#{{ order.id }}</span></td>
+    <td style="font-weight: 500;">
+        {% if order.user %}
+            {{ order.user.username }}
+        {% else %}
+            {{ order.guest_name }} <small style="color: #888;">(Visitante)</small>
+            <br><small style="font-size: 0.8em; color: #666;">{{ order.guest_phone }}</small>
+        {% endif %}
+    </td>
+    <td style="font-size: 0.85em; color: #555;">
+        {% for item in order.items.all %}
+            <div style="margin-bottom: 2px;">{{ item.quantity }}x {{ item.product.name }}</div>
+        {% endfor %}
+    </td>
+    <td style="color: #666;">{{ order.created|date:"d/m/Y H:i" }}</td>
+    <td style="font-weight: bold; color: #333;">R$ {{ order.total_amount }}</td>
+    <td>
+        {% if order.status == 'paid' %}
+            <span class="status-pill status-paid">Pago</span>
+        {% elif order.status == 'pending' %}
+            <span class="status-pill status-pending">Pendente</span>
+        {% elif order.status == 'shipped' %}
+            <span class="status-pill status-shipped">Enviado</span>
+        {% elif order.status == 'cancelled' %}
+            <span class="status-pill status-cancelled">Cancelado</span>
+        {% elif order.status == 'refunded' %}
+            <span class="status-pill status-refunded">Reembolsado</span>
+        {% else %}
+            <span class="status-pill">{{ order.get_status_display }}</span>
+        {% endif %}
+    </td>
+    <td>
+        <div class="action-buttons">
+            {% if order.status == 'pending' %}
+                <a href="javascript:void(0);" data-id="{{ order.id }}" onclick="updateOrderStatus(event, this.dataset.id, 'paid')" class="btn-action btn-approve" title="Aprovar Pagamento"><i class="fas fa-check"></i></a>
+            {% elif order.status == 'paid' %}
+                <a href="javascript:void(0);" data-id="{{ order.id }}" onclick="updateOrderStatus(event, this.dataset.id, 'shipped')" class="btn-action btn-ship" title="Marcar Enviado"><i class="fas fa-shipping-fast"></i></a>
+            {% endif %}
+            
+            {% if order.status != 'cancelled' and order.status != 'refunded' and order.status != 'shipped' %}
+                <a href="javascript:void(0);" data-id="{{ order.id }}" onclick="updateOrderStatus(event, this.dataset.id, 'cancelled')" class="btn-action btn-cancel" title="Cancelar Pedido"><i class="fas fa-times"></i></a>
+            {% endif %}
+            
+            {% if order.status == 'paid' or order.status == 'shipped' %}
+                 <a href="javascript:void(0);" data-id="{{ order.id }}" onclick="updateOrderStatus(event, this.dataset.id, 'refunded')" class="btn-action btn-cancel" title="Reembolsar" style="background-color: #f3e5f5; color: #7b1fa2;"><i class="fas fa-undo"></i></a>
+            {% endif %}
+            
+            <a href="javascript:void(0);" data-id="{{ order.id }}" onclick="deleteOrder(this.dataset.id)" class="btn-action btn-delete-permanent" title="Excluir Permanentemente" style="background-color: #ffcdd2; color: #b71c1c; margin-left: 5px;">
+                <i class="fas fa-trash"></i>
+            </a>
+        </div>
+    </td>
+</tr>
+{% empty %}
+<tr>
+<tr>
+    <td colspan="7" style="padding: 40px; text-align: center; color: #999;">
+        <i class="far fa-folder-open" style="font-size: 2em; margin-bottom: 10px; display: block;"></i>
+        Nenhum pedido recente.
+    </td>
+</tr>
+</tr>
+{% endfor %}

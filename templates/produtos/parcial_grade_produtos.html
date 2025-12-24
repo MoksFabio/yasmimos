@@ -1,0 +1,18 @@
+{% for product in products %}
+    <div class="product-card">
+        <div class="product-image">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            {% else %}
+                <div style="height: 100%; display: flex; align-items: center; justify-content: center; background: #f0f0f0; color: #ccc;">Sem Imagem</div>
+            {% endif %}
+        </div>
+        <div class="product-info">
+            <h3 class="product-title">{{ product.name }}</h3>
+            <p class="product-price">R$ {{ product.price }}</p>
+            <a href="{% url 'products:product_detail' product.id product.slug %}" class="btn">Ver Detalhes</a>
+        </div>
+    </div>
+{% empty %}
+    <p style="text-align: center; grid-column: 1/-1;">Nenhum produto encontrado.</p>
+{% endfor %}
