@@ -1,106 +1,90 @@
-require('dotenv').config({ path: '../.env' }); // Lê o arquivo .env da raiz do projeto
-const { IgApiClient } = require('instagram-private-api');
+require('dotenv').config({ path: '../.env' });
+const https = require('https');
 const http = require('http');
+const crypto = require('crypto');
 
 async function connectToInstagram() {
-    const ig = new IgApiClient();
-
-    const username = process.env.IG_USERNAME;
-    const password = process.env.IG_PASSWORD;
     const sessionId = process.env.IG_SESSIONID;
-    const csrfToken = process.env.IG_CSRFTOKEN || "missing_csrf";
-
-    if (!username) {
-        console.error("❌ ERRO: IG_USERNAME não foi configurado no arquivo de ambiente");
+    const csrfToken = process.env.IG_CSRFTOKEN;
+    
+    if (!sessionId || !csrfToken) {
+        console.error("❌ ERRO: Para o bot Web API rodar, IG_SESSIONID e IG_CSRFTOKEN devem estar configurados.");
         return;
     }
 
-    ig.state.generateDevice(username);
+    const userId = sessionId.split('%3A')[0];
+    console.log("Iniciando Bot do Instagram via Web API Hack... ID: " + userId);
 
-    if (sessionId) {
-        console.log("Usando Session ID e CSRF Token para pular a tela de login...");
-        try {
-            const userId = sessionId.split('%3A')[0];
-            const cookieStr = JSON.stringify({
-                "cookies": [
-                    {
-                        "key": "sessionid",
-                        "value": sessionId,
-                        "domain": "i.instagram.com",
-                        "path": "/",
-                        "hostOnly": false,
-                        "creation": new Date().toISOString(),
-                        "lastAccessed": new Date().toISOString()
-                    },
-                    {
-                        "key": "csrftoken",
-                        "value": csrfToken,
-                        "domain": "i.instagram.com",
-                        "path": "/",
-                        "hostOnly": false,
-                        "creation": new Date().toISOString(),
-                        "lastAccessed": new Date().toISOString()
-                    },
-                    {
-                        "key": "ds_user_id",
-                        "value": userId,
-                        "domain": "i.instagram.com",
-                        "path": "/",
-                        "hostOnly": false,
-                        "creation": new Date().toISOString(),
-                        "lastAccessed": new Date().toISOString()
-                    }
-                ]
+    const headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'X-IG-App-ID': '936619743392459',
+        'X-CSRFToken': csrfToken,
+        'Cookie': `sessionid=${sessionId}; csrftoken=${csrfToken}; ds_user_id=${userId};`
+    };
+
+    function fetchIg(url, method = 'GET', bodyStr = null) {
+        return new Promise((resolve, reject) => {
+            const urlObj = new URL(url);
+            const options = {
+                hostname: urlObj.hostname,
+                path: urlObj.pathname + urlObj.search,
+                method: method,
+                headers: { ...headers }
+            };
+            if (bodyStr) {
+                options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+                options.headers['Content-Length'] = Buffer.byteLength(bodyStr);
+            }
+
+            const req = https.request(options, (res) => {
+                let data = '';
+                res.on('data', d => data += d);
+                res.on('end', () => {
+                    if (res.statusCode >= 400) return reject(new Error(`HTTP ${res.statusCode}: ${data}`));
+                    try { resolve(JSON.parse(data)); } catch(e) { resolve(data); }
+                });
             });
-            await ig.state.deserializeCookieJar(cookieStr);
-            ig.state.cookieUserId = userId; // Define o ID de usuário a partir do cookie
-            console.log('✅ Bot conectado ao Instagram (via Cookie) com sucesso! Aguardando mensagens...');
-        } catch (e) {
-            console.error("❌ Falha ao restaurar sessão por Cookie.", e.message);
-            return;
-        }
-    } else {
-        if (!password) {
-            console.error("❌ ERRO: IG_PASSWORD não configurado (e nenhum Session ID foi fornecido).");
-            return;
-        }
-        // Tenta fazer o login
-        try {
-            console.log(`Tentando login no Instagram com a conta: ${username}...`);
-            await ig.account.login(username, password);
-            console.log('✅ Bot conectado ao Instagram com sucesso! Aguardando mensagens...');
-        } catch (e) {
-            console.error("❌ Falha ao fazer login no Instagram. Verifique se as credenciais estão corretas ou se o Instagram não bloqueou o acesso exigindo verificação por e-mail/SMS.", e.message);
-            return;
-        }
+            req.on('error', reject);
+            if (bodyStr) req.write(bodyStr);
+            req.end();
+        });
     }
 
-    // Memória para controlar o estado do usuário
-    const userStates = new Map();
-    const welcomeSent = new Map(); // Guarda quando a última saudação completa foi enviada
-    const lastMessageIdProcessed = new Set(); // Para não processar a mesma mensagem duas vezes
+    async function broadcastText(threadId, text) {
+        const clientContext = crypto.randomUUID();
+        const body = `text=${encodeURIComponent(text)}&client_context=${clientContext}`;
+        await fetchIg(`https://www.instagram.com/api/v1/direct_v2/threads/${threadId}/broadcast/text/`, 'POST', body);
+    }
     
-    const HUMAN_TIMEOUT_MS = 60 * 60 * 1000; // 1 hora de pausa
-    const MENU_TIMEOUT_MS = 10 * 60 * 1000; // 10 min de inatividade volta pro inicio
+    // Teste de Conexão
+    try {
+        await fetchIg('https://www.instagram.com/api/v1/direct_v2/inbox/?persistentBadging=true&folder=0&limit=10');
+        console.log('✅ Bot conectado ao Instagram (via Web API) com sucesso! Aguardando mensagens...');
+    } catch(e) {
+        console.error("❌ Falha crítica ao conectar Web API:", e.message);
+        return;
+    }
 
-    // Monitor de Inatividade (10 minutos)
+    const userStates = new Map();
+    const welcomeSent = new Map();
+    const lastMessageIdProcessed = new Set();
+    
+    const HUMAN_TIMEOUT_MS = 60 * 60 * 1000;
+    const MENU_TIMEOUT_MS = 10 * 60 * 1000;
+
     setInterval(async () => {
         const now = Date.now();
         for (const [threadId, userData] of userStates.entries()) {
             if (userData.state === 'HUMAN' || userData.state === 'START') continue;
-
             if (now - userData.lastActivity > MENU_TIMEOUT_MS) {
                 try {
-                    const thread = ig.entity.directThread(threadId);
-                    await thread.broadcastText("Poxa, parece que você deu uma saidinha! 🏃💨\n\nPor inatividade, vou encerrar nosso chat por agora. Se precisar de algo, é só mandar uma nova mensagem! ✨");
+                    await broadcastText(threadId, "Poxa, parece que você deu uma saidinha! 🏃💨\n\nPor inatividade, vou encerrar nosso chat por agora. Se precisar de algo, é só mandar uma nova mensagem! ✨");
                     userStates.delete(threadId);
                     welcomeSent.delete(threadId);
-                } catch (e) {
-                    // Silencioso se der erro no envio
-                }
+                } catch (e) {}
             }
         }
-    }, 60000); // Checa a cada 1 minuto
+    }, 60000);
 
     function fetchApi(path) {
         return new Promise((resolve, reject) => {
@@ -108,39 +92,37 @@ async function connectToInstagram() {
                 let data = '';
                 res.on('data', chunk => data += chunk);
                 res.on('end', () => {
-                    try { resolve(JSON.parse(data)); }
-                    catch (e) { reject(e); }
+                    try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
                 });
-            }).on('error', err => reject(err));
+            }).on('error', reject);
         });
     }
 
-    // POLLING: Lê as mensagens a cada 5 segundos
+    // POLLING: Lê mensagens a cada 5 segundos
     setInterval(async () => {
         try {
-            const inboxFeed = ig.feed.directInbox();
-            const threads = await inboxFeed.items();
+            const inbox = await fetchIg('https://www.instagram.com/api/v1/direct_v2/inbox/?persistentBadging=true&folder=0&limit=10');
+            const threads = inbox.inbox.threads;
 
             for (const thread of threads) {
-                // A primeira mensagem da thread é a mais recente
                 const lastMessage = thread.items[0];
+                if (!lastMessage) continue;
                 
-                // Se a mensagem for nossa (do próprio bot), ignoramos
-                if (lastMessage.user_id === ig.state.cookieUserId) continue;
-
-                // Se já processamos essa mensagem, pulamos
+                // Ignora se fomos nós que enviamos
+                if (String(lastMessage.user_id) === String(userId)) continue;
+                
                 if (lastMessageIdProcessed.has(lastMessage.item_id)) continue;
-                
-                // Marca como lida e processada
                 lastMessageIdProcessed.add(lastMessage.item_id);
-                // Opcional: Para evitar que a lista de ids fique gigante na memória
                 if (lastMessageIdProcessed.size > 1000) {
                     const firstItem = lastMessageIdProcessed.values().next().value;
                     lastMessageIdProcessed.delete(firstItem);
                 }
 
-                // Marca a thread como visualizada no app
-                await ig.entity.directThread(thread.thread_id).markItemSeen(lastMessage.item_id);
+                // Marca como lida
+                try {
+                    const clientContext = crypto.randomUUID();
+                    await fetchIg(`https://www.instagram.com/api/v1/direct_v2/threads/${thread.thread_id}/items/${lastMessage.item_id}/seen/`, 'POST', `client_context=${clientContext}`);
+                } catch(e) {}
 
                 const threadId = thread.thread_id;
                 
@@ -150,7 +132,6 @@ async function connectToInstagram() {
                 } else if (lastMessage.item_type === 'link') {
                     textMessage = lastMessage.link.text;
                 } else {
-                    // Ignora áudios, imagens, etc, no momento.
                     continue; 
                 }
 
@@ -158,17 +139,11 @@ async function connectToInstagram() {
                     const now = Date.now();
                     let userData = userStates.get(threadId) || { state: 'START', lastActivity: 0, lastMessageTime: 0 };
 
-                    // ANTI-SPAM
-                    if (now - userData.lastMessageTime < 1500) {
-                        continue;
-                    }
+                    if (now - userData.lastMessageTime < 1500) continue;
                     userData.lastMessageTime = now;
 
-                    const activeThread = ig.entity.directThread(threadId);
-
-                    // PROTEÇÃO DE TAMANHO
                     if (textMessage.length > 500) {
-                        await activeThread.broadcastText("Ops! Sua mensagem é muito longa. Por favor, tente algo mais curto! ✨");
+                        await broadcastText(threadId, "Ops! Sua mensagem é muito longa. Por favor, tente algo mais curto! ✨");
                         continue;
                     }
 
@@ -203,11 +178,6 @@ async function connectToInstagram() {
                     userData.lastActivity = now;
                     userStates.set(threadId, userData);
 
-                    // Simulando o "digitando..."
-                    await activeThread.broadcastAction('typing_on');
-                    await new Promise(r => setTimeout(r, 1500));
-                    await activeThread.broadcastAction('typing_off');
-
                     try {
                         if (/^[1-8]$/.test(textStr)) {
                             if (userData.state === 'AWAITING_REVIEW' && /^[1-5]$/.test(textStr)) {
@@ -223,7 +193,7 @@ async function connectToInstagram() {
                             const isRecent = (now - lastWelcome < 10 * 60 * 1000);
 
                             if (isRecent) {
-                                await activeThread.broadcastText(`Como posso te ajudar agora? ✨\n\n${menuOpcoes}`);
+                                await broadcastText(threadId, `Como posso te ajudar agora? ✨\n\n${menuOpcoes}`);
                             } else {
                                 welcomeSent.set(threadId, now);
                                 let statusText = apiInfo.is_open
@@ -234,7 +204,7 @@ async function connectToInstagram() {
                                     `${statusText.trim()}\n\n` +
                                     `Como posso te ajudar hoje? Digite o *número* da opção desejada:\n\n${menuOpcoes}`;
 
-                                await activeThread.broadcastText(msgMenu);
+                                await broadcastText(threadId, msgMenu);
                             }
                             userData.state = 'MENU';
                             userStates.set(threadId, userData);
@@ -243,7 +213,7 @@ async function connectToInstagram() {
                         else if (userData.state === 'AWAITING_FIDELITY_ID') {
                             if (textStr === '0') {
                                 userData.state = 'MENU';
-                                await activeThread.broadcastText(`Voltando ao menu principal... ✨\n\n${menuOpcoes}`);
+                                await broadcastText(threadId, `Voltando ao menu principal... ✨\n\n${menuOpcoes}`);
                                 userStates.set(threadId, userData);
                                 continue;
                             } else {
@@ -263,16 +233,16 @@ async function connectToInstagram() {
                                             `${motivacao}\n\n` +
                                             `*Deseja consultar outro ID?* Digite o ID abaixo.\n*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada):\n\n${menuOpcoes}`;
 
-                                        await activeThread.broadcastText(msgFid);
+                                        await broadcastText(threadId, msgFid);
                                         userData.state = 'AWAITING_FIDELITY_ID';
                                         userStates.set(threadId, userData);
                                         continue;
                                     } else {
-                                        await activeThread.broadcastText("❌ Não encontrei nenhum cartão com esse ID. Verifique se digitou corretamente e *tente novamente*, ou digite *0* para voltar ao menu principal. ✨");
+                                        await broadcastText(threadId, "❌ Não encontrei nenhum cartão com esse ID. Verifique se digitou corretamente e *tente novamente*, ou digite *0* para voltar ao menu principal. ✨");
                                         continue;
                                     }
                                 } catch (e) {
-                                    await activeThread.broadcastText("Houve um erro ao consultar o cartão. Tente novamente mais tarde.");
+                                    await broadcastText(threadId, "Houve um erro ao consultar o cartão. Tente novamente mais tarde.");
                                     continue;
                                 }
                             }
@@ -281,25 +251,25 @@ async function connectToInstagram() {
                             const choice = textStr.toUpperCase();
                             if (choice === '0') {
                                 userData.state = 'MENU';
-                                await activeThread.broadcastText(`Voltando ao menu principal... ✨\n\n${menuOpcoes}`);
+                                await broadcastText(threadId, `Voltando ao menu principal... ✨\n\n${menuOpcoes}`);
                                 userStates.set(threadId, userData);
                                 continue;
                             } else if (choice === 'A') {
-                                await activeThread.broadcastText("💳 *Formas de Pagamento:*\n\nAceitamos PIX (direto no site), Cartão de Crédito/Débito (via link ou na retirada) e Dinheiro.\n\n*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada)\n\n" + menuOpcoes);
+                                await broadcastText(threadId, "💳 *Formas de Pagamento:*\n\nAceitamos PIX (direto no site), Cartão de Crédito/Débito (via link ou na retirada) e Dinheiro.\n\n*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada)\n\n" + menuOpcoes);
                                 userData.state = 'MENU';
                             } else if (choice === 'B') {
-                                await activeThread.broadcastText("🎨 *Personalização:*\n\nApenas a *Caixinha da Felicidade Personalizada* permite a escolha de sabores. Você escolhe os 4 brigadeiros diretamente no nosso site!\n\n⏳ *Tempo de Preparo:* Por ser uma encomenda artesanal, seu pedido será preparado em alguns dias após a confirmação. O tempo exato depende dos dias em que estivermos abertos (confira sempre o status no topo da conversa!). ✨\n\n*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada)\n\n" + menuOpcoes);
+                                await broadcastText(threadId, "🎨 *Personalização:*\n\nApenas a *Caixinha da Felicidade Personalizada* permite a escolha de sabores. Você escolhe os 4 brigadeiros diretamente no nosso site!\n\n⏳ *Tempo de Preparo:* Por ser uma encomenda artesanal, seu pedido será preparado em alguns dias após a confirmação. O tempo exato depende dos dias em que estivermos abertos (confira sempre o status no topo da conversa!). ✨\n\n*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada)\n\n" + menuOpcoes);
                                 userData.state = 'MENU';
                             } else if (choice === 'C') {
-                                await activeThread.broadcastText("🛵 *Entrega e Retirada:*\n\nAtualmente focamos em retiradas no Centro de Biociências (CB). Para entregas em outros locais, consulte a disponibilidade com um atendente.\n\n*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada)\n\n" + menuOpcoes);
+                                await broadcastText(threadId, "🛵 *Entrega e Retirada:*\n\nAtualmente focamos em retiradas no Centro de Biociências (CB). Para entregas em outros locais, consulte a disponibilidade com um atendente.\n\n*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada)\n\n" + menuOpcoes);
                                 userData.state = 'MENU';
                             } else {
-                                await activeThread.broadcastText("Ops! Escolha A, B ou C, ou digite 0 para voltar ao menu principal.");
+                                await broadcastText(threadId, "Ops! Escolha A, B ou C, ou digite 0 para voltar ao menu principal.");
                                 continue;
                             }
                         }
                         else if (userData.state === 'AWAITING_REVIEW') {
-                            await activeThread.broadcastText("Recebemos sua avaliação! Muito obrigado pelo feedback, ele nos ajuda a melhorar sempre. 🥰\n\nTenha um mimoso dia! ✨");
+                            await broadcastText(threadId, "Recebemos sua avaliação! Muito obrigado pelo feedback, ele nos ajuda a melhorar sempre. 🥰\n\nTenha um mimoso dia! ✨");
                             userData.state = 'START';
                             welcomeSent.delete(threadId);
                             userStates.set(threadId, userData);
@@ -309,7 +279,7 @@ async function connectToInstagram() {
                             const orderIdStr = textStr.replace(/\D/g, '');
                             if (orderIdStr === '0' || orderIdStr === '') {
                                 userData.state = 'MENU';
-                                await activeThread.broadcastText(`Voltando ao menu principal... ✨\n\n${menuOpcoes}`);
+                                await broadcastText(threadId, `Voltando ao menu principal... ✨\n\n${menuOpcoes}`);
                                 userStates.set(threadId, userData);
                                 continue;
                             }
@@ -321,26 +291,23 @@ async function connectToInstagram() {
                                     const captionText = `📦 *Status do Pedido #${orderInfo.order_id}*\n\n` +
                                         `Status atual: *${orderInfo.status_display}*\n` +
                                         `Valor Total: R$ ${orderInfo.total.toFixed(2).replace('.', ',')}\n\n` +
-                                        `Para ver o comprovante detalhado acesse o WhatsApp ou o site!\n\n` +
+                                        `Para ver o comprovante acesse o WhatsApp ou Site!\n\n` +
                                         `*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada):\n\n${menuOpcoes}`;
                                         
-                                    // A API privada do Instagram não suporta envio fácil de imagens por URL como o WhatsApp, enviamos apenas texto
-                                    await activeThread.broadcastText(captionText);
-                                    
+                                    await broadcastText(threadId, captionText);
                                     userData.state = 'MENU';
                                     userStates.set(threadId, userData);
                                     continue;
                                 } else {
-                                    await activeThread.broadcastText(`❌ Não consegui encontrar o pedido #${orderId}. Verifique se o número está correto.\n(Digite 0 para voltar ao menu)`);
+                                    await broadcastText(threadId, `❌ Não consegui encontrar o pedido #${orderId}. Verifique se o número está correto.\n(Digite 0 para voltar ao menu)`);
                                     continue;
                                 }
                             } catch (e) {
-                                await activeThread.broadcastText(`❌ Houve um erro ao buscar o pedido #${orderId}.\n(Digite 0 para voltar ao menu)`);
+                                await broadcastText(threadId, `❌ Houve um erro ao buscar o pedido #${orderId}.\n(Digite 0 para voltar ao menu)`);
                                 continue;
                             }
                         }
 
-                        // BLOCO FINAL DO MENU: Processa 1 a 8
                         if (userData.state === 'MENU') {
                             if (textStr === '1') {
                                 const apiInfo = await fetchApi('/sistema/api/bot/info/');
@@ -349,28 +316,28 @@ async function connectToInstagram() {
                                     msgResposta += `\n\n⚠️ *Atenção:* ${apiInfo.notice || "Estamos fechados agora, mas você pode conferir o cardápio!"}`;
                                 }
                                 msgResposta += `\n\n*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada)\n\n${menuOpcoes}`;
-                                await activeThread.broadcastText(msgResposta);
+                                await broadcastText(threadId, msgResposta);
                             }
                             else if (textStr === '2') {
-                                await activeThread.broadcastText("Por favor, digite apenas o *número do seu pedido* (ex: 123) ou *0* para voltar ao menu:");
+                                await broadcastText(threadId, "Por favor, digite apenas o *número do seu pedido* (ex: 123) ou *0* para voltar ao menu:");
                                 userData.state = 'AWAITING_ORDER_ID';
                             }
                             else if (textStr === '3') {
-                                await activeThread.broadcastText("Buscando nosso cardápio completo... ⏳🧁");
+                                await broadcastText(threadId, "Buscando nosso cardápio completo... ⏳🧁");
                                 try {
                                     const prodData = await fetchApi(`/sistema/api/bot/products/all/`);
                                     if (prodData.products && prodData.products.length > 0) {
                                         for (let p of prodData.products) {
                                             const caption = `🍫 *${p.name}*\n💰 R$ ${p.price.toFixed(2).replace('.', ',')}\n📦 Estoque: ${p.stock} unidades\n\n👉 *Ver no site:* ${p.url}`;
-                                            await activeThread.broadcastText(caption);
+                                            await broadcastText(threadId, caption);
                                             await new Promise(r => setTimeout(r, 800));
                                         }
-                                        await activeThread.broadcastText(`Acima estão os nossos mimos disponíveis! ✨\n\n*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada)\n\n${menuOpcoes}`);
+                                        await broadcastText(threadId, `Acima estão os nossos mimos disponíveis! ✨\n\n*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada)\n\n${menuOpcoes}`);
                                     } else {
-                                        await activeThread.broadcastText(`No momento não temos produtos disponíveis no catálogo online.\n\n*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada)\n\n${menuOpcoes}`);
+                                        await broadcastText(threadId, `No momento não temos produtos disponíveis no catálogo online.\n\n*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada)\n\n${menuOpcoes}`);
                                     }
                                 } catch (e) {
-                                    await activeThread.broadcastText("Houve um erro ao carregar o catálogo. Tente novamente mais tarde.");
+                                    await broadcastText(threadId, "Houve um erro ao carregar o catálogo. Tente novamente mais tarde.");
                                 }
                             }
                             else if (textStr === '4') {
@@ -380,7 +347,7 @@ async function connectToInstagram() {
                                     msgResposta += `\n*Detalhes:*\n${apiInfo.details}`;
                                 }
                                 msgResposta += `\n\n*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada)\n\n${menuOpcoes}`;
-                                await activeThread.broadcastText(msgResposta);
+                                await broadcastText(threadId, msgResposta);
                             }
                             else if (textStr === '5') {
                                 const faqMsg = `❓ *Dúvidas Frequentes:*\n\n` +
@@ -388,23 +355,23 @@ async function connectToInstagram() {
                                     `*B* - Como personalizar meu pedido?\n` +
                                     `*C* - Como funciona a retirada?\n\n` +
                                     `*0* - Voltar ao menu principal`;
-                                await activeThread.broadcastText(faqMsg);
+                                await broadcastText(threadId, faqMsg);
                                 userData.state = 'AWAITING_FAQ';
                             }
                             else if (textStr === '6') {
-                                await activeThread.broadcastText("🧁 *Cartão Fidelidade YasMimos*\n\nA cada *Caixinha da Felicidade* você ganha 1 selo! (Independente de ser personalizada ou não). 🎁\n\nAo completar *7 selos*, você ganha uma recompensa deliciosa!\n\nPara consultar seus pontos, por favor, digite o *ID do seu cartão* (Ex: Tassia) ou digite *0* para voltar ao menu:");
+                                await broadcastText(threadId, "🧁 *Cartão Fidelidade YasMimos*\n\nA cada *Caixinha da Felicidade* você ganha 1 selo! (Independente de ser personalizada ou não). 🎁\n\nAo completar *7 selos*, você ganha uma recompensa deliciosa!\n\nPara consultar seus pontos, por favor, digite o *ID do seu cartão* (Ex: Tassia) ou digite *0* para voltar ao menu:");
                                 userData.state = 'AWAITING_FIDELITY_ID';
                             }
                             else if (textStr === '7') {
-                                await activeThread.broadcastText("Certo! O seu atendimento foi transferido para um humano. 👩‍💼\n\nNossa equipe te responderá o mais rápido possível por aqui mesmo.\n\n_(Para encerrar o atendimento humano e voltar pro menu automático, digite *0*)_");
+                                await broadcastText(threadId, "Certo! O seu atendimento foi transferido para um humano. 👩‍💼\n\nNossa equipe te responderá o mais rápido possível por aqui mesmo.\n\n_(Para encerrar o atendimento humano e voltar pro menu automático, digite *0*)_");
                                 userData.state = 'HUMAN';
                             }
                             else if (textStr === '8') {
-                                await activeThread.broadcastText("Obrigado por entrar em contato com a *YasMimos*! 🧁✨\n\nAntes de ir, como você avalia nosso atendimento hoje?\n\n*5* - Excelente ⭐\n*4* - Muito Bom\n*3* - Bom\n*2* - Regular\n*1* - Ruim");
+                                await broadcastText(threadId, "Obrigado por entrar em contato com a *YasMimos*! 🧁✨\n\nAntes de ir, como você avalia nosso atendimento hoje?\n\n*5* - Excelente ⭐\n*4* - Muito Bom\n*3* - Bom\n*2* - Regular\n*1* - Ruim");
                                 userData.state = 'AWAITING_REVIEW';
                             }
                             else {
-                                await activeThread.broadcastText(`Ops! Não entendi essa opção... 🤔\n\nPor favor, escolha uma das opções abaixo (1 a 8):\n\n${menuOpcoes}`);
+                                await broadcastText(threadId, `Ops! Não entendi essa opção... 🤔\n\nPor favor, escolha uma das opções abaixo (1 a 8):\n\n${menuOpcoes}`);
                             }
                         }
 
@@ -418,7 +385,7 @@ async function connectToInstagram() {
         } catch (error) {
             console.error("Erro ao verificar mensagens no Instagram:", error.message);
         }
-    }, 5000); // Polling a cada 5 segundos
+    }, 5000);
 }
 
 connectToInstagram();
