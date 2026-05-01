@@ -4,6 +4,7 @@ from django.conf import settings
 class StoreSettings(models.Model):
     is_open = models.BooleanField(default=True)
     about_photo = models.ImageField(upload_to='about/', blank=True, null=True)
+    developer_photo = models.ImageField(upload_to='about/', blank=True, null=True, verbose_name="Foto do Desenvolvedor")
     delivery_notice = models.TextField(default="Não realizamos entregas no momento. Apenas retirada.", verbose_name="Aviso de Entrega / Localização")
     delivery_details = models.TextField(blank=True, null=True, verbose_name="Detalhes da Localização")
     

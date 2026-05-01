@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/update-notice/', views.update_delivery_notice, name='update_notice'),
     path('api/status/update_gps/', views.update_gps_location, name='update_gps'),
     path('update-about-photo/', views.update_about_photo, name='update_about_photo'),
+    path('update-developer-photo/', views.update_developer_photo, name='update_developer_photo'),
     path('sobre/', views.about_view, name='about'),
     path('configuracoes/', views.settings_view, name='settings'),
 

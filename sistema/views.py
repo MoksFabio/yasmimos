@@ -153,6 +153,11 @@ def update_about_photo(request):
     if request.method == 'POST' and request.FILES.get('about_photo'):
         settings = StoreSettings.get_settings()
         settings.about_photo = request.FILES['about_photo']
+@user_passes_test(lambda u: u.is_superuser)
+def update_developer_photo(request):
+    if request.method == 'POST' and request.FILES.get('developer_photo'):
+        settings = StoreSettings.get_settings()
+        settings.developer_photo = request.FILES['developer_photo']
         settings.save()
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
