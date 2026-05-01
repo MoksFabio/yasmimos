@@ -85,14 +85,31 @@ def main():
         # Instala dependências do bot se não existirem
         bot_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "robo_whatsapp")
         if not os.path.exists(os.path.join(bot_dir, "node_modules")):
-            print("Instalando dependencias do bot...")
+            print("Instalando dependencias do bot do WhatsApp...")
             subprocess.run(["npm", "install"], cwd=bot_dir)
             
         subprocess.Popen(["node", "index.js"], 
                         cwd=bot_dir)
         print("Bot do WhatsApp iniciado.")
     except Exception as e:
-        print(f"Aviso: Nao foi possivel iniciar o bot. Detalhes: {e}")
+        print(f"Aviso: Nao foi possivel iniciar o bot do WhatsApp. Detalhes: {e}")
+
+    # 5.1 INICIAR BOT DO INSTAGRAM (Segundo Plano)
+    try:
+        if os.environ.get("IG_USERNAME") and os.environ.get("IG_PASSWORD"):
+            ig_bot_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "robo_instagram")
+            if os.path.exists(ig_bot_dir):
+                if not os.path.exists(os.path.join(ig_bot_dir, "node_modules")):
+                    print("Instalando dependencias do bot do Instagram...")
+                    subprocess.run(["npm", "install"], cwd=ig_bot_dir)
+                    
+                subprocess.Popen(["node", "index.js"], 
+                                cwd=ig_bot_dir)
+                print("Bot do Instagram iniciado.")
+        else:
+            print("Bot do Instagram pulado: Credenciais IG_USERNAME ou IG_PASSWORD ausentes no ambiente.")
+    except Exception as e:
+        print(f"Aviso: Nao foi possivel iniciar o bot do Instagram. Detalhes: {e}")
 
     # 6. INICIAR SERVIDOR DAPHNE
     print("Iniciando servidor...")
