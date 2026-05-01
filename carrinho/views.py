@@ -9,6 +9,8 @@ def cart_add(request, product_id):
     carrinho = Cart(request)
     product = get_object_or_404(Product, id=product_id)
     quantity = int(request.POST.get('quantity', 1))
+    if quantity < 1:
+        quantity = 1
     import json
     metadata_raw = request.POST.get('metadata')
     metadata = None

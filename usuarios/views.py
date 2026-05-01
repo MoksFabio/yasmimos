@@ -379,7 +379,7 @@ def delete_user_api(request, user_id):
     user.delete()
     return JsonResponse({'status': 'success'})
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def user_list_api(request):
     from django.utils import timezone
     from datetime import timedelta
@@ -398,7 +398,7 @@ def user_list_api(request):
     users = User.objects.annotate(is_assinante=Exists(clube_items)).order_by('-date_joined')
     return render(request, 'usuarios/parcial_lista_usuarios.html', {'users': users})
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def admin_list_api(request):
     users = User.objects.all().order_by('-date_joined')
     return render(request, 'usuarios/parcial_lista_admins.html', {'users': users})
