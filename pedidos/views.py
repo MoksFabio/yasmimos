@@ -63,8 +63,13 @@ def order_detail(request, order_id):
     except Order.DoesNotExist:
         return render(request, 'pedidos/pedido_nao_encontrado.html')
     # Ensure current user owns the order, or is admin
-    if request.user != order.user and not request.user.is_superuser:
-        return redirect('usuarios:profile') # Or 403 Forbidden
+    if not request.user.is_superuser:
+        if order.user:
+            if request.user != order.user:
+                return redirect('usuarios:profile')
+        else:
+            if request.session.get('guest_order_id') != order.id:
+                return redirect('usuarios:profile')
     
     return render(request, 'pedidos/detalhe.html', {'order': order})
 
@@ -133,7 +138,9 @@ def order_create(request):
         for item in cart:
             OrderItem.objects.create(order=order, product=item['product'], price=item['price'], quantity=item['quantity'], metadata=item.get('metadata'))
             
-
+        # Securing Guest Order Access
+        if not request.user.is_authenticated:
+            request.session['guest_order_id'] = order.id
 
         # Notify Push (Web)
         try:
@@ -162,8 +169,13 @@ def order_created(request, order_id):
     except Order.DoesNotExist:
         return render(request, 'pedidos/pedido_nao_encontrado.html')
         
-    if order.user and request.user != order.user and not request.user.is_superuser:
-        return render(request, 'pedidos/pedido_nao_encontrado.html')
+    if not request.user.is_superuser:
+        if order.user:
+            if request.user != order.user:
+                return render(request, 'pedidos/pedido_nao_encontrado.html')
+        else:
+            if request.session.get('guest_order_id') != order.id:
+                return render(request, 'pedidos/pedido_nao_encontrado.html')
     
     try:
         # Mercado Pago Integration
@@ -349,8 +361,13 @@ def order_created(request, order_id):
 def check_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     
-    if order.user and request.user != order.user and not request.user.is_superuser:
-        return JsonResponse({'error': 'Not found'}, status=404)
+    if not request.user.is_superuser:
+        if order.user:
+            if request.user != order.user:
+                return JsonResponse({'error': 'Not found'}, status=404)
+        else:
+            if request.session.get('guest_order_id') != order.id:
+                return JsonResponse({'error': 'Not found'}, status=404)
     
     # Active Polling: If pending, verify directly with MP (Bypasses delayed Webhooks)
     if order.status == 'pending' and order.mercado_pago_id:
@@ -396,10 +413,16 @@ from django.http import HttpResponse
 
 @require_GET
 def order_receipt_image(request, order_id):
+    import os
+    bot_token = request.GET.get('bot_token')
+    valid_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', os.environ.get('TELEGRAM_BOT_TOKEN', ''))
+    if not request.user.is_superuser and (not bot_token or bot_token != valid_token):
+        return HttpResponse("Acesso negado", status=403)
+
     order = get_object_or_404(Order, id=order_id)
     
     # URL interna especial que renderiza o HTML já formatado para print
-    url = request.build_absolute_uri(f'/pedidos/receipt-html/{order.id}/')
+    url = request.build_absolute_uri(f'/pedidos/receipt-html/{order.id}/?bot_token={bot_token}')
     
     try:
         with sync_playwright() as p:
@@ -424,6 +447,13 @@ def order_receipt_image(request, order_id):
 
 @require_GET
 def receipt_html_for_bot(request, order_id):
+    import os
+    bot_token = request.GET.get('bot_token')
+    valid_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', os.environ.get('TELEGRAM_BOT_TOKEN', ''))
+    
+    if not request.user.is_superuser and (not bot_token or bot_token != valid_token):
+        return HttpResponse("Acesso negado", status=403)
+
     order = get_object_or_404(Order, id=order_id)
     # Renderiza o HTML dizendo que é para o bot (oculta barras, força paisagem)
     return render(request, 'pedidos/detalhe.html', {'order': order, 'is_bot_print': True})
@@ -717,7 +747,7 @@ def mp_webhook(request):
             return HttpResponse(status=200) # Always 200 to MP
     return HttpResponse(status=200)
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def global_order_search(request):
     query = request.GET.get('q', '').strip()
     sort_by = request.GET.get('sort', 'recent')

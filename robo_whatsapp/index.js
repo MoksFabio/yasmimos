@@ -275,8 +275,9 @@ async function connectToWhatsApp() {
                                 `*Posso te ajudar com algo mais?* ✨ (Digite o número da opção desejada):\n\n${menuOpcoes}`;
                                 
                             try {
+                                const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
                                 await sock.sendMessage(remoteJid, {
-                                    image: { url: `https://www.yasmimos.com.br/pedidos/receipt-image/${orderInfo.order_id}/` },
+                                    image: { url: `https://www.yasmimos.com.br/pedidos/receipt-image/${orderInfo.order_id}/?bot_token=${botToken}` },
                                     caption: captionText
                                 });
                             } catch (imgErr) {
