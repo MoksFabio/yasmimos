@@ -86,7 +86,7 @@ O projeto respeita o padrão **MTV (Model-Template-View)** particionado em apps 
 *   `produtos/`: Motor do catálogo, controle de estoque e avaliações.
 *   `carrinho/` & `pedidos/`: Lógica de checkout, carrinho de sessão e histórico.
 *   `usuarios/` & `fidelidade/`: Gestão de contas, autenticação segura e gamificação.
-*   `robo_whatsapp/`: A interface do Bot YasMimos e o motor de renderização de recibos.
+*   `robo_whatsapp/`: A interface do Bot Suporte YasMimos e o motor de renderização de recibos.
 *   `chat/`: O barramento de comunicação WebSocket.
 *   `static/`: Contém a nova arquitetura modular de CSS e JS isolada por páginas.
 
