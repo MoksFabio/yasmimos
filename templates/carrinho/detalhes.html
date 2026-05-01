@@ -1,49 +1,261 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Carrinho{% endblock %}
 {% block content %}
-<h1 style="font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 30px;">Seu Carrinho</h1>
+<link rel="stylesheet" href="{% static 'css/carrinho/detalhes.css' %}">
+
 {% if cart|length > 0 %}
-    <div style="overflow-x: auto;">
-        <table class="cart-table">
-            <thead>
-                <tr>
-                    <th>Produto</th>
-                    <th>Qtd</th>
-                    <th>Preço Unit.</th>
-                    <th>Total</th>
-                    <th>Ação</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in cart %}
-                    {% with product=item.product %}
-                    <tr>
-                        <td>{{ product.name }}</td>
-                        <td>{{ item.quantity }}</td>
-                        <td>R$ {{ item.price }}</td>
-                        <td>R$ {{ item.total_price }}</td>
-                        <td>
-                            <form action="{% url 'cart:cart_remove' product.id %}" method="post">
+<div class="cart-container">
+    
+
+
+    <!-- Products List -->
+    <div class="cart-section" style="margin-bottom: 10px;">
+        {% for item in cart %}
+        {% with product=item.product %}
+        <div class="cart-item" data-item-key="{{ item.item_key }}">
+            {% if product.image %}
+            <img class="cart-item-img" src="{{ product.image.url }}" alt="{{ product.name }}">
+            {% else %}
+            <div class="cart-item-img" style="background:var(--input-bg); display:flex; align-items:center; justify-content:center; color:#ccc;">
+                <i class="fas fa-image fa-2x"></i>
+            </div>
+            {% endif %}
+            
+            <div class="cart-item-details">
+                <div>
+                    <h3 class="cart-item-title">{{ product.name }}</h3>
+                    {% if item.metadata and item.metadata.description %}
+                    <span class="cart-item-desc">{{ item.metadata.description }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="cart-item-bottom">
+                    <div class="cart-item-price item-total-price">R$ {{ item.total_price }}</div>
+                    
+                    <div style="display: flex; align-items: center;">
+                        <form action="{% url 'carrinho:cart_remove' item.item_key %}" method="post" class="ajax-cart-remove" style="margin:0;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-delete-item"><i class="fas fa-trash-alt"></i></button>
+                        </form>
+                        
+                        <div class="qty-controls" style="margin-left: 15px;">
+                            <form action="{% url 'carrinho:cart_update' item.item_key %}" method="post" class="ajax-cart-form" style="margin:0;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn-remove" style="background: none; border: none; color: red; cursor: pointer;"><i class="fas fa-trash"></i></button>
+                                <input type="hidden" name="action" value="decrease">
+                                <button type="submit" class="qty-btn">-</button>
                             </form>
-                        </td>
-                    </tr>
-                    {% endwith %}
-                {% endfor %}
-            </tbody>
-        </table>
+                            <span class="quantity-display qty-input">{{ item.quantity }}</span>
+                            {% if not product.category or 'clube' not in product.category.name|lower %}
+                            <form action="{% url 'carrinho:cart_update' item.item_key %}" method="post" class="ajax-cart-form" style="margin:0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="increase">
+                                <button type="submit" class="qty-btn">+</button>
+                            </form>
+                            {% else %}
+                            <button class="qty-btn" disabled style="opacity: 0.5;">+</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
     </div>
-    <div class="cart-total">
-        Total: R$ {{ cart.get_total_price }}
+
+    <!-- Cupom e Gorjeta -->
+    <div class="cart-section">
+        <form action="{% url 'carrinho:coupon_apply' %}" method="post" id="coupon-form" >
+            {% csrf_token %}
+            <div class="action-row">
+                <div class="action-label">
+                    <i class="fas fa-ticket-alt"></i> Cupom YasMimos
+                </div>
+                <div class="action-value">
+                    <input type="text" name="code" placeholder="Insira o código" class="action-input" value="{% if carrinho.coupon %}{{ carrinho.coupon.code }}{% endif %}">
+                    <button type="submit" class="action-btn">Aplicar</button>
+                </div>
+            </div>
+        </form>
+        
+        <form action="{% url 'carrinho:set_tip' %}" method="post" id="tip-form">
+            {% csrf_token %}
+            <div class="action-row" style="border-bottom:none;">
+                <div class="action-label">
+                    <i class="fas fa-hand-holding-heart"></i> Gorjeta Equipe (R$)
+                </div>
+                <div class="action-value">
+                    <input type="number" name="tip_amount" id="tip_amount" step="0.01" min="0" placeholder="Insira o valor" class="action-input" value="{% if carrinho.get_tip > 0 %}{{ carrinho.get_tip|stringformat:'.2f' }}{% endif %}">
+                    <button type="submit" class="action-btn">Aplicar</button>
+                    <button type="button" id="remove-tip-btn" class="{% if not carrinho.get_tip > 0 %}hidden-el{% endif %}" style="background:none; border:none; color:var(--error-color); cursor:pointer; padding:5px;"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+        </form>
+        <div id="message-area" style="font-size: 0.85rem; text-align: right; min-height: 20px;">
+        </div>
     </div>
-    <div class="cart-actions" style="display: flex; gap: 20px; justify-content: flex-end; flex-wrap: wrap;">
-        <a href="{% url 'products:product_list' %}" class="btn" style="background-color: #ccc; width: auto;">Continuar Comprando</a>
-        <a href="{% url 'orders:order_create' %}" class="btn checkout-btn-action" data-original-text="Finalizar Pedido" style="width: auto;">Finalizar Pedido</a>
+
+    <!-- Cross Selling -->
+    {% if suggested_products %}
+    <div class="cart-section">
+        <div class="cart-section-title">
+            <i class="fas fa-star" style="color: var(--accent-color);"></i> Aproveite e leve também
+        </div>
+        <div class="cs-scroll">
+            {% for product in suggested_products %}
+            <div class="cs-card">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" class="cs-img" alt="{{ product.name }}">
+                {% else %}
+                <div class="cs-img" style="background:var(--input-bg); display:flex; align-items:center; justify-content:center; color:#ccc;">
+                    <i class="fas fa-image"></i>
+                </div>
+                {% endif %}
+                <div class="cs-title">{{ product.name }}</div>
+                <div class="cs-price">R$ {{ product.price|floatformat:2 }}</div>
+                <form action="{% url 'carrinho:cart_add' product.id %}" method="post" class="ajax-add-suggestion" style="margin: 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" class="cs-btn">+ Add</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
     </div>
+    {% endif %}
+
+    <!-- Checkout Form (Método de Pagto, etc) -->
+    <form id="checkout-form" action="{% url 'pedidos:order_create' %}" method="post">
+        {% csrf_token %}
+        
+        <div class="cart-section">
+            <div class="cart-section-title"><i class="fas fa-credit-card" style="color: var(--accent-color);"></i> Método de Pagamento</div>
+            
+            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; cursor: pointer; padding: 12px; border: 1px solid #f0f0f0; border-radius: 8px;">
+                <input type="radio" name="payment_method" value="pix" checked onchange="togglePaymentInfo('pix')">
+                <i class="fa-brands fa-pix" style="color: #32BCAD; font-size: 1.4rem;"></i>
+                <span><strong>PIX</strong></span>
+            </label>
+
+            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; cursor: pointer; padding: 12px; border: 1px solid #f0f0f0; border-radius: 8px;">
+                <input type="radio" name="payment_method" value="cash" onchange="togglePaymentInfo('cash')">
+                <i class="fas fa-money-bill-wave" style="color: #2e7d32; font-size: 1.2rem;"></i>
+                <span><strong>Dinheiro</strong></span>
+            </label>
+
+            {% if user.is_superuser %}
+            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; cursor: pointer; padding: 12px; border: 1px solid var(--input-border); border-radius: 8px; background-color: var(--input-bg);">
+                <input type="radio" name="payment_method" value="point" onchange="togglePaymentInfo('point')">
+                <i class="fas fa-mobile-alt" style="color: #ffc107; font-size: 1.2rem;"></i>
+                <span><strong>Maquininha Point</strong></span>
+            </label>
+            {% endif %}
+
+            <div id="info-pix" style="margin-top: 5px; font-size: 0.85em; color: #757575;">Você receberá um QR Code para pagamento instantâneo.</div>
+            <div id="info-point" style="display: none; margin-top: 5px; font-size: 0.85em; color: #757575;">O App do Mercado Pago será aberto neste dispositivo para cobrar o valor na Maquininha.</div>
+            <div id="info-cash" style="display: none; margin-top: 5px; font-size: 0.85em; color: #757575;">Pagamento em dinheiro no momento da entrega ou retirada.</div>
+        </div>
+
+        {% if user.is_superuser %}
+        <div class="cart-section">
+            <div class="cart-section-title"><i class="fas fa-user-cog" style="color: var(--accent-color);"></i> Este pedido é para:</div>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="radio" name="order_type" value="self" onclick="toggleClientInfo(false)">
+                    <strong>Para Mim (Pessoal)</strong>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="radio" name="order_type" value="client" checked onclick="toggleClientInfo(true)">
+                    <strong>Para Cliente (Venda)</strong>
+                </label>
+            </div>
+
+            <div id="superuser-client-info" style="display: block; border-top: 1px solid #eee; padding-top: 15px;">
+                <h4 style="margin-top: 0; margin-bottom: 15px; font-size: 0.95rem; color: var(--text-color);"><i class="fas fa-user-edit"></i> Dados do Cliente</h4>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:500; font-size:0.85rem; color:#555;">Vincular a uma Conta (Opcional)</label>
+                    <select name="client_user_id" id="client_user_id" style="width:100%; padding:10px; border:1px solid var(--input-border); border-radius:5px; outline:none; font-family:var(--font-sans); background: var(--input-bg); color: var(--text-color);" onchange="handleClientSelect(this)">
+                        <option value="">-- Sem Conta (Apenas Nome) --</option>
+                        {% for client in clients %}
+                        <option value="{{ client.id }}" data-name="{{ client.first_name }} {{ client.last_name }}" data-username="{{ client.username }}" data-phone="{{ client.phone_number|default:'' }}">
+                            {{ client.username }} {% if client.first_name %}- {{ client.first_name }} {{ client.last_name }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:500; font-size:0.85rem; color:#555;">Nome do Cliente</label>
+                    <input type="text" name="name" id="client_name" placeholder="Ex: Maria Silva" style="width:100%; padding:10px; border:1px solid var(--input-border); border-radius:5px; outline:none; font-family:var(--font-sans); background: var(--input-bg); color: var(--text-color);">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:5px; font-weight:500; font-size:0.85rem; color:#555;">WhatsApp do Cliente</label>
+                    <input type="tel" name="phone" id="client_phone" placeholder="Ex: 81 99999-9999" style="width:100%; padding:10px; border:1px solid var(--input-border); border-radius:5px; outline:none; font-family:var(--font-sans); background: var(--input-bg); color: var(--text-color);">
+                </div>
+            </div>
+        </div>
+        {% elif not user.is_authenticated %}
+        <div class="cart-section">
+            <div class="cart-section-title"><i class="fas fa-user-circle" style="color: var(--accent-color);"></i> Seus Dados (Opcional)</div>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:500; font-size:0.85rem; color:#555;">Nome Completo</label>
+                <input type="text" name="name" id="guest_name" placeholder="Ex: Maria Silva" style="width:100%; padding:10px; border:1px solid var(--input-border); border-radius:5px; outline:none; font-family:var(--font-sans); background: var(--input-bg); color: var(--text-color);">
+            </div>
+            <div>
+                <label style="display:block; margin-bottom:5px; font-weight:500; font-size:0.85rem; color:#555;">WhatsApp (com DDD)</label>
+                <input type="tel" name="phone" id="guest_phone" placeholder="Ex: 81 99999-9999" style="width:100%; padding:10px; border:1px solid var(--input-border); border-radius:5px; outline:none; font-family:var(--font-sans); background: var(--input-bg); color: var(--text-color);">
+            </div>
+        </div>
+        {% endif %}
+    </form>
+    
+    <!-- Payment Details / Summary Box -->
+    <div class="cart-section">
+        <div class="cart-section-title">Detalhes do Pagamento</div>
+        <div class="payment-details">
+            <div class="payment-row">
+                <span>Total dos Produtos</span>
+                <span>R$ <span id="subtotal-amount">{{ carrinho.get_total_price_display }}</span></span>
+            </div>
+            
+            <div class="payment-row {% if not carrinho.coupon %}hidden-el{% endif %}" id="discount-row" style="color: var(--success-color);">
+                <span>Cupom de desconto{% if carrinho.coupon %} ({{ carrinho.coupon.code }}){% endif %}</span>
+                <span>- R$ <span id="discount-amount">{% if carrinho.coupon %}{{ carrinho.get_discount|floatformat:2 }}{% else %}0,00{% endif %}</span></span>
+            </div>
+            
+            <div class="payment-row {% if not carrinho.get_tip > 0 %}hidden-el{% endif %}" id="tip-row">
+                <span>Gorjeta da equipe</span>
+                <span>+ R$ <span id="tip-amount">{{ carrinho.get_tip|floatformat:2 }}</span></span>
+            </div>
+            
+            <div class="payment-row total">
+                <span>Pagamento Total</span>
+                <span style="color: var(--accent-color);">R$ <span id="payment-total-amount">{{ carrinho.get_total_price_after_discount|floatformat:2 }}</span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sticky Bottom Bar -->
+    <div class="sticky-bottom-bar">
+        <div class="bottom-total">
+            <div class="bottom-total-label">Total</div>
+            <div class="bottom-total-value">R$ <span id="bottom-total-amount">{{ carrinho.get_total_price_after_discount|floatformat:2 }}</span></div>
+        </div>
+        <button type="submit" form="checkout-form" class="btn-checkout">Confirmar ({{cart|length}})</button>
+    </div>
+
+</div>
 {% else %}
-    <p>Seu carrinho está vazio.</p>
-    <a href="{% url 'products:product_list' %}" class="btn" style="width: auto; margin-top: 20px;">Ver Produtos</a>
+<div class="empty-cart">
+    <i class="fas fa-shopping-bag"></i>
+    <h2 style="color: var(--text-color); margin-bottom: 15px; font-size: 1.3rem;">Seu carrinho está vazio</h2>
+    <p style="color: #888; margin-bottom: 25px;">Adicione nossos deliciosos mimos ao seu carrinho.</p>
+    <a href="{% url 'produtos:lista' %}" style="background: var(--accent-color); color: white; padding: 12px 30px; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-block;">Ver Produtos</a>
+</div>
 {% endif %}
+
+<script src="{% static 'js/carrinho/detalhes.js' %}"></script>
+
 {% endblock %}

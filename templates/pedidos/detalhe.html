@@ -1,0 +1,1109 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Pedido #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="receipt-page-wrapper">
+
+    <!-- The Premium Receipt Card -->
+    <div class="premium-receipt-card {% if is_bot_print %}exporting-image{% endif %}">
+
+        <!-- Decorative Top Wave -->
+        <div class="receipt-wave-top">
+            <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+                <path fill="#ffffff" fill-opacity="0.2"
+                    d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,128C960,139,1056,181,1152,186.7C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z">
+                </path>
+            </svg>
+        </div>
+
+        <!-- Receipt Header -->
+        <div class="receipt-header">
+            <div class="brand-logo-container">
+                <img src="{% static 'img/logo.png' %}" alt="YasMimos" class="brand-logo-img">
+            </div>
+            <h1 class="brand-title">YasMimos</h1>
+            <p class="brand-subtitle">Doces Artesanais</p>
+
+            <div class="order-id-badge">
+                Pedido #{{ order.id }}
+            </div>
+        </div>
+
+        <!-- Div to wrap ALL right-side content for Flexbox Print Layout -->
+        <div class="right-column-container">
+            <!-- Main Info Grid -->
+            <div class="receipt-info-grid">
+                <div class="info-item">
+                    <div class="info-icon"><i class="fas fa-user"></i></div>
+                    <div class="info-content">
+                        <span class="label">Cliente</span>
+                        <span class="value">
+                            {% if order.user %}
+                            {{ order.user.first_name|default:order.user.username }}
+                            {% elif order.guest_name and order.guest_name != 'Visitante' %}
+                            {{ order.guest_name }}
+                            {% else %}
+                            Visitante
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="info-content">
+                        <span class="label">Data</span>
+                        <span class="value">{{ order.created|date:"d/m/Y - H:i" }}</span>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="info-content">
+                        <span class="label">Status</span>
+                        <span class="value status-badge" data-status="{{ order.status }}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-icon"><i class="fas fa-wallet"></i></div>
+                    <div class="info-content">
+                        <span class="label">Pagamento</span>
+                        <span class="value payment-method">
+                            {% if 'pix' in order.payment_method %}
+                            <i class="fa-brands fa-pix"></i> Pix
+                            {% elif 'cash' in order.payment_method %}
+                            <i class="fas fa-money-bill-wave"></i> Dinheiro
+                            {% elif 'point' in order.payment_method %}
+                            <i class="fas fa-mobile-alt"></i> Maquineta
+                            {% else %}
+                            {{ order.payment_method }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items List -->
+            <div class="receipt-items-container">
+                <h3 class="items-header">Resumo do Pedido</h3>
+                <div class="items-list">
+                    {% for item in order.items.all %}
+                    <div class="item-row">
+                        <div class="item-details">
+                            <span class="item-qty">{{ item.quantity }}x</span>
+                            <div class="item-name-group">
+                                <span class="item-name">{{ item.product.name }}</span>
+                                {% if item.metadata and item.metadata.description %}
+                                <div class="item-customization"
+                                    style="font-size: 0.75rem; color: #777; margin-left: 35px; font-style: italic;">
+                                    {{ item.metadata.description }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="item-price">R$ {{ item.get_cost }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if order.observations %}
+                <div
+                    style="margin-top: 20px; padding: 15px; background: rgba(255, 193, 7, 0.1); border-radius: 12px; border-left: 4px solid #ffc107;">
+                    <h4 style="margin: 0 0 5px 0; font-size: 0.8rem; color: #ffc107; text-transform: uppercase;">Sua
+                        Observação:</h4>
+                    <p style="margin: 0; font-size: 0.9rem; color: var(--rec-text-dark); font-style: italic;">"{{ order.observations }}"
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Totals Section -->
+            <div class="receipt-totals">
+                {% if order.discount > 0 %}
+                <div class="total-row subtotal">
+                    <span>Subtotal</span>
+                    <span>R$ {{ order.get_subtotal }}</span>
+                </div>
+                <div class="total-row discount">
+                    <span>Desconto {% if order.coupon %}<small>({{ order.coupon.code }})</small>{% endif %}</span>
+                    <span>- R$ {{ order.discount }}</span>
+                </div>
+                {% endif %}
+
+                {% if order.tip_amount > 0 %}
+                <div class="total-row tip">
+                    <span>Gorjeta</span>
+                    <span>+ R$ {{ order.tip_amount }}</span>
+                </div>
+                {% endif %}
+
+                <div class="total-row final-total">
+                    <span>Total Confirmado</span>
+                    <span>R$ {{ order.total_amount }}</span>
+                </div>
+            </div>
+
+            <!-- Footer / Thank You -->
+            <div class="receipt-footer">
+                <div class="thank-you-message">
+                    "Obrigada por escolher a YasMimos! <br> Cada detalhe foi feito com muito amor para você."
+                </div>
+
+                <div class="social-connect">
+                    <!-- Web View: Icons Only -->
+                    <div class="social-web-only">
+                        <a href="https://instagram.com/yasmimo_s" target="_blank"><i class="fab fa-instagram"></i></a>
+                        <a href="https://wa.me/5581983964906" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+
+                    <!-- Print View: Text Information -->
+                    <div class="social-print-only" style="display: none;">
+                        <div class="print-social-item"><i class="fab fa-instagram"></i> @yasmimo_s</div>
+                        <div class="print-social-item"><i class="fab fa-whatsapp"></i> (81) 98396-4906</div>
+                    </div>
+                </div>
+
+                <div class="footer-website">
+                    https://www.yasmimos.com.br/
+                </div>
+            </div>
+
+        </div> <!-- /.right-column-container -->
+
+        <!-- Decorative Bottom Pattern -->
+        <div class="receipt-bottom-deco"></div>
+    </div>
+
+    <!-- Actions Toolbar (Moved to Bottom) -->
+    {% if not is_bot_print %}
+    <div class="actions-toolbar" style="margin-top: 30px; margin-bottom: 0;">
+        {% if user.is_superuser %}
+        <a href="{% url 'produtos:gerenciar' %}" class="action-pill back-btn">
+            <i class="fas fa-arrow-left"></i> Voltar (Admin)
+        </a>
+        {% else %}
+        <a href="{% url 'usuarios:profile' %}" class="action-pill back-btn">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+        {% endif %}
+
+        <div style="display: flex; gap: 10px;">
+            <button onclick="shareAsImage()" class="action-pill share-btn" style="background: #25D366; color: white; border: none;">
+                <i class="fab fa-whatsapp"></i> Whatsapp
+            </button>
+            <button onclick="window.print()" class="action-pill print-btn">
+                <i class="fas fa-print"></i> PDF / Imprimir
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if is_bot_print %}
+    <style>
+        /* Esconde a barra de navegação, banners e rodapés para o print do Playwright ficar limpo */
+        nav, header, .navbar, .store-status-banner, footer, .sticky-nav-wrapper, .delivery-warning {
+            display: none !important;
+        }
+        /* Tira o espaçamento do topo que existia por causa do menu */
+        .receipt-page-wrapper {
+            padding-top: 20px !important;
+        }
+        body {
+            padding-top: 0 !important;
+        }
+    </style>
+    {% endif %}
+</div>
+
+<style>
+    :root {
+        --rec-primary: #E91E63;
+        --rec-primary-soft: rgba(233, 30, 99, 0.1);
+        --rec-accent: #F48FB1;
+        --rec-bg-page: var(--bg-color);
+        --rec-card-bg: var(--card-bg);
+        --rec-text-dark: var(--text-color);
+        --rec-text-gray: var(--text-light);
+    }
+
+    /* Page Layout */
+    .receipt-page-wrapper {
+        min-height: 100vh;
+        background: var(--rec-bg-page);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 85px 20px 40px;
+        /* Reduced to pull card up */
+        font-family: 'Outfit', sans-serif;
+    }
+
+    /* Actions Toolbar */
+    .actions-toolbar {
+        display: flex;
+        gap: 15px;
+        width: 100%;
+        max-width: 480px;
+        justify-content: space-between;
+    }
+
+    .action-pill {
+        background: var(--card-bg);
+        border: 1px solid var(--input-border);
+        padding: 10px 20px;
+        border-radius: 30px;
+        text-decoration: none;
+        color: var(--rec-text-dark);
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+    }
+
+    .action-pill:hover {
+        transform: translateY(-3px);
+        background: var(--input-bg);
+        box-shadow: 0 8px 20px rgba(233, 30, 99, 0.15);
+        color: var(--rec-primary);
+    }
+
+    .print-btn {
+        background: var(--rec-primary);
+        color: white;
+        border: none;
+    }
+
+    .print-btn:hover {
+        background: #D81B60;
+        color: white;
+    }
+
+    /* The Receipt Card */
+    .premium-receipt-card {
+        background: var(--rec-card-bg);
+        width: 100%;
+        max-width: 480px;
+        border-radius: 25px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 20px 60px rgba(233, 30, 99, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.02);
+        animation: slideUp 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(40px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    /* Header Section */
+    .receipt-header {
+        background: linear-gradient(135deg, var(--rec-primary) 0%, #FF80AB 100%);
+        padding: 40px 30px 30px;
+        text-align: center;
+        color: white;
+        position: relative;
+        z-index: 2;
+    }
+
+    .brand-logo-container {
+        width: 140px;
+        /* Increased Size */
+        height: 140px;
+        /* Increased Size */
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* Removed background and padding to remove white border */
+    }
+
+    .brand-logo-img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        /* Optional: drop shadow for the logo itself since we removed container bg */
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+    }
+
+    .brand-title {
+        font-family: 'Outfit', sans-serif;
+        /* Could be a script font if user wants */
+        font-size: 2rem;
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: -0.5px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .brand-subtitle {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin: 5px 0 20px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-weight: 500;
+    }
+
+    .order-id-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(5px);
+        padding: 6px 16px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .receipt-wave-top {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100px;
+        z-index: 1;
+        /* Behind content but visible */
+        opacity: 0.1;
+        pointer-events: none;
+    }
+
+    /* Info Grid */
+    .receipt-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        padding: 30px 30px 10px;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .info-icon {
+        width: 38px;
+        height: 38px;
+        background: var(--rec-primary-soft);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--rec-primary);
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .info-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-content .label {
+        font-size: 0.7rem;
+        color: var(--rec-text-gray);
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .info-content .value {
+        font-size: 0.95rem;
+        color: var(--rec-text-dark);
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .status-badge[data-status="paid"] {
+        color: #4caf50;
+    }
+
+    .status-badge[data-status="pending"] {
+        color: #ffc107;
+    }
+
+    .status-badge[data-status="preparing"] {
+        color: #ff9800;
+    }
+
+    .status-badge[data-status="ready"] {
+        color: #00bcd4;
+    }
+
+    .status-badge[data-status="shipped"] {
+        color: #2196f3;
+    }
+
+    .status-badge[data-status="cancelled"] {
+        color: #f44336;
+    }
+
+    .status-badge[data-status="refunded"] {
+        color: #9c27b0;
+    }
+
+    /* Items List */
+    .receipt-items-container {
+        padding: 20px 30px;
+    }
+
+    .items-header {
+        font-size: 0.9rem;
+        color: var(--rec-text-gray);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 2px dashed #eee;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+
+    .items-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .item-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+
+    .item-details {
+        display: flex;
+        gap: 10px;
+        font-size: 1rem;
+        color: var(--rec-text-dark);
+        flex: 1;
+        padding-right: 15px;
+    }
+
+    .item-qty {
+        font-weight: 700;
+        color: var(--rec-primary);
+        flex-shrink: 0;
+    }
+
+    .item-name {
+        font-weight: 500;
+        display: block;
+    }
+
+    .item-price {
+        font-weight: 600;
+        color: var(--rec-text-dark);
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* Totals */
+    .receipt-totals {
+        background: var(--rec-primary-soft);
+        margin: 10px 20px 20px;
+        padding: 20px;
+        border-radius: 15px;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+        color: var(--rec-text-gray);
+    }
+
+    .total-row.final-total {
+        margin-top: 12px;
+        margin-bottom: 0;
+        padding-top: 12px;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        color: var(--rec-primary);
+        font-weight: 800;
+        font-size: 1.3rem;
+    }
+
+    /* Footer */
+    .receipt-footer {
+        text-align: center;
+        padding: 0 30px 40px;
+    }
+
+    .thank-you-message {
+        font-style: italic;
+        color: var(--rec-text-gray);
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+
+    .social-connect {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .social-web-only {
+        display: flex;
+        gap: 15px;
+    }
+
+    .social-web-only a {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: var(--card-bg);
+        color: var(--rec-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+        text-decoration: none;
+    }
+
+    .social-web-only a:hover {
+        transform: scale(1.1);
+        background: var(--rec-primary);
+        color: white;
+    }
+
+    .footer-website {
+        font-size: 0.8rem;
+        color: var(--rec-text-gray);
+        font-weight: 500;
+        letter-spacing: 1px;
+    }
+
+    .receipt-bottom-deco {
+        height: 8px;
+        background: repeating-linear-gradient(45deg,
+                var(--rec-primary),
+                var(--rec-primary) 10px,
+                #FF80AB 10px,
+                #FF80AB 20px);
+        width: 100%;
+        position: absolute;
+        bottom: 0;
+    }
+
+    /* Print Overrides - LANDSCAPE PREMIUM REDESIGN */
+    @media print {
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+
+        /* 1. GLOBAL RESET & PRINT SETTINGS */
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        /* Reset wrappers that might push the page down */
+        main,
+        .container {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: none !important;
+            width: 100% !important;
+        }
+
+        /* 2. HIDE UNWANTED UI */
+        header,
+        footer,
+        .delivery-warning,
+        .sticky-nav-wrapper,
+        .actions-toolbar,
+        .global-bg-animation,
+        #pending-order-popup,
+        .sidebar-footer {
+            display: none !important;
+        }
+
+        /* 3. LAYOUT CONTAINER */
+        .receipt-page-wrapper {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: #fff !important;
+            box-sizing: border-box !important;
+            z-index: 9999 !important;
+        }
+
+        /* 4. MAIN CARD - LANDSCAPE CERTIFICATE STYLE */
+        .premium-receipt-card {
+            display: flex !important;
+            flex-direction: row !important;
+            /* Split Layout */
+            width: 275mm !important;
+            min-height: 185mm !important;
+            height: auto !important;
+            max-width: none !important;
+            margin: 0 auto !important;
+            border: 2px solid var(--rec-primary) !important;
+            border-radius: 20px !important;
+            overflow: visible !important;
+            box-shadow: none !important;
+            background: #fff;
+            /* Force break inside to not split */
+            page-break-before: auto !important;
+            page-break-after: auto !important;
+            page-break-inside: auto !important;
+            position: relative;
+        }
+
+        /* Create a container for the right column and force it to be right next to the left column */
+        .right-column-container {
+            display: flex;
+            flex-direction: column;
+            width: 65%;
+            height: 100%;
+            padding: 20px 0;
+            box-sizing: border-box;
+        }
+
+        /* --- THE TWO COLUMNS --- */
+
+        /* LEFT COLUMN: BRANDING */
+        .receipt-header {
+            width: 35% !important;
+            height: 100% !important;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, var(--rec-primary) 0%, #FF80AB 100%) !important;
+            display: flex !important;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px !important;
+            color: white !important;
+            border-bottom: none !important;
+            border-right: 4px solid white;
+            box-sizing: border-box;
+            break-inside: avoid;
+        }
+
+        /* Enhancing Branding Column */
+        .brand-logo-container {
+            width: 200px !important;
+            /* Slightly larger since no padding */
+            height: 200px !important;
+            margin-bottom: 30px !important;
+            box-shadow: none !important;
+            /* Removed shadow */
+            background: none !important;
+            /* Removed white bg */
+            padding: 0 !important;
+            /* Removed padding */
+            border-radius: 0 !important;
+        }
+
+        .brand-title {
+            font-size: 2.5rem !important;
+            margin-bottom: 10px !important;
+            color: white !important;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .brand-subtitle {
+            font-size: 1.1rem !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+            letter-spacing: 3px !important;
+        }
+
+        /* RIGHT COLUMN: CONTENT WRAPPER */
+        /* We need to wrap the rest of the items effectively. 
+           Since they are siblings of .receipt-header, we can style them individually 
+           to generally sit in column 2. 
+        */
+
+        /* Recipient/Info Grid */
+        .receipt-info-grid {
+            padding: 20px 40px 10px !important;
+            gap: 15px !important;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Items */
+        .receipt-items-container {
+            padding: 5px 40px !important;
+            overflow: visible !important;
+            flex-grow: 1;
+            /* Automatically takes remaining space */
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Totals */
+        .receipt-totals {
+            margin: 0px 40px 10px !important;
+            padding: 10px 25px !important;
+            background: #fdfdfd !important;
+            border: 1px dashed #ddd !important;
+            border-radius: 12px;
+            break-inside: avoid;
+            width: calc(100% - 80px);
+            /* 40px margin both sides */
+            box-sizing: border-box;
+        }
+
+        /* Footer */
+        .receipt-footer {
+            display: flex !important;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 10px 40px 20px !important;
+            break-inside: avoid;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .thank-you-message {
+            margin-bottom: 20px !important;
+        }
+
+        /* Floating Order Badge */
+        .order-id-badge {
+            background: white !important;
+            color: var(--rec-primary) !important;
+            padding: 8px 20px !important;
+            border-radius: 20px !important;
+            margin-top: 30px !important;
+            font-weight: 800 !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Decos */
+        .receipt-wave-top,
+        .receipt-bottom-deco {
+            display: none !important;
+        }
+
+        /* Typography Updates for Print */
+        .label {
+            color: #999 !important;
+        }
+
+        .value {
+            color: #333 !important;
+            font-size: 1rem !important;
+        }
+
+        .item-row {
+            border-bottom: 1px dotted #eee;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+
+        .total-row.final-total {
+            color: var(--rec-primary) !important;
+            font-size: 1.5rem !important;
+        }
+
+        /* Social Media for Print */
+        .social-web-only {
+            display: none !important;
+        }
+
+        .social-print-only {
+            display: flex !important;
+            grid-column: 2 / 3;
+            grid-row: 4;
+            gap: 20px;
+            justify-content: center;
+            /* Center since footer is re-aligned or grid-aligned */
+            margin-bottom: 15px;
+        }
+
+        .print-social-item {
+            color: var(--rec-primary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #eee;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        /* Ensure footer aligns correctly with these new items */
+        .receipt-footer {
+            display: flex !important;
+            flex-direction: column;
+            align-items: center;
+            /* Center content in footer column */
+            justify-content: flex-end;
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+        .receipt-page-wrapper {
+            padding: 95px 15px 30px;
+            /* Adjusted to optimize gap on mobile */
+        }
+
+        .premium-receipt-card {
+            border-radius: 20px;
+        }
+
+        .receipt-info-grid {
+            grid-template-columns: 1fr;
+            /* Stack on mobile */
+            gap: 15px;
+        }
+    }
+    /* Image Generation Fixes (Landscape Layout) */
+    .exporting-image, .exporting-image * {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+        filter: none !important;
+    }
+
+    .exporting-image {
+        display: flex !important;
+        flex-direction: row !important;
+        width: 1000px !important; 
+        min-height: 700px !important;
+        max-width: none !important;
+        margin: 0 !important;
+        border: 2px solid #E91E63 !important;
+        border-radius: 20px !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        padding: 0 !important;
+    }
+
+    .exporting-image .right-column-container {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 65% !important;
+        height: auto !important;
+        padding: 20px 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .exporting-image .receipt-header {
+        width: 35% !important;
+        height: auto !important; 
+        min-height: 100% !important;
+        flex-shrink: 0 !important;
+        background: linear-gradient(135deg, #E91E63 0%, #FF80AB 100%) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        padding: 40px !important;
+        color: #ffffff !important;
+        border-bottom: none !important;
+        border-right: 4px solid #ffffff !important;
+        box-sizing: border-box !important;
+    }
+
+    .exporting-image .brand-logo-container {
+        width: 200px !important;
+        height: 200px !important;
+        margin-bottom: 30px !important;
+        box-shadow: none !important;
+        background: none !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    .exporting-image .brand-title {
+        font-size: 2.5rem !important;
+        margin-bottom: 10px !important;
+        color: white !important;
+        text-shadow: none !important;
+    }
+
+    .exporting-image .brand-subtitle {
+        font-size: 1.1rem !important;
+        color: #ffffff !important;
+        letter-spacing: 3px !important;
+    }
+
+    .exporting-image .receipt-info-grid {
+        padding: 20px 40px 10px !important;
+        gap: 15px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .exporting-image .receipt-items-container {
+        padding: 5px 40px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .exporting-image .receipt-totals {
+        margin: 0px 40px 10px !important;
+        padding: 10px 25px !important;
+        background: #fdfdfd !important;
+        border: 1px dashed #ddd !important;
+        border-radius: 12px !important;
+        width: calc(100% - 80px) !important;
+        box-sizing: border-box !important;
+    }
+
+    .exporting-image .receipt-footer {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        padding: 10px 40px 20px !important;
+        text-align: center !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .exporting-image .order-id-badge {
+        background: #ffffff !important;
+        color: #E91E63 !important;
+        padding: 8px 20px !important;
+        border-radius: 20px !important;
+        margin-top: 30px !important;
+        font-weight: 800 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important; 
+    }
+
+    .exporting-image .receipt-wave-top,
+    .exporting-image .receipt-bottom-deco {
+        display: none !important;
+    }
+
+    .exporting-image .label { color: #999 !important; }
+    .exporting-image .value { color: #333 !important; font-size: 1rem !important; font-weight: bold !important; font-family: system-ui, -apple-system, sans-serif !important; }
+    .exporting-image .item-price, .exporting-image .item-qty { color: #333 !important; font-weight: bold !important; font-family: system-ui, -apple-system, sans-serif !important;}
+    .exporting-image .total-row.final-total { color: var(--rec-primary) !important; font-size: 1.5rem !important; font-weight: bold !important; font-family: system-ui, -apple-system, sans-serif !important; }
+
+    .exporting-image .social-web-only { display: none !important; }
+    .exporting-image .social-print-only { display: flex !important; gap: 20px !important; justify-content: center !important; margin-bottom: 15px !important; }
+    .exporting-image .print-social-item { color: var(--rec-primary) !important; font-weight: 600 !important; display: flex !important; align-items: center !important; gap: 8px !important; border: 1px solid #eee !important; padding: 5px 15px !important; border-radius: 20px !important; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+    // Simple script to refresh status
+    const pollUrl = "/pedidos/status/{{ order.id }}/";
+    setInterval(() => {
+        fetch(pollUrl).then(r => {
+            if (r.status === 404) location.reload();
+        });
+    }, 5000);
+
+    async function shareAsImage() {
+        const btn = document.querySelector('.share-btn');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
+        btn.disabled = true;
+
+        try {
+            const card = document.querySelector('.premium-receipt-card');
+            
+            card.classList.add('exporting-image');
+
+            // Generate canvas
+            const canvas = await html2canvas(card, {
+                scale: 2, // higher res
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                allowTaint: true,
+                windowHeight: card.scrollHeight
+            });
+
+            card.classList.remove('exporting-image');
+
+            canvas.toBlob(async (blob) => {
+                const fileName = 'Pedido_{{ order.id }}_YasMimos.png';
+                const file = new File([blob], fileName, { type: 'image/png' });
+                
+                // Try using native share API if supported (mainly mobile)
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            title: 'Seu Pedido - YasMimos',
+                            files: [file]
+                        });
+                    } catch (err) {
+                        console.log('Share canceled or failed', err);
+                    }
+                } else {
+                    // Fallback for Desktop/Unsupported: Download image and open Web Whatsapp
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    
+                    alert('A imagem do pedido foi baixada! Você pode enviá-la no WhatsApp que será aberto em seguida.');
+                    
+                    // Format phone number
+                    let phone = "{{ order.guest_phone|default:'' }}";
+                    let text = "Olá! Aqui está o resumo do seu pedido na YasMimos. 💖";
+                    let waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                    
+                    if (phone && phone.trim() !== '') {
+                        let cleanPhone = phone.replace(/\\D/g, '');
+                        if(cleanPhone.length === 10 || cleanPhone.length === 11) {
+                            cleanPhone = '55' + cleanPhone;
+                        }
+                        if(cleanPhone.length >= 12) {
+                            waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+                        }
+                    }
+                    window.open(waUrl, '_blank');
+                }
+            }, 'image/png');
+
+        } catch (error) {
+            console.error('Error generating image:', error);
+            alert('Não foi possível gerar a imagem do pedido.');
+        } finally {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    }
+</script>
+{% endblock %}

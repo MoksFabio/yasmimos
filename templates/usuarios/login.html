@@ -1,25 +1,47 @@
 {% extends "base.html" %}
 {% load static %}
+{% load socialaccount %}
+
+{% block title %}Entrar{% endblock %}
 
 {% block content %}
-<div style="max-width: 400px; margin: 0 auto; background: var(--white); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
-    <h1 style="text-align: center; font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 30px;">Entrar</h1>
+<link rel="stylesheet" href="{% static 'css/usuarios/auth.css' %}">
+<div class="auth-container login">
+    <h1 class="auth-title">Entrar</h1>
+    
     <form method="post">
         {% csrf_token %}
         {% for field in form %}
-            <div class="form-group">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% for error in field.errors %}
-                    <div style="color: red; font-size: 0.9rem;">{{ error }}</div>
-                {% endfor %}
-            </div>
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}" style="color: var(--text-color);">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}
+            <div style="color: red; font-size: 0.9rem;">{{ error }}</div>
+            {% endfor %}
+        </div>
         {% endfor %}
-        <button type="submit" class="btn">Entrar</button>
+        <div style="text-align: center;">
+            <button type="submit" class="btn">Entrar</button>
+        </div>
+
+        <div class="google-btn-wrapper" style="margin-top: 20px;">
+            <div class="auth-divider">
+                <div class="line"></div>
+                <span>OU</span>
+                <div class="line"></div>
+            </div>
+
+            <a href="{% provider_login_url 'google' process='login' scope='profile email' prompt='select_account' %}"
+                title="Entrar com Google" class="google-btn">
+                <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="Google">
+            </a>
+        </div>
+        
+        <div class="auth-forgot-password">
+            <a href="{% url 'usuarios:password_reset' %}">Esqueci minha senha</a>
+        </div>
     </form>
-    <p style="text-align: center; margin-top: 20px;">Não tem uma conta? <a href="{% url 'users:register' %}" style="color: var(--primary-dark); font-weight: bold;">Cadastre-se</a></p>
+    
+    <p class="auth-footer-text">Não tem uma conta? <a href="{% url 'usuarios:register' %}">Cadastre-se</a></p>
 </div>
-<style>
-    input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; }
-</style>
 {% endblock %}

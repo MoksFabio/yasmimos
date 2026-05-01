@@ -1,27 +1,248 @@
 {% extends "base.html" %}
+{% block title %}Minha Conta{% endblock %}
+
 {% block content %}
-<div style="max-width: 600px; margin: 0 auto; background: var(--white); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+<div
+    style="max-width: 600px; margin: 0 auto; background: var(--card-bg); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
     <h1 style="font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 30px;">Minha Conta</h1>
     <p style="font-size: 1.2rem; margin-bottom: 20px;">Bem-vindo, <strong>{{ user.username }}</strong></p>
-    
-    <div style="display: flex; flex-direction: column; gap: 15px;">
-        <a href="{% url 'users:password_change' %}" class="btn" style="background-color: var(--primary-color); color: var(--accent-color);">Alterar Senha</a>
-        {% if not user.is_superuser %}
-        <a href="{% url 'users:delete_account' %}" class="btn" style="background-color: #ffebee; color: red; border: 1px solid red;">Excluir Conta</a>
+
+    <!-- Clube YasMimos Dashboard Widget -->
+    <div style="background: linear-gradient(135deg, var(--accent-color), #c2185b); border-radius: 15px; padding: 25px; color: white; margin-bottom: 30px; box-shadow: 0 5px 15px rgba(233, 30, 99, 0.3); display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <i class="fas fa-gem" style="font-size: 3rem; opacity: 0.9;"></i>
+            <div>
+                <h3 style="margin: 0; font-family: var(--font-serif); font-size: 1.4rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">Plano Atual: {{ active_plan_name }}</h3>
+                {% if active_plan_name != "Sem Plano" %}
+                    <p style="margin: 5px 0 0 0; font-size: 0.95rem; opacity: 0.9;">
+                        <i class="fas fa-clock"></i> Restam <strong>{{ plan_days_remaining }} dias</strong> para encerrar o ciclo do seu mês.
+                    </p>
+                {% else %}
+                    <p style="margin: 5px 0 0 0; font-size: 0.95rem; opacity: 0.9;">
+                        Você ainda não possui uma assinatura.
+                    </p>
+                    <a href="{% url 'produtos:lista' %}" style="display: inline-block; margin-top: 10px; padding: 6px 15px; background: white; color: var(--accent-color); border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 0.85rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"><i class="fas fa-crown"></i> Ver Planos Disponíveis</a>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if active_plan_name != "Sem Plano" %}
+        <div style="margin-top: 5px;">
+            <a href="{% url 'usuarios:manage_subscription' %}" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; background: rgba(255, 255, 255, 0.15); color: white; border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 30px; text-decoration: none; font-weight: bold; font-size: 0.9rem; transition: all 0.3s ease; backdrop-filter: blur(5px);" onmouseover="this.style.background='white'; this.style.color='var(--accent-color)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.15)'; this.style.color='white';">
+                <i class="fas fa-sliders-h"></i> Gerenciar Assinatura
+            </a>
+        </div>
         {% endif %}
     </div>
-    
-    <h2 style="margin-top: 40px; margin-bottom: 20px; font-family: var(--font-serif); color: var(--accent-color);">Meus Pedidos</h2>
-    {% if user.orders.all %}
-        <ul style="list-style: none;">
-            {% for order in user.orders.all %}
-                <li style="background: #f9f9f9; padding: 15px; margin-bottom: 10px; border-radius: 8px;">
-                    <strong>Pedido #{{ order.id }}</strong> - {{ order.created|date:"d/m/Y" }} - R$ {{ order.total_amount }} - {{ order.get_status_display }}
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>Você ainda não fez nenhum pedido.</p>
-    {% endif %}
+
+    <div style="display: flex; flex-direction: column; gap: 15px;">
+        {% if user.has_usable_password %}
+        <a href="{% url 'usuarios:password_change' %}" class="btn">Alterar Senha</a>
+        {% else %}
+        <p style="text-align: center; color: var(--text-light); font-size: 0.9rem; margin-bottom: 0;">
+            <i class="fab fa-google" style="margin-right: 5px;"></i> Conectado via Google
+        </p>
+        {% endif %}
+        {% if not user.is_superuser %}
+        <a href="{% url 'usuarios:delete_account' %}" class="btn"
+            style="background: var(--card-bg); color: var(--error-color); border: 1px solid var(--error-color); margin-top: 10px;">Excluir
+            Conta</a>
+        {% endif %}
+    </div>
+
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; margin-bottom: 20px;">
+        <h2 style="margin: 0; font-family: var(--font-serif); color: var(--accent-color);">Meus Pedidos</h2>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="order-filters"
+        style="display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none;">
+        <button class="filter-btn active" data-filter="all">Todos</button>
+        <button class="filter-btn" data-filter="pending">Pendentes</button>
+        <button class="filter-btn" data-filter="paid">Pagos / Em Produção</button>
+        <button class="filter-btn" data-filter="finished">Histórico</button>
+    </div>
+
+    <div id="my-orders-container" class="custom-scrollbar"
+        style="max-height: 500px; overflow-y: auto; padding-right: 10px; border-radius: 8px;">
+        <!-- Evita que a IDE quebre as tags nas próximas atualizações -->
+        {% include "pedidos/parcial_meus_pedidos.html" %}
+    </div>
+
 </div>
+
+<style>
+    /* Custom Scrollbar for sleek look */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: var(--input-bg);
+        border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: var(--input-border);
+        border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: var(--text-light);
+    }
+
+    /* Filter Buttons */
+    .filter-btn {
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        color: var(--text-light);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        outline: none;
+    }
+
+    .filter-btn:hover {
+        background: var(--card-bg);
+        color: var(--accent-color);
+        border-color: var(--accent-color);
+    }
+
+    .filter-btn.active {
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+        box-shadow: 0 4px 10px rgba(230, 0, 126, 0.2);
+    }
+
+    .order-filters::-webkit-scrollbar {
+        display: none;
+    }
+</style>
+
+<script>
+    let expandedTrackers = new Set();
+    let currentOrderFilter = 'all';
+
+    function toggleTracking(orderId) {
+        const el = document.getElementById('tracking-' + orderId);
+        if (el.style.display === 'none') {
+            el.style.display = 'block';
+            expandedTrackers.add(orderId);
+        } else {
+            el.style.display = 'none';
+            expandedTrackers.delete(orderId);
+        }
+    }
+
+    function applyOrderFilter() {
+        const cards = document.querySelectorAll('.order-card');
+        const activeSection = document.getElementById('active-orders-section');
+        const historySection = document.getElementById('history-orders-section');
+
+        // Show everything temporarily
+        if (activeSection) activeSection.style.display = '';
+        if (historySection) historySection.style.display = '';
+
+        let visibleActive = 0;
+        let visibleHistory = 0;
+
+        cards.forEach(card => {
+            const status = card.dataset.status;
+            let show = false;
+
+            if (currentOrderFilter === 'all') {
+                show = true;
+            } else if (currentOrderFilter === 'pending') {
+                show = status === 'pending';
+            } else if (currentOrderFilter === 'paid') {
+                show = ['paid', 'preparing', 'ready', 'shipped'].includes(status);
+            } else if (currentOrderFilter === 'finished') {
+                show = ['delivered', 'cancelled', 'refunded'].includes(status);
+            }
+
+            if (show) {
+                card.style.display = '';
+                if (card.closest('#active-orders-section')) visibleActive++;
+                if (card.closest('#history-orders-section')) visibleHistory++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Toggle sections based on child visibility
+        if (activeSection) {
+            activeSection.style.display = visibleActive > 0 ? '' : 'none';
+        }
+        if (historySection) {
+            historySection.style.display = visibleHistory > 0 ? '' : 'none';
+            // If we're filtering, let's open the history content block automatically if there are visible items
+            const historyContent = document.getElementById('history-content');
+            const historyChevron = document.getElementById('history-chevron');
+            if (currentOrderFilter !== 'all' && visibleHistory > 0 && historyContent) {
+                historyContent.style.display = 'flex';
+                if (historyChevron) historyChevron.classList.replace('fa-chevron-down', 'fa-chevron-up');
+            }
+        }
+    }
+
+    // Bind Filter Buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            // Update active state
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            // Set filter and apply
+            currentOrderFilter = this.dataset.filter;
+            applyOrderFilter();
+        });
+    });
+
+    // Poll for order updates every 5 seconds
+    setInterval(function () {
+        const container = document.getElementById('my-orders-container');
+        const scrollPos = container.scrollTop;
+
+        fetch("{% url 'pedidos:my_orders_poll' %}")
+            .then(response => {
+                if (!response.ok) return; // Ignore server errors silently
+                return response.text();
+            })
+            .then(html => {
+                if (!html) return;
+                container.innerHTML = html;
+                // Re-expand previously expanded trackers
+                expandedTrackers.forEach(id => {
+                    const el = document.getElementById('tracking-' + id);
+                    if (el) el.style.display = 'block';
+                });
+
+                // Reapply the active filter
+                applyOrderFilter();
+
+                container.scrollTop = scrollPos;
+            })
+            .catch(() => { }); // Silent fail
+    }, 5000);
+</script>
+
+<style>
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 {% endblock %}

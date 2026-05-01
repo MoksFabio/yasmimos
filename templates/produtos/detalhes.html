@@ -1,75 +1,993 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}{{ produto.name }}{% endblock %}
+
 {% block content %}
-<div class="product-detail" style="display: flex; gap: 40px; flex-wrap: wrap;">
+<link rel="stylesheet" href="{% static 'css/produtos/detalhes.css' %}">
+<div style="margin-bottom: 20px; margin-top: 50px;">
+    <a href="{% url 'produtos:lista' %}" class="btn"
+        style="width: auto; padding: 8px 15px; display: inline-flex; align-items: center; gap: 8px; background: transparent; border: 1px solid var(--accent-color); color: var(--accent-color);">
+        <i class="fas fa-arrow-left"></i> Voltar ao Cardápio
+    </a>
+</div>
+
+<div class="produto-detail" style="display: flex; gap: 40px; flex-wrap: wrap;">
     <div class="detail-image" style="flex: 1; min-width: 300px;">
         <!-- Main Image -->
-        <div class="main-image-wrapper" style="position: relative; overflow: hidden; border-radius: 15px; cursor: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\'><path d=\'M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z\'/></svg>') 10 10, zoom-in;" onclick="openLightbox()">
-            {% if product.image %}
-                <img id="currentImage" src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 400px; object-fit: contain; background-color: #fafafa; display: block; transition: transform 0.3s ease;">
+        <div class="main-image-wrapper"
+            style="position: relative; overflow: hidden; border-radius: 15px; cursor: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\'><path d=\'M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z\'/></svg>') 10 10, zoom-in;"
+            onclick="openLightbox()">
+            {% if produto.image %}
+            <img id="currentImage" src="{{ produto.image.url }}" alt="{{ produto.name }}"
+                style="width: 100%; height: 400px; object-fit: contain; background-color: var(--card-bg); display: block; transition: transform 0.3s ease;">
             {% else %}
-                <div style="height: 400px; display: flex; align-items: center; justify-content: center; background: #f0f0f0; color: #ccc;">Sem Imagem</div>
+            <div
+                style="height: 400px; display: flex; align-items: center; justify-content: center; background: var(--input-bg); color: var(--text-light);">
+                Sem Imagem</div>
             {% endif %}
         </div>
 
         <!-- Thumbnails -->
-        {% if product.image %}
-        <div class="thumbnails-container" style="display: flex; gap: 10px; margin-top: 15px; overflow-x: auto; padding-bottom: 5px;">
-            <div class="thumb active" onclick="updateMainImage('{{ product.image.url }}', this)">
-                <img src="{{ product.image.url }}" alt="Principal">
+        {% if produto.image %}
+        <div class="thumbnails-container"
+            style="display: flex; gap: 10px; margin-top: 15px; overflow-x: auto; padding-bottom: 5px;">
+            <div class="thumb active" onclick="updateMainImage('{{ produto.image.url }}', this)">
+                <img src="{{ produto.image.url }}" alt="Principal">
             </div>
-            {% if product.image2 %}
-            <div class="thumb" onclick="updateMainImage('{{ product.image2.url }}', this)">
-                <img src="{{ product.image2.url }}" alt="Imagem 2">
-            </div>
-            {% endif %}
-            {% if product.image3 %}
-            <div class="thumb" onclick="updateMainImage('{{ product.image3.url }}', this)">
-                <img src="{{ product.image3.url }}" alt="Imagem 3">
+            {% if produto.image2 %}
+            <div class="thumb" onclick="updateMainImage('{{ produto.image2.url }}', this)">
+                <img src="{{ produto.image2.url }}" alt="Imagem 2">
             </div>
             {% endif %}
-            {% if product.image4 %}
-            <div class="thumb" onclick="updateMainImage('{{ product.image4.url }}', this)">
-                <img src="{{ product.image4.url }}" alt="Imagem 4">
+            {% if produto.image3 %}
+            <div class="thumb" onclick="updateMainImage('{{ produto.image3.url }}', this)">
+                <img src="{{ produto.image3.url }}" alt="Imagem 3">
             </div>
             {% endif %}
-            {% if product.image5 %}
-            <div class="thumb" onclick="updateMainImage('{{ product.image5.url }}', this)">
-                <img src="{{ product.image5.url }}" alt="Imagem 5">
+            {% if produto.image4 %}
+            <div class="thumb" onclick="updateMainImage('{{ produto.image4.url }}', this)">
+                <img src="{{ produto.image4.url }}" alt="Imagem 4">
+            </div>
+            {% endif %}
+            {% if produto.image5 %}
+            <div class="thumb" onclick="updateMainImage('{{ produto.image5.url }}', this)">
+                <img src="{{ produto.image5.url }}" alt="Imagem 5">
             </div>
             {% endif %}
         </div>
         {% endif %}
     </div>
     <div class="detail-info" style="flex: 1; min-width: 300px;">
-        <h1 style="font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 10px;">{{ product.name }}</h1>
-        <p class="price" style="font-size: 1.5rem; font-weight: bold; margin-bottom: 5px;">R$ {{ product.price }}</p>
-        
+        <h1 style="font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 10px;">{{ produto.name }}
+        </h1>
+        <p class="price" style="font-size: 1.5rem; font-weight: bold; margin-bottom: 5px;">R$ {{ produto.price }}</p>
+
         <p style="margin-bottom: 20px; font-weight: bold; font-size: 0.9rem;">
-            {% if product.stock > 0 %}
-                <span style="color: green;">Estoque: {{ product.stock }} unidades</span>
+            {% if "Personalizada" in produto.name or produto.is_customizable %}
+            <span class="stock-available" style="color: var(--accent-color); font-weight: 600;">
+                <i class="fas fa-calendar-alt"></i> Sob Encomenda (Ter, Qui, Sex e Sáb)
+            </span>
+            {% elif 'clube' in produto.category.name|lower %}
+            {% if produto.stock > 0 %}
+            <span class="stock-available" style="color: var(--accent-color); font-size: 1.1rem; font-weight: 800;"><i class="fas fa-gem"></i> Vagas no Clube: {{ produto.stock }} disponíveis</span>
             {% else %}
-                <span style="color: red;">Esgotado!</span>
+            <span style="color: red; font-weight: bold;"><i class="fas fa-lock"></i> Vagas Esgotadas! O Clube está lotado.</span>
+            {% endif %}
+            {% elif produto.stock > 0 %}
+            <span class="stock-available">Estoque: {{ produto.stock }} unidades</span>
+            {% else %}
+            <span style="color: red;">Esgotado!</span>
             {% endif %}
         </p>
 
         <div class="description" style="margin-bottom: 30px;">
-            {{ product.description|linebreaks }}
+            {{ produto.description|linebreaks }}
         </div>
-        
-        {% if product.stock > 0 %}
-        <form action="{% url 'cart:cart_add' product.id %}" method="post">
+
+        {% if produto.stock > 0 %}
+        {% if not produto.is_customizable %}
+        <form action="{% url 'carrinho:cart_add' produto.id %}" method="post" id="add-to-cart-form">
             {% csrf_token %}
+            {% if 'clube' in produto.category.name|lower %}
+                {% if user.is_authenticated %}
+                <input type="hidden" name="quantity" value="1">
+
+                <div style="margin-top: 15px; margin-bottom: 20px;">
+                    <details style="background: var(--input-bg); border: 1px dashed var(--accent-color); border-radius: 12px; padding: 15px; box-shadow: 0 2px 10px rgba(233, 30, 99, 0.05); transition: all 0.3s ease;">
+                        <summary style="font-size: 0.95rem; color: var(--accent-color); font-weight: 800; text-transform: uppercase; cursor: pointer; outline: none; list-style: none; display: flex; align-items: center; justify-content: space-between;" onclick="this.querySelector('.fa-chevron-down').style.transform = this.parentNode.open ? 'rotate(0deg)' : 'rotate(180deg)'">
+                            <span><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> Regras Essenciais</span>
+                            <i class="fas fa-chevron-down" style="font-size: 0.9rem; transition: transform 0.3s ease;"></i>
+                        </summary>
+                        <div style="margin-top: 15px; border-top: 1px solid rgba(233, 30, 99, 0.1); padding-top: 15px;">
+                            <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: var(--text-color); line-height: 1.5;">
+                                <li style="margin-bottom: 6px;"><strong>Exclusivo UFPE:</strong> Este clube é inteiramente voltado e exclusivo para alunos da Universidade Federal de Pernambuco (UFPE).</li>
+                                <li style="margin-bottom: 6px;"><strong>A Entrega é Física:</strong> O aluno precisa ir de encontro com onde Yasmim estiver pelo Campus naquele dia.</li>
+                                <li style="margin-bottom: 6px;"><strong>Validade da Retirada:</strong> 
+                                    {% if 'diário' in produto.name|lower or 'diario' in produto.name|lower %}
+                                    Se não buscar os mimos de terça e quinta na própria semana, eles não acumulam para a próxima semana ou fim do mês.
+                                    {% elif 'duo' in produto.name|lower %}
+                                    Se não buscar a caixinha na sexta-feira da semana vigente, ela não acumulará para a próxima semana.
+                                    {% elif 'grand' in produto.name|lower %}
+                                    Se não buscar o brigadeiro no dia útil correspondente, ele não acumulará para os dias seguintes ou fim do mês.
+                                    {% else %}
+                                    Os mimos não resgatados nos dias corretos da semana perdem a validade e não acumulam.
+                                    {% endif %}
+                                </li>
+                                <li style="margin-bottom: 6px;"><strong>Sabor a critério do dia:</strong> Sujeito à disponibilidade do estoque diário da bolsa.</li>
+                                <li style="margin-bottom: 6px;"><strong>Horário de Retirada:</strong> Ocorre apenas durante o período normal de circulação da Yasmim pelo Campus, não no horário estrito da aula do aluno.</li>
+                                <li style="margin-bottom: 6px;"><strong>Uso Pessoal:</strong> A assinatura é ligada ao seu perfil na plataforma. Não é permitido terceirizar a conta para amigos buscarem em seu lugar.</li>
+                                <li style="margin-bottom: 6px;"><strong>Comunicação Ativa:</strong> Verifique os avisos no topo do site e nas redes para saber onde a Yasmim e a bolsa estão no momento da sua retirada.</li>
+                                <li><strong>Sem Reembolsos Múltiplos:</strong> Sendo produtos artesanais perecíveis com planejamento direto no dia e logística justa, brigadeiros "esquecidos" ou desistências não possuem devoluções retroativas ou transferências.</li>
+                            </ul>
+                            <label style="display: flex; align-items: flex-start; gap: 10px; margin-top: 15px; cursor: pointer; background: var(--card-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--manage-border);">
+                                <input type="checkbox" id="aceito_termos_clube" style="margin-top: 2px; accent-color: var(--accent-color); width: 18px; height: 18px; cursor: pointer;" onchange="document.getElementById('btn_assinar_clube').disabled = !this.checked; document.getElementById('btn_assinar_clube').style.opacity = this.checked ? '1' : '0.5';">
+                                <span style="font-size: 0.9rem; color: var(--text-color); font-weight: 700;">Li e Aceito as regras de funcionamento do Clube.</span>
+                            </label>
+                        </div>
+                    </details>
+                </div>
+
+                <button type="submit" id="btn_assinar_clube" class="btn" disabled style="max-width: 300px; background: var(--accent-color); border: none; box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4); color: white; text-transform: uppercase; font-weight: 800; font-size: 1.05rem; border-radius: 30px; margin-top: 5px; transition: all 0.3s; opacity: 0.5;">
+                    <i class="fas fa-gem"></i> Assinar Clube Agora
+                </button>
+                {% else %}
+                <a href="{% url 'usuarios:login' %}?next={{ request.path }}" class="btn" style="max-width: 300px; background: var(--card-bg); border: 2px solid var(--accent-color); color: var(--accent-color); text-transform: uppercase; font-weight: 800; font-size: 0.95rem; border-radius: 30px; margin-top: 10px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">
+                    <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i> Fazer Login para Assinar
+                </a>
+                <p style="color: var(--text-light); font-size: 0.8rem; margin-top: 5px; margin-bottom: 0;">Apenas membros cadastrados podem participar do clube.</p>
+                {% endif %}
+            {% else %}
             <div class="quantity-selector" style="margin-bottom: 20px;">
                 <label for="quantity">Quantidade:</label>
-                <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd; width: 80px;">
+                <input type="number" name="quantity" value="1" min="1" max="{{ produto.stock }}" class="quantity-input">
             </div>
-            <button type="submit" class="btn" style="max-width: 300px;">Adicionar ao Carrinho</button>
+            <button type="submit" class="btn" style="max-width: 300px;">
+                <i class="fas fa-shopping-basket"></i> Adicionar ao Carrinho
+            </button>
+            {% endif %}
         </form>
-        {% else %}
-            <button class="btn" style="max-width: 300px; background-color: #ccc; cursor: not-allowed;" disabled>Indisponível</button>
         {% endif %}
+        {% else %}
+        <button class="btn"
+            style="max-width: 300px; background: transparent; color: var(--accent-color); border: 2px dashed var(--accent-color); cursor: not-allowed; opacity: 0.6; font-weight: bold;"
+            disabled>
+            <i class="fas fa-box-open"></i> INDISPONÍVEL
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+{% if produto.stock > 0 and produto.is_customizable %}
+<form action="{% url 'carrinho:cart_add' produto.id %}" method="post" id="add-to-cart-form"
+    style="margin-top: 60px; scroll-margin-top: 80px;">
+    {% csrf_token %}
+    <input type="hidden" name="metadata" id="cart-metadata">
+
+    <div id="customizer-section"
+        style="background: var(--card-bg); border: 1px solid var(--input-border); border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); overflow: hidden; max-width: 900px; margin: 0 auto;">
+
+        <!-- Header -->
+        <div
+            style="background: rgba(233, 30, 99, 0.05); padding: 20px; text-align: center; border-bottom: 1px solid var(--input-border);">
+            <h3 style="margin: 0 0 5px; font-family: var(--font-serif); color: var(--accent-color); font-size: 1.5rem;">
+                <i class="fas fa-magic" style="margin-right: 8px;"></i> Personalize sua Caixinha
+            </h3>
+            <p style="color: var(--text-light); font-size: 0.9rem; margin: 0;">
+                Escolha <strong>{{ produto.customizable_slots }} sabores</strong> artesanais abaixo:
+            </p>
+        </div>
+
+        <div style="padding: 20px;">
+
+            <!-- Process visual timeline (Subtle version) -->
+            <div
+                style="display: flex; justify-content: center; gap: 40px; margin-bottom: 30px; opacity: 0.8; flex-wrap: wrap;">
+                <div style="text-align: center; min-width: 80px;">
+                    <i class="fas fa-hand-pointer"
+                        style="font-size: 1.2rem; color: var(--accent-color); margin-bottom: 5px;"></i>
+                    <div style="font-size: 0.75rem; font-weight: bold; color: var(--text-color);">1. Pedido</div>
+                </div>
+                <!-- Clicável: Explicação com WhatsApp -->
+                <div style="text-align: center; min-width: 80px; cursor: pointer;"
+                    onclick="document.getElementById('preparo-modal').style.display='flex'">
+                    <i class="fas fa-utensils"
+                        style="font-size: 1.2rem; color: #ffc107; margin-bottom: 5px; transition: transform 0.2s;"></i>
+                    <div
+                        style="font-size: 0.75rem; font-weight: bold; color: var(--text-color); display: flex; align-items: center; justify-content: center; gap: 4px;">
+                        2. Preparo <i class="fas fa-info-circle"
+                            style="color: var(--accent-color); font-size: 0.7rem;"></i>
+                    </div>
+                </div>
+                <div style="text-align: center; min-width: 80px;">
+                    <i class="fas fa-heart" style="font-size: 1.2rem; color: #2ecc71; margin-bottom: 5px;"></i>
+                    <div style="font-size: 0.75rem; font-weight: bold; color: var(--text-color);">3. Entrega</div>
+                </div>
+            </div>
+
+            <!-- Modal Explicando o Preparo -->
+            <div id="preparo-modal"
+                style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+                <div
+                    style="background: var(--card-bg); padding: 30px; border-radius: 20px; max-width: 90%; width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; animation: popIn 0.3s ease-out;">
+                    <button type="button" onclick="document.getElementById('preparo-modal').style.display='none'"
+                        style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; color: var(--text-light); cursor: pointer;">&times;</button>
+
+                    <i class="fas fa-utensils" style="font-size: 2.5rem; color: #ffc107; margin-bottom: 15px;"></i>
+                    <h3 style="margin: 0 0 10px; font-family: var(--font-serif); color: var(--accent-color);">Tempo de
+                        Preparo</h3>
+                    <p style="color: var(--text-color); font-size: 1rem; line-height: 1.5; margin-bottom: 20px;">
+                        Por ser uma encomenda especial artesanal, o seu pedido será preparado em <strong>alguns dias
+                            após a confirmação</strong>.
+                        O tempo exato depende dos dias em que a YasMimos estiver aberta (fique de olho nos dias de
+                        abertura no aviso da loja!).
+                    </p>
+
+                    <a href="https://wa.me/5581983964906" target="_blank"
+                        style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: #25d366; color: white; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);">
+                        <i class="fab fa-whatsapp" style="font-size: 1.2rem;"></i> Dúvidas? Fale com a YasMimos
+                    </a>
+                </div>
+            </div>
+
+            <!-- Sticky Progress Bar (Compact) -->
+            <div
+                style="position: sticky; top: 70px; z-index: 100; background: var(--bg-color); padding: 10px 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border: 1px solid var(--input-border);">
+                <div>
+                    <p style="margin: 0; font-weight: bold; color: var(--text-color); font-size: 0.95rem;">Progresso</p>
+                    <p style="margin: 0; font-size: 0.75rem; color: var(--text-light);" id="customizer-subtitle">Faltam
+                        {{ produto.customizable_slots }}</p>
+                </div>
+                <div>
+                    <span style="font-size: 1.3rem; font-weight: 800; color: var(--accent-color);"><span id="slots-filled">0</span> <span style="font-size: 0.9rem; color: var(--text-light); font-weight: 600;">/ {{ produto.customizable_slots }}</span></span>
+                </div>
+            </div>
+
+            <div id="customizer-error"
+                style="display: none; background: #fff5f5; color: #c53030; padding: 10px; border-radius: 10px; margin-bottom: 15px; font-size: 0.85rem; font-weight: bold; text-align: center; border: 1px solid #feb2b2;">
+            </div>
+
+            <!-- Items Compact List/Grid -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; margin-bottom: 25px;">
+                {% for item in customizable_items %}
+                <div class="flavor-item"
+                    style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: var(--bg-color); border: 1px solid var(--input-border); border-radius: 12px; transition: border-color 0.2s;">
+                    <div style="display: flex; align-items: center; gap: 12px; flex-grow: 1; overflow: hidden;">
+                        <div style="position: relative; width: 50px; height: 50px; flex-shrink: 0;">
+                            {% if item.image %}
+                            <img src="{{ item.image.url }}"
+                                style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                            {% else %}
+                            <div
+                                style="width: 100%; height: 100%; border-radius: 8px; background: var(--input-bg); display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-cookie" style="font-size: 1.2rem; color: var(--text-light);"></i></div>
+                            {% endif %}
+                        </div>
+                        <div style="min-width: 0; padding-right: 5px;">
+                            <h4
+                                style="margin: 0 0 2px 0; font-family: var(--font-serif); font-size: 0.95rem; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {{ item.name }}</h4>
+                            <p
+                                style="margin: 0; font-size: 0.75rem; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {{ item.description|default:"Sabor inconfundível." }}</p>
+                        </div>
+                    </div>
+
+                    <div
+                        style="display: flex; align-items: center; gap: 8px; background: var(--input-bg); padding: 4px; border-radius: 20px; flex-shrink: 0;">
+                        <button type="button" onclick="changeQuantity('{{ item.id }}', -1)"
+                            style="border: none; background: white; width: 28px; height: 28px; border-radius: 50%; color: var(--accent-color); font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);"><i
+                                class="fas fa-minus" style="font-size: 0.8rem;"></i></button>
+                        <span id="count-{{ item.id }}"
+                            style="font-weight: 800; font-size: 1rem; color: var(--text-color); min-width: 16px; text-align: center;">0</span>
+                        <button type="button" onclick="changeQuantity('{{ item.id }}', 1)"
+                            style="border: none; background: var(--accent-color); color: white; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(233, 30, 99, 0.3);"><i
+                                class="fas fa-plus" style="font-size: 0.8rem;"></i></button>
+                    </div>
+                </div>
+                {% empty %}
+                <div
+                    style="grid-column: 1 / -1; text-align: center; padding: 20px; background: var(--input-bg); border-radius: 12px; color: var(--text-light);">
+                    <i class="fas fa-frown-open" style="font-size: 1.5rem; margin-bottom: 5px; opacity: 0.5;"></i>
+                    <p style="margin: 0; font-size: 0.9rem;">Nenhum sabor disponível.</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Bottom Action Area -->
+            <button type="button" id="add-custom-to-cart" onclick="addCustomizedToCart()" class="btn"
+                style="width: 100%; border-radius: 20px; padding: 15px; background: var(--accent-color); color: white; opacity: 0.4; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; font-size: 1rem; box-shadow: 0 4px 15px rgba(233, 30, 99, 0.2); margin: 0; transition: transform 0.2s, opacity 0.3s;"
+                disabled>
+                <i class="fas fa-shopping-basket" style="margin-right: 8px;"></i> ADICIONAR AO CARRINHO
+            </button>
+
+        </div>
+    </div>
+</form>
+
+{% endif %}
+
+<!-- Reviews Section -->
+<div class="reviews-section" style="margin-top: 60px; border-top: 1px solid var(--input-border); padding-top: 40px;">
+    {% include 'produtos/parcial_secao_avaliacoes.html' %}
+</div>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof resetSelection === 'function' && document.getElementById('slots-filled')) {
+            resetSelection();
+        }
+        initStarRating();
+
+        // AJAX Add to Cart
+        const cartForm = document.getElementById('add-to-cart-form');
+        if (cartForm) {
+            cartForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                // --- SMART ANIMATION SYSTEM ---
+                const isMobile = window.innerWidth <= 768;
+                const produtoImg = document.getElementById('currentImage');
+
+                if (isMobile) {
+                    // --- MOBILE: BOTTOM SHEET NOTIFICATION ---
+                    // Create or reuse bottom sheet
+                    let bottomSheet = document.getElementById('cart-notification-sheet');
+                    if (!bottomSheet) {
+                        bottomSheet = document.createElement('div');
+                        bottomSheet.id = 'cart-notification-sheet';
+                        bottomSheet.style.cssText = `
+                               position: fixed; left: 0; bottom: -100px; width: 100%;
+                               background: var(--card-bg, #ffffff);
+                               z-index: 10000;
+                               padding: 15px; 
+                               box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+                               border-radius: 20px 20px 0 0; 
+                               display: flex; align-items: center; gap: 15px;
+                               transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                               border-top: 1px solid var(--input-border, #eee);
+                           `;
+                        document.body.appendChild(bottomSheet);
+                    }
+
+                    // Populate Content
+                    const imgUrl = produtoImg ? produtoImg.src : '';
+                    const title = document.querySelector('h1') ? document.querySelector('h1').innerText : '{{ produto.name|escapejs }}';
+
+                    bottomSheet.innerHTML = `
+                           <img src="${imgUrl}" style="width: 50px; height: 50px; border-radius: 10px; object-fit: cover; border: 1px solid var(--input-border, #eee);">
+                           <div style="flex-grow: 1;">
+                               <p style="margin: 0; font-weight: bold; font-size: 0.9rem; color: var(--text-color, #333);">Adicionado!</p>
+                               <p style="margin: 0; font-size: 0.8rem; color: var(--text-light, #777); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">${title}</p>
+                           </div>
+                           <a href="{% url 'carrinho:cart_detail' %}" style="background: var(--accent-color); color: white; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-size: 0.85rem; font-weight: bold; white-space: nowrap;">Ver Carrinho</a>
+                       `;
+
+                    // Animate In
+                    requestAnimationFrame(() => {
+                        bottomSheet.style.bottom = '0';
+                    });
+
+                    // Auto Hide after 5 seconds
+                    setTimeout(() => {
+                        bottomSheet.style.bottom = '-100px';
+                    }, 5000);
+
+                } else {
+                    // --- DESKTOP: FLYING CANDY ---
+                    // Try to find the cart link in the nav menu
+                    const cartIconTarget = document.querySelector('.nav-menu a[href*="carrinho"]') || document.querySelector('a[href*="carrinho"]');
+
+                    if (produtoImg && cartIconTarget) {
+                        const flyImg = produtoImg.cloneNode();
+                        flyImg.style.cssText = `
+                               position: fixed; z-index: 9999; border-radius: 50%;
+                               object-fit: cover; opacity: 0.9; pointer-events: none;
+                               box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                               transition: all 1s cubic-bezier(0.2, 1, 0.3, 1);
+                           `;
+
+                        const startRect = produtoImg.getBoundingClientRect();
+                        const endRect = cartIconTarget.getBoundingClientRect();
+
+                        // Start
+                        flyImg.style.top = startRect.top + 'px';
+                        flyImg.style.left = startRect.left + 'px';
+                        flyImg.style.width = startRect.width + 'px';
+                        flyImg.style.height = startRect.height + 'px';
+
+                        document.body.appendChild(flyImg);
+                        void flyImg.offsetWidth;
+
+                        // End
+                        const targetX = endRect.left + (endRect.width / 2);
+                        const targetY = endRect.top + (endRect.height / 2);
+
+                        flyImg.style.top = (targetY - 10) + 'px';
+                        flyImg.style.left = (targetX - 10) + 'px';
+                        flyImg.style.width = '20px';
+                        flyImg.style.height = '20px';
+                        flyImg.style.opacity = '0.5';
+
+                        setTimeout(() => {
+                            flyImg.remove();
+                            cartIconTarget.style.animation = 'shake-cart 0.4s ease';
+                            setTimeout(() => { cartIconTarget.style.animation = ''; }, 400);
+                        }, 1000);
+                    }
+                }
+                // --- END NEW ANIMATION SYSTEM ---
+
+                const btn = cartForm.querySelector('button[type="submit"]') || document.getElementById('add-custom-to-cart');
+                const originalText = btn ? btn.innerText : '';
+                if (btn) {
+                    btn.innerText = 'Adicionando...';
+                    btn.disabled = true;
+                }
+
+                const formData = new FormData(cartForm);
+
+                fetch(cartForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => {
+                        if (response.redirected) {
+                            window.location.href = response.url;
+                            return;
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && data.success) {
+                            // Only show Toast on Desktop (Mobile has bottom sheet)
+                            if (!isMobile) {
+                                showToast(data.message, 'success');
+                            }
+
+                            // Update Cart Badge Logic
+                            const badges = document.querySelectorAll('.badge');
+                            badges.forEach(b => b.innerText = data.cart_quantity);
+
+                            if (badges.length === 0 && data.cart_quantity > 0) {
+                                // Try multiple selectors to catch the cart link
+                                const cartLinks = document.querySelectorAll('.nav-menu a[href*="carrinho"], a[href*="carrinho"]');
+                                cartLinks.forEach(link => {
+                                    if (!link.querySelector('.badge')) {
+                                        const newBadge = document.createElement('span');
+                                        newBadge.className = 'badge';
+                                        newBadge.innerText = data.cart_quantity;
+                                        link.appendChild(newBadge);
+                                    }
+                                });
+                            }
+
+                        } else if (data) {
+                            showToast(data.message || 'Erro ao adicionar produto.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        showToast('Erro na comunicação com o servidor.', 'error');
+                    })
+                    .finally(() => {
+                        if (btn) {
+                            btn.innerText = originalText;
+                            btn.disabled = false;
+                        }
+                    });
+            });
+        }
+    });
+
+    // Toast Function (Global-ish)
+    function showToast(message, type = 'success') {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.style.zIndex = '30000'; // Higher than any modal
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+
+        toast.innerHTML = `
+                <i class="fas ${iconClass} toast-icon"></i>
+                <span>${message}</span>
+            `;
+
+        container.appendChild(toast);
+        void toast.offsetWidth; // Trigger reflow
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400);
+        }, 3000);
+    }
+
+    function initStarRating() {
+        // Remove old listeners by cloning is too risky if IDs or references are complex.
+        // Better: Just select and attach. If multiple listeners attach, it's bad.
+        // But since we replace HTML via AJAX, elements are fresh. 
+        // On first load, they are fresh. 
+        // So we just need to attach listeners to whatever is currently in DOM.
+
+        const stars = document.querySelectorAll('.star-rating-selector i');
+        const hiddenInput = document.getElementById('selected-rating');
+        const container = document.querySelector('.star-rating-selector');
+
+        if (!hiddenInput || !container) return;
+
+        // Helper to update visual state
+        window.updateStars = function (value) {
+            stars.forEach(s => {
+                const starVal = s.getAttribute('data-val');
+                if (parseInt(starVal) <= parseInt(value)) {
+                    s.classList.remove('far');
+                    s.classList.add('fas');
+                    s.style.color = '#ffc107';
+                } else {
+                    s.classList.remove('fas');
+                    s.classList.add('far');
+                    s.style.color = 'var(--input-border)';
+                }
+            });
+        }
+
+        // Attach events to stars
+        stars.forEach(star => {
+            // Remove old click/mouseover to be safe (assigning null first)
+            star.onclick = null;
+            star.onmouseover = null;
+
+            star.onclick = function () {
+                hiddenInput.value = this.getAttribute('data-val');
+                window.updateStars(this.getAttribute('data-val'));
+            };
+
+            star.onmouseover = function () {
+                window.updateStars(this.getAttribute('data-val'));
+            };
+        });
+
+        // Attach event to container
+        container.onmouseleave = null;
+        container.onmouseleave = function () {
+            window.updateStars(hiddenInput.value || 0);
+        };
+    }
+
+    function openReviewForm() {
+        const formBox = document.getElementById('review-form-box');
+        if (formBox) {
+            formBox.style.display = 'block';
+            formBox.scrollIntoView({ behavior: 'smooth' });
+
+            // Reset fields
+            document.getElementById('form-title').innerText = 'Sua Opinião é Importante';
+            const idInput = document.getElementById('review_id_input');
+            if (idInput) idInput.value = '';
+
+            const commentInput = document.getElementById('id_comment');
+            if (commentInput) commentInput.value = '';
+
+            const ratingInput = document.getElementById('selected-rating');
+            if (ratingInput) ratingInput.value = '';
+
+            const btn = document.getElementById('submit-btn');
+            if (btn) btn.innerText = 'Publicar Avaliação';
+
+            const addBtn = document.getElementById('add-review-btn');
+            if (addBtn) addBtn.style.display = 'none';
+
+            if (window.updateStars) window.updateStars(0);
+        }
+    }
+
+    function closeReviewForm() {
+        const formBox = document.getElementById('review-form-box');
+        if (formBox) formBox.style.display = 'none';
+
+        const addBtn = document.getElementById('add-review-btn');
+        if (addBtn) addBtn.style.display = 'inline-block';
+    }
+
+    function editReview(id, rating, comment) {
+        openReviewForm();
+
+        const title = document.getElementById('form-title');
+        if (title) title.innerText = 'Editar Sua Avaliação';
+
+        const idInput = document.getElementById('review_id_input');
+        if (idInput) idInput.value = id;
+
+        const commentInput = document.getElementById('id_comment');
+        if (commentInput) commentInput.value = comment;
+
+        const ratingInput = document.getElementById('selected-rating');
+        if (ratingInput) ratingInput.value = rating;
+
+        const btn = document.getElementById('submit-btn');
+        if (btn) btn.innerText = 'Atualizar Avaliação';
+
+        if (window.updateStars) window.updateStars(rating);
+    }
+
+    // --- Review Deletion Modal Logic ---
+    let deleteUrlTarget = null;
+
+    function confirmDeleteReview(url) {
+        deleteUrlTarget = url;
+        const modal = document.getElementById('delete-confirm-modal');
+        modal.style.display = 'flex';
+
+        // Add slight animation
+        const content = modal.querySelector('.modal-content');
+        content.style.transform = 'scale(0.8)';
+        content.style.opacity = '0';
+        setTimeout(() => {
+            content.style.transform = 'scale(1)';
+            content.style.opacity = '1';
+        }, 10);
+    }
+
+    function closeDeleteConfirmModal() {
+        const modal = document.getElementById('delete-confirm-modal');
+        modal.style.display = 'none';
+        deleteUrlTarget = null;
+    }
+
+    function executeDeleteReview() {
+        if (!deleteUrlTarget) return;
+
+        const url = deleteUrlTarget;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // Show loading state
+        const btn = document.getElementById('btn-confirm-delete');
+        const originalText = btn.innerText;
+        btn.innerText = 'Excluindo...';
+        btn.disabled = true;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const section = document.querySelector('.reviews-section');
+                    if (section) {
+                        section.innerHTML = data.html;
+                        initStarRating();
+                    }
+                    closeDeleteConfirmModal();
+                    showToast('Avaliação excluída com sucesso!', 'success');
+                } else {
+                    alert('Erro ao excluir avaliação.');
+                }
+            })
+            .catch(err => {
+                console.error('Error deleting review:', err);
+                showToast('Erro ao excluir.', 'error');
+            })
+            .finally(() => {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            });
+    }
+
+    function submitReview(event) {
+        event.preventDefault();
+        const form = document.getElementById('review-form');
+
+        // --- Funny Validation Check 🌟 ---
+        const ratingInput = form.querySelector('input[name="rating"]');
+
+        // Remove existing error if any
+        const existingError = document.getElementById('rating-error-msg');
+        if (existingError) existingError.style.display = 'none';
+
+        if (!ratingInput || !ratingInput.value) {
+            // Shake animation
+            const starContainer = document.getElementById('star-container');
+            if (starContainer) {
+                starContainer.style.animation = 'shake-cart 0.5s ease';
+                setTimeout(() => starContainer.style.animation = '', 500);
+
+                // Inline Error Message (No Popup!)
+                let errorMsg = document.getElementById('rating-error-msg');
+                if (!errorMsg) {
+                    errorMsg = document.createElement('div');
+                    errorMsg.id = 'rating-error-msg';
+                    errorMsg.style.cssText = 'color: #e91e63; font-weight: bold; margin-top: 10px; font-size: 0.9rem; animation: fadeIn 0.3s;';
+                    starContainer.parentNode.appendChild(errorMsg);
+                }
+                errorMsg.innerText = "Eita! Esqueceu das estrelas? 🌟 Sem elas o brigadeiro fica triste! 🥺";
+                errorMsg.style.display = 'block';
+            }
+            return;
+        }
+
+        const data = new FormData(form);
+        data.append('is_ajax', 'true'); // Explicitly flag as AJAX
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // Disable button
+        const btn = document.getElementById('submit-btn');
+        const originalText = btn ? btn.innerText : '';
+        if (btn) {
+            btn.innerText = 'Salvando...';
+            btn.disabled = true;
+        }
+
+        fetch(window.location.href, {
+            method: 'POST',
+            body: data,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            }
+        })
+            .then(response => {
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return response.json();
+                } else {
+                    return response.text().then(text => {
+                        throw new Error("Server returned non-JSON response: " + text.substring(0, 100));
+                    });
+                }
+            })
+            .then(data => {
+                if (data.success) {
+                    const section = document.querySelector('.reviews-section');
+                    if (section) {
+                        section.innerHTML = data.html;
+                        initStarRating();
+                    }
+                    closeReviewForm();
+                    showToast('Avaliação salva com sucesso! 💖', 'success');
+                } else {
+                    if (data.html) {
+                        showToast('Ops! Algo deu errado no formulário. 🍰', 'error');
+                    } else {
+                        showToast('Erro ao salvar. Tente de novo! 🧁', 'error');
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Error submitting review:', err);
+                showToast('Erro ao processar: ' + err.message, 'error');
+            })
+            .finally(() => {
+                if (btn) {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            });
+    }
+
+    // --- Customizer Logic ---
+    const slotsTotal = parseInt("{{ produto.customizable_slots|default:0 }}");
+    let selectedItems = {};
+
+    function resetSelection() {
+        selectedItems = {};
+        document.querySelectorAll('[id^="count-"]').forEach(span => span.innerText = '0');
+        updateSelectionUI();
+    }
+
+    function changeQuantity(id, delta) {
+        const currentTotal = Object.values(selectedItems).reduce((a, b) => a + b, 0);
+        const currentVal = selectedItems[id] || 0;
+
+        if (delta > 0 && currentTotal >= slotsTotal) {
+            const errorDiv = document.getElementById('customizer-error');
+            if (errorDiv) {
+                errorDiv.innerText = `A caixinha já está cheia! (${slotsTotal} itens)`;
+                errorDiv.style.display = 'block';
+                errorDiv.style.animation = 'none';
+                void errorDiv.offsetWidth;
+                errorDiv.style.animation = 'shake-cart 0.5s ease';
+            }
+            return;
+        }
+
+        const errorDiv = document.getElementById('customizer-error');
+        if (errorDiv) errorDiv.style.display = 'none';
+
+        const newVal = currentVal + delta;
+        if (newVal < 0) return;
+
+        if (newVal === 0) {
+            delete selectedItems[id];
+        } else {
+            selectedItems[id] = newVal;
+        }
+
+        // Instant visual update for the changed item
+        const countSpan = document.getElementById(`count-${id}`);
+        if (countSpan) countSpan.innerText = newVal;
+
+        updateSelectionUI();
+    }
+
+    function updateSelectionUI() {
+        const currentTotal = Object.values(selectedItems).reduce((a, b) => a + b, 0);
+        document.getElementById('slots-filled').innerText = currentTotal;
+
+        // Update Add Button State
+        const addBtn = document.getElementById('add-custom-to-cart');
+        if (addBtn) {
+            if (currentTotal === slotsTotal) {
+                addBtn.disabled = false;
+                addBtn.style.background = 'var(--accent-color)';
+                addBtn.style.color = 'white';
+                addBtn.style.opacity = '1';
+                addBtn.style.cursor = 'pointer';
+            } else {
+                addBtn.disabled = true;
+                addBtn.style.background = 'var(--accent-color)';
+                addBtn.style.color = 'white';
+                addBtn.style.opacity = '0.4';
+                addBtn.style.cursor = 'not-allowed';
+            }
+        }
+
+        // Update subtitle
+        const subtitle = document.getElementById('customizer-subtitle');
+        if (subtitle) {
+            if (currentTotal === slotsTotal) {
+                subtitle.innerText = "Sua caixinha está cheia!";
+                subtitle.style.color = "var(--accent-color)";
+                subtitle.style.fontWeight = "bold";
+            } else {
+                subtitle.innerText = `Faltam ${slotsTotal - currentTotal} brigadeiros`;
+                subtitle.style.color = "var(--text-light)";
+                subtitle.style.fontWeight = "normal";
+            }
+        }
+    }
+
+    function addCustomizedToCart() {
+        const currentTotal = Object.values(selectedItems).reduce((a, b) => a + b, 0);
+        if (currentTotal !== slotsTotal) {
+            showToast(`Por favor, escolha ${slotsTotal} brigadeiros.`, 'error');
+            return;
+        }
+
+        const itemsMetadata = [];
+        const itemData = JSON.parse(document.getElementById('customizable-items-json').textContent);
+
+        itemData.forEach(item => {
+            const qty = selectedItems[item.id];
+            if (qty) {
+                itemsMetadata.push({
+                    'id': item.id,
+                    'name': item.name,
+                    'quantity': qty
+                });
+            }
+        });
+
+        const metadata = {
+            'items': itemsMetadata,
+            'description': itemsMetadata.map(i => `${i.quantity}x ${i.name}`).join(', ')
+        };
+
+        // Inject metadata into form
+        const metadataInput = document.getElementById('cart-metadata');
+        metadataInput.value = JSON.stringify(metadata);
+
+        const cartForm = document.getElementById('add-to-cart-form');
+        const btn = document.getElementById('add-custom-to-cart');
+        const originalText = btn.innerHTML;
+        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ADICIONANDO...';
+        btn.style.opacity = '0.8';
+        btn.disabled = true;
+
+        const formData = new FormData(cartForm);
+
+        fetch(cartForm.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                
+                // Animate Button
+                btn.innerHTML = '<i class="fas fa-check"></i> ADICIONADO!';
+                btn.style.background = 'var(--success-color)';
+                btn.style.opacity = '1';
+                btn.style.transform = 'scale(1.05)';
+                
+                setTimeout(() => {
+                    btn.style.transform = 'scale(1)';
+                }, 200);
+
+                // Update cart badges
+                document.querySelectorAll('.mobile-cart-badge').forEach(b => {
+                    b.innerText = data.cart_quantity;
+                    // Pulse animation for badge
+                    b.style.animation = 'none';
+                    void b.offsetWidth; // trigger reflow
+                    b.style.animation = 'pulse 0.5s';
+                });
+
+                // Reset Selection
+                setTimeout(() => {
+                    resetSelection();
+                    btn.innerHTML = originalText;
+                    btn.style.background = 'var(--accent-color)';
+                    updateSelectionUI(); // force disable btn since it's 0 now
+                }, 2500);
+
+            } else {
+                showToast(data.message || 'Erro ao adicionar item.', 'error');
+                btn.innerHTML = originalText;
+                btn.style.opacity = '1';
+                btn.disabled = false;
+            }
+        })
+        .catch(err => {
+            console.error('Error adding custom item:', err);
+            showToast('Erro de conexão.', 'error');
+            btn.innerHTML = originalText;
+            btn.style.opacity = '1';
+            btn.disabled = false;
+        });
+    }
+</script>
+
+<!-- Customizable Items Data -->
+<script id="customizable-items-json" type="application/json">
+    [
+        {% for item in customizable_items %}
+            {"id": {{ item.id }}, "name": "{{ item.name|escapejs }}"}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ]
+</script>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-confirm-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 20002; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+    <div class="modal-content"
+        style="background: var(--card-bg); width: 90%; max-width: 350px; border-radius: 20px; padding: 25px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative;">
+
+        <i class="fas fa-trash-alt"
+            style="font-size: 3rem; color: var(--accent-color); margin-bottom: 20px; opacity: 0.8;"></i>
+
+        <h3 style="margin: 0 0 10px 0; color: var(--text-color); font-size: 1.2rem;">Excluir Avaliação?</h3>
+        <p style="color: var(--text-light); font-size: 0.9rem; margin-bottom: 25px; line-height: 1.5;">Tem certeza que
+            deseja excluir esta avaliação? Essa ação não pode ser desfeita.</p>
+
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button onclick="closeDeleteConfirmModal()"
+                style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--input-border); background: transparent; color: var(--text-color); font-weight: bold; cursor: pointer; transition: background 0.2s;">Cancelar</button>
+            <button id="btn-confirm-delete" onclick="executeDeleteReview()"
+                style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: var(--accent-color); color: white; font-weight: bold; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);">Excluir</button>
+        </div>
     </div>
 </div>
 
@@ -79,83 +997,14 @@
     <img class="lightbox-content" id="lightboxImage">
 </div>
 
-<style>
-    .thumb {
-        width: 70px;
-        height: 70px;
-        border-radius: 10px;
-        overflow: hidden;
-        cursor: pointer;
-        border: 2px solid transparent;
-        transition: all 0.2s;
-        flex-shrink: 0;
-    }
-    .thumb img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    .thumb.active {
-        border-color: var(--accent-color);
-        transform: scale(0.95);
-    }
-    .thumb:hover {
-        opacity: 0.8;
-    }
 
-    /* Lightbox Styles */
-    .lightbox {
-        display: none;
-        position: fixed;
-        z-index: 2000;
-        padding-top: 50px;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        background-color: rgba(0, 0, 0, 0.9);
-        backdrop-filter: blur(5px);
-    }
-    .lightbox-content {
-        margin: auto;
-        display: block;
-        width: auto;
-        max-width: 90%;
-        max-height: 85vh;
-        border-radius: 5px;
-        box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        animation: zoomIn 0.3s;
-    }
-    .close-lightbox {
-        position: absolute;
-        top: 20px;
-        right: 35px;
-        color: #f1f1f1;
-        font-size: 40px;
-        font-weight: bold;
-        transition: 0.3s;
-        cursor: pointer;
-    }
-    .close-lightbox:hover,
-    .close-lightbox:focus {
-        color: var(--primary-color);
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    @keyframes zoomIn {
-        from {transform:scale(0)} 
-        to {transform:scale(1)}
-    }
-</style>
 
 <script>
     function updateMainImage(src, thumbElement) {
         // Update main image source
         const mainImg = document.getElementById('currentImage');
         mainImg.style.opacity = '0.5';
-        
+
         setTimeout(() => {
             mainImg.src = src;
             mainImg.style.opacity = '1';
@@ -170,12 +1019,12 @@
         const modal = document.getElementById("lightboxModal");
         const modalImg = document.getElementById("lightboxImage");
         const currentSrc = document.getElementById("currentImage").src;
-        
+
         modal.style.display = "flex";
         modal.style.alignItems = "center";
         modal.style.justifyContent = "center";
         modalImg.src = currentSrc;
-        
+
         // Prevent body scroll
         document.body.style.overflow = "hidden";
     }
@@ -188,7 +1037,7 @@
     }
 
     // Close on Escape key
-    document.addEventListener('keydown', function(event) {
+    document.addEventListener('keydown', function (event) {
         if (event.key === "Escape") {
             closeLightbox();
         }

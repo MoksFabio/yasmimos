@@ -1,0 +1,17 @@
+{
+  "name": "YasMimos",
+  "short_name": "YasMimos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF5F7",
+  "theme_color": "#D32F2F",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/static/img/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

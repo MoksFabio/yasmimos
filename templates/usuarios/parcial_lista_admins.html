@@ -1,0 +1,69 @@
+{% for u in users %}
+{% if u.is_staff %}
+<div class="user-card admin-card" data-name="{{ u.username|lower }}" data-date="{{ u.date_joined|date:'Y-m-d' }}"
+    style="background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--manage-border); display: flex; flex-direction: column; gap: 15px; position: relative; transition: transform 0.3s, box-shadow 0.3s;"
+    onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.1)';"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.05)';">
+
+    <div
+        style="position: absolute; top: 15px; right: 15px; background: var(--accent-color); color: white; padding: 4px 8px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; letter-spacing: 1px; box-shadow: 0 2px 5px rgba(233, 30, 99, 0.3);">
+        ADMIN
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div
+            style="width: 50px; height: 50px; border-radius: 50%; background: var(--input-bg); color: var(--accent-color); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; text-transform: uppercase; border: 2px solid var(--accent-color);">
+            {{ u.username.0 }}
+        </div>
+        <div>
+            <h3
+                style="margin: 0; font-size: 1.1rem; color: var(--manage-text); font-family: var(--font-serif); font-weight: 700;">
+                {{ u.username }}</h3>
+            <p style="margin: 3px 0 0 0; color: var(--text-light); font-size: 0.85rem;"><i
+                    class="far fa-calendar-alt"></i> Cad: {{ u.date_joined|date:"d/m/Y" }}</p>
+        </div>
+    </div>
+
+    <div
+        style="background: var(--input-bg); padding: 10px; border-radius: 10px; border: 1px solid var(--input-border); display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-phone-alt" style="color: var(--manage-text-sec);"></i>
+        <span style="color: var(--text-color); font-weight: 500;">{{ u.phone_number|default:"Sem fone" }}</span>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: auto; padding-top: 5px;">
+        <a href="https://wa.me/55{{ u.phone_number|cut:' '|cut:'-'|cut:'('|cut:')' }}" target="_blank" class="btn"
+            style="flex: 1; padding: 8px; background: #25D366; color: white; border-radius: 10px; font-size: 0.9rem; display: inline-flex; justify-content: center; align-items: center; gap: 5px; text-decoration: none;"
+            title="WhatsApp">
+            <i class="fab fa-whatsapp"></i> Chat
+        </a>
+        <button onclick="openClientHistory('{{ u.id }}')" class="btn"
+            style="flex: 1; padding: 8px; background: var(--input-border); color: var(--manage-text); border-radius: 10px; font-size: 0.9rem; display: inline-flex; justify-content: center; align-items: center; gap: 5px;"
+            title="Histórico">
+            <i class="fas fa-history"></i> Pedidos
+        </button>
+    </div>
+
+    {% if u.id != request.user.id %}
+    <div style="display: flex; gap: 10px;">
+        <button onclick="demoteUser('{{ u.id }}', '{{ u.username|escapejs }}')" class="btn"
+            style="flex: 1; padding: 8px; background: #ed8936; color: white; border-radius: 10px; font-size: 0.85rem; display: inline-flex; justify-content: center; align-items: center;"
+            title="Remover Adm">
+            <i class="fas fa-user-minus"></i>
+        </button>
+        <button onclick="deleteUser('{{ u.id }}')" class="btn"
+            style="flex: 1; padding: 8px; background: var(--error-color); color: white; border-radius: 10px; font-size: 0.85rem; display: inline-flex; justify-content: center; align-items: center;"
+            title="Excluir">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+    {% endif %}
+</div>
+    {% endif %}
+{% empty %}
+<div class="user-card empty-row"
+    style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-light); background: var(--card-bg); border-radius: 16px; border: 1px dashed var(--manage-border);">
+    <i class="fas fa-users-slash" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
+    <h3 style="margin: 0; font-family: var(--font-serif); color: var(--manage-text);">Nenhum administrador encontrado.
+    </h3>
+</div>
+{% endfor %}

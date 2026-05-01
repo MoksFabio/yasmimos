@@ -1,0 +1,969 @@
+{% extends "base.html" %}
+{% load static %}
+{% load loyalty_extras %}
+
+{% block title %}Cartão Fidelidade{% endblock %}
+
+{% block content %}
+<div class="loyalty-management-container" style="max-width: 1000px; margin: 0 auto; padding: 20px;">
+
+    <!-- Hero Section / Title -->
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="font-family: var(--font-serif); color: var(--accent-color); font-size: 2.5rem; margin-bottom: 10px;">
+            Cartão Fidelidade YasMimos</h1>
+        <p style="color: var(--text-light); font-size: 1.1rem;">Gerencie seus clientes e acompanhe cada selinho de
+            felicidade.</p>
+    </div>
+
+
+    <div class="loyalty-grid-wrapper {% if user.is_superuser %}is-admin{% else %}is-customer{% endif %}"
+        style="display: grid; gap: 30px; align-items: start;">
+
+        <link rel="stylesheet" href="{% static 'css/fidelidade/fidelidade.css' %}">
+        <!-- LEFT COLUMN: Search & Result -->
+        <div class="sections-column">
+            <!-- Search / Filter Section -->
+            <div class="card-section"
+                style="background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid var(--input-border);;">
+                <h3
+                    style="margin-bottom: 20px; color: var(--text-color); font-size: 1.2rem; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-search" style="color: var(--accent-color);"></i>
+                    {% if user.is_superuser %}Buscar Cliente ou ID{% else %}Consultar Meu Cartão{% endif %}
+                </h3>
+                <form id="mainSearchForm" method="get" action=".">
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div class="search-row" style="display: flex; gap: 10px;">
+                            <input type="text" id="searchInput" name="q" value="{{ search_query }}"
+                                placeholder="Busque por Nome, ID ou WhatsApp..."
+                                style="flex: 1; padding: 13px 18px; border-radius: 12px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); outline: none; font-size: 1rem;">
+
+                            <button type="submit" class="btn" style="padding: 13px 25px; border-radius: 12px;"><i
+                                    class="fas fa-search"></i></button>
+                        </div>
+                        {% if user.is_superuser %}
+                        <input type="hidden" id="statusInput" name="status" value="all">
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+
+            <!-- 3D Card Result -->
+            {% if search_query or card %}
+            {% if card %}
+            
+
+            <div class="card-3d-scene" id="cardScene">
+                <div class="card-3d-inner" id="loyaltyCard3D" onclick="flipCard()"
+                    style="position: relative; width: 100%; aspect-ratio: 1.58 / 1; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; cursor: pointer;">
+
+                    <!-- FRONT SIDE -->
+                    <div class="card-side card-front"
+                        style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; background-repeat: no-repeat; background-position: center; background-size: 100% 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center;">
+                        <div
+                            style="position: absolute; top: 60.5%; left: 49.5%; transform: translate(-50%, -50%); font-family: var(--font-main), sans-serif; font-size: 0.55rem; font-weight: 900; color: #333; letter-spacing: -0.5px; width: 33%; text-align: center; white-space: nowrap;">
+                            {{ card.id_code }}
+                        </div>
+                        <div
+                            style="position: absolute; bottom: 8px; right: 10px; background: rgba(255,255,255,0.9); padding: 3px 8px; border-radius: 10px; font-size: 0.5rem; font-weight: bold; color: var(--accent-color); backdrop-filter: blur(4px);">
+                            VER VERSO <i class="fas fa-sync"></i>
+                        </div>
+                    </div>
+
+                    <!-- BACK SIDE -->
+                    <div class="card-side card-back" id="cardBackView"
+                        style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; transform: rotateY(180deg); border-radius: 12px; background-repeat: no-repeat; background-position: center; background-size: 100% 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05);">
+
+                        <!-- Dynamic Stamps Container (Manual Positioning) -->
+                        <div id="stampsContainer"
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                            {% for pos in card.get_positions %}
+                            <div class="stamp-item is-filled"
+                                style="--pos-y: {{ pos.y }}%; --pos-x: {{ pos.x }}%;">
+                                <img src="{% static 'img/logo.png' %}" class="stamp-logo" alt="Logo YasMimos"
+                                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; clip-path: circle(50% at 50% 50%);">
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Reward Slot Removed per user request -->
+                    </div>
+                </div>
+
+                <!-- Fullscreen Controls -->
+                <div class="zoom-controls">
+                    <button onclick="flipCard()" title="Girar Cartão"><i class="fas fa-sync"></i></button>
+                    <button onclick="changeZoom(0.2)" title="Aumentar"><i class="fas fa-plus"></i></button>
+                    <button onclick="changeZoom(-0.2)" title="Diminuir"><i class="fas fa-minus"></i></button>
+                    <button onclick="resetZoom()" title="Resetar"><i class="fas fa-undo"></i></button>
+                    <button onclick="toggleFullscreen()" title="Sair" style="background: #555;"><i
+                            class="fas fa-times"></i></button>
+                </div>
+            </div>
+
+            <button id="fullscreenBtn" onclick="toggleFullscreen()"><i class="fas fa-expand"></i> Ver em Tela
+                Cheia</button>
+
+            <script>
+                let zoomLevel = 1;
+                let currentRotation = 0;
+
+                function toggleFullscreen() {
+                    const scene = document.getElementById('cardScene');
+                    const inner = document.getElementById('loyaltyCard3D');
+
+                    if (!document.fullscreenElement) {
+                        // Before entering, check current rotation to sync
+                        if (inner.style.transform === 'rotateY(180deg)') {
+                            currentRotation = 180;
+                        } else {
+                            currentRotation = 0;
+                        }
+                        scene.style.setProperty('--flip-val', currentRotation + 'deg');
+
+                        document.getElementById('cardScene').requestFullscreen().catch(err => {
+                            alert(`Erro ao tentar ativar tela cheia: ${err.message}`);
+                        });
+                    } else {
+                        document.exitFullscreen();
+                    }
+                }
+
+                function changeZoom(delta) {
+                    const scene = document.getElementById('cardScene');
+                    zoomLevel = Math.max(0.5, Math.min(3, zoomLevel + delta));
+                    scene.style.setProperty('--zoom-val', zoomLevel);
+                }
+
+                function resetZoom() {
+                    const scene = document.getElementById('cardScene');
+                    zoomLevel = 1;
+                    scene.style.setProperty('--zoom-val', zoomLevel);
+                }
+
+                function flipCard() {
+                    const scene = document.getElementById('cardScene');
+                    const inner = document.getElementById('loyaltyCard3D');
+
+                    if (document.fullscreenElement) {
+                        currentRotation = currentRotation === 0 ? 180 : 0;
+                        scene.style.setProperty('--flip-val', currentRotation + 'deg');
+                    } else {
+                        if (inner.style.transform === 'rotateY(180deg)') {
+                            inner.style.transform = 'rotateY(0deg)';
+                            currentRotation = 0;
+                        } else {
+                            inner.style.transform = 'rotateY(180deg)';
+                            currentRotation = 180;
+                        }
+                    }
+                }
+            </script>
+
+
+
+            {% else %}
+            <div
+                style="text-align: center; padding: 30px; background: #fff3f3; color: #d32f2f; border-radius: 15px; border: 1px solid #ffcdd2;">
+                <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                <p style="margin: 0;">Cartão não encontrado. Verifique se o ID está correto.</p>
+                <a href="https://wa.me/5581983964906" target="_blank"
+                    style="display: inline-block; margin-top: 15px; color: #d32f2f; font-weight: bold; text-decoration: underline;">
+                    <i class="fab fa-whatsapp"></i> Falar com Yasmim
+                </a>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- RIGHT COLUMN: Admin Controls -->
+        {% if user.is_superuser %}
+        <div class="admin-column">
+            <!-- Create Section -->
+            <div class="card-section"
+                style="background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px; border: 2px solid var(--accent-color);">
+                <h3 style="margin-bottom: 20px; color: var(--text-color);"><i class="fas fa-plus-circle"
+                        style="color: var(--accent-color);"></i> Registrar Novo Cartão</h3>
+                <form method="post" action="{% url 'fidelidade:loyalty_card_create' %}">
+                    {% csrf_token %}
+                    <div style="display: grid; gap: 15px;">
+                        <input type="text" name="id_code" placeholder="ID do Físico (Ex: YM-101)"
+                            style="padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color);"
+                            required>
+                        <input type="text" name="name" placeholder="Nome do Cliente (Opcional)"
+                            style="padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color);">
+                        <input type="tel" name="phone" placeholder="WhatsApp (Opcional)"
+                            style="padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color);">
+                        <button type="submit" class="btn" style="width: 100%;">Cadastrar Cartão</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Full List Section: GERENCIAR CARTÕES -->
+            <div id="assetsListSection" class="card-section"
+                style="background: var(--card-bg); padding: 25px; border-radius: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.06); border: 1px solid var(--input-border); display: flex; flex-direction: column; overflow: hidden; transition: opacity 0.3s;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <h3
+                        style="margin: 0; color: var(--text-color); font-size: 1.3rem; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-id-card" style="color: var(--accent-color);"></i> Gerenciar Cartões
+                    </h3>
+
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        {% if user.is_superuser %}
+                        <select id="sortSelect" name="sort" onchange="triggerAjaxSearch()"
+                            style="padding: 6px 10px; border-radius: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); font-size: 0.8rem; font-weight: 600; cursor: pointer; outline: none; transition: border-color 0.2s;">
+                            <option value="recent" {% if sort_by == 'recent' %}selected{% endif %}>Recentes</option>
+                            <option value="stamps_desc" {% if sort_by == 'stamps_desc' %}selected{% endif %}>Mais Selos
+                            </option>
+                            <option value="stamps_asc" {% if sort_by == 'stamps_asc' %}selected{% endif %}>Menos Selos
+                            </option>
+                            <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Antigos</option>
+                        </select>
+                        {% endif %}
+                        <div
+                            style="background: var(--input-bg); padding: 6px 15px; border-radius: 20px; font-size: 0.8rem; color: var(--text-light); border: 1px solid var(--input-border); font-weight: 600;">
+                            {{ all_cards|length }} encontrados
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    style="max-height: 600px; overflow-y: auto; overflow-x: auto; margin: 0 -10px; padding: 0 10px; scrollbar-width: thin; scrollbar-color: var(--accent-color) var(--input-bg); -webkit-overflow-scrolling: touch;">
+                    
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+                        <thead>
+                            <tr
+                                style="text-align: left; color: var(--text-light); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
+                                <th style="padding: 10px 15px;">Cliente / ID</th>
+                                <th style="padding: 10px 15px; text-align: center;">Progresso</th>
+                                <th style="padding: 10px 15px; text-align: right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for l_card in all_cards %}
+                            <tr class="manage-row" style="background: var(--input-bg); transition: all 0.2s;">
+                                <td
+                                    style="padding: 15px; border-radius: 15px 0 0 15px; border-top: 1px solid var(--input-border); border-bottom: 1px solid var(--input-border); border-left: 1px solid var(--input-border);">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div
+                                            style="width: 40px; height: 40px; background: var(--bg-color); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-color); font-weight: bold; border: 1px solid var(--input-border);">
+                                            {{ l_card.customer_name|slice:":1"|default:"?" }}
+                                        </div>
+                                        <div>
+                                            <div
+                                                style="font-weight: 700; color: var(--text-color); font-size: 1rem; margin-bottom: 2px;">
+                                                {{ l_card.id_code }}</div>
+                                            <div
+                                                style="font-size: 0.8rem; color: var(--text-light); display: flex; align-items: center; gap: 5px;">
+                                                <span>{{ l_card.customer_name|default:"Cliente não identificado" }}</span>
+                                                {% if l_card.customer_phone %}
+                                                <a href="https://wa.me/55{{ l_card.customer_phone|cut:' ' }}"
+                                                    target="_blank" style="color: #4caf50; text-decoration: none;"><i
+                                                        class="fab fa-whatsapp"></i></a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td
+                                    style="padding: 15px; border-top: 1px solid var(--input-border); border-bottom: 1px solid var(--input-border); text-align: center;">
+                                    <div id="stamp-container-{{ l_card.id }}"
+                                        style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+                                        <div
+                                            style="font-weight: 800; color: var(--accent-color); font-size: 1.05rem; display: flex; align-items: baseline; gap: 2px; min-width: 45px; justify-content: flex-end;">
+                                            <span id="stamp-count-{{ l_card.id }}">{{ l_card.stamps }}</span>
+                                            <span
+                                                style="font-size: 0.7rem; font-weight: normal; color: var(--text-light);">/7</span>
+                                        </div>
+                                        <div
+                                            style="width: 70px; height: 7px; background: rgba(0,0,0,0.05); border-radius: 10px; overflow: hidden; flex-shrink: 0;">
+                                            <div id="progress-bar-{{ l_card.id }}" data-stamps="{{ l_card.stamps }}"
+                                                class="init-progress"
+                                                style="width: 0%; height: 100%; background: var(--accent-color); transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 10px;">
+                                            </div>
+                                        </div>
+                                        {% if l_card.stamps >= 7 %}
+                                        <div id="ready-badge-wrapper-{{ l_card.id }}">
+                                            <i class="fas fa-gift" id="ready-badge-{{ l_card.id }}"
+                                                style="color: #2e7d32; font-size: 0.9rem;" title="PRÊMIO PRONTO"></i>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td
+                                    style="padding: 15px; border-radius: 0 15px 15px 0; border-top: 1px solid var(--input-border); border-bottom: 1px solid var(--input-border); border-right: 1px solid var(--input-border); text-align: right;">
+                                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                                        <button
+                                            onclick="openManualStampModal('{{ l_card.id }}', '{{ l_card.id_code }}')"
+                                            class="action-btn plus" title="Adicionar Selo">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                        <button
+                                            onclick="tableRemoveStamp(this, '{{ l_card.id }}', '{{ l_card.id_code }}')"
+                                            class="action-btn minus" title="Remover Selo">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <button data-url="{% url 'fidelidade:loyalty_card_delete' l_card.id %}"
+                                            data-code="{{ l_card.id_code }}" onclick="openDeleteModalTrigger(this)"
+                                            class="action-btn delete" title="Excluir">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" style="text-align: center; padding: 40px; color: var(--text-light);">
+                                    <img src="{% static 'img/logo.png' %}"
+                                        style="width: 60px; opacity: 0.2; filter: grayscale(1); margin-bottom: 15px;"><br>
+                                    Nenhum cartão encontrado com esses filtros.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+
+
+{% if card %}
+<script>
+    function updateCardStatus() {
+        const idCode = "{{ card.id_code }}";
+        fetch(`/fidelidade/api/${idCode}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.exists) {
+                    location.href = "{% url 'fidelidade:loyalty_card_page' %}";
+                    return;
+                }
+                updateFullUIWithData(data);
+            });
+    }
+    // Polling a cada 5 segundos
+    setInterval(updateCardStatus, 5000);
+</script>
+{% endif %}
+
+<!-- Global Loyalty Scripts -->
+<script>
+    function updateFullUIWithData(data) {
+        if (!data || !data.exists) return;
+
+        // Atualizar selos visuais com posições dinâmicas
+        const container = document.getElementById('stampsContainer');
+        if (container && data.positions) {
+            container.innerHTML = '';
+            data.positions.forEach(pos => {
+                const stamp = document.createElement('div');
+                stamp.className = 'stamp-item is-filled';
+                stamp.style.position = 'absolute';
+                stamp.style.top = `${pos.y}%`;
+                stamp.style.left = `${pos.x}%`;
+                stamp.style.width = '10%';
+                stamp.style.aspectRatio = '1/1';
+                stamp.style.transform = 'translate(-50%, -50%) scale(1.1)';
+                stamp.style.display = 'flex';
+                stamp.style.alignItems = 'center';
+                stamp.style.justifyContent = 'center';
+
+                const img = document.createElement('img');
+                img.src = "{% static 'img/logo.png' %}";
+                img.className = 'stamp-logo';
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '50%';
+                img.style.clipPath = 'circle(50% at 50% 50%)';
+
+                stamp.appendChild(img);
+                container.appendChild(stamp);
+            });
+        }
+
+        const currentCycle = data.current_cycle_stamps;
+
+        // Atualizar Texto de Status (se existir)
+        const statusText = document.querySelector('.status-text-msg');
+        if (statusText) {
+            if (data.reward_count > 0) {
+                statusText.innerHTML = '🎉 PRONTO PARA RESGATE! 🎁';
+            } else {
+                statusText.innerHTML = `Faltam ${7 - currentCycle} selos para o presente!`;
+            }
+        }
+
+        // Atualizar Selo de Recompensa (Pill) na frente do cartão
+        const rewardBadge = document.querySelector('.reward-badge-pill');
+        if (data.reward_count > 0) {
+            if (rewardBadge) {
+                rewardBadge.innerHTML = `<i class="fas fa-gift"></i> ${data.reward_count} DISPONÍVEL`;
+                rewardBadge.style.display = 'block';
+            }
+        } else if (rewardBadge) {
+            rewardBadge.style.display = 'none';
+        }
+    }
+
+    function tableRemoveStamp(btn, id, code) {
+        if (!id) return;
+        fetch(`/fidelidade/stamp-remove/${id}/?ajax=1`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    // Update table row count
+                    const row = btn.closest('tr');
+                    const stampCell = row.querySelector('td:nth-child(2) span');
+                    if (stampCell) stampCell.innerText = data.stamps;
+
+                    // Update progress bar
+                    const pbar = row.querySelector('td:nth-child(2) div[style*="background: #eee"] div');
+                    if (pbar) {
+                        pbar.style.width = data.stamps >= 7 ? '100%' : (data.stamps * 14.2) + '%';
+                    }
+
+                    // Update reward badge/visibility
+                    const statusCol = row.querySelector('td:nth-child(2)');
+                    let rewardBadge = statusCol.querySelector('span[style*="background: #e8f5e9"]');
+                    if (data.stamps < 7) {
+                        if (rewardBadge) rewardBadge.remove();
+                        if (pbar) pbar.parentElement.style.display = 'block';
+                    }
+
+                    // If it's the currently viewed card, update the card preview
+                    const currentSearchCode = "{{ card.id_code|default:'' }}".toUpperCase();
+                    if (code && code.toUpperCase() === currentSearchCode) {
+                        data.exists = true;
+                        updateFullUIWithData(data);
+                    }
+                }
+            });
+    }
+
+    let currentStampCardId = null;
+
+    function renderModalStamps(positions) {
+        const container = document.getElementById('modalStampsContainer');
+        if (!container) return;
+        container.innerHTML = '';
+        positions.forEach(pos => {
+            const stamp = document.createElement('div');
+            stamp.style.position = 'absolute';
+            stamp.style.top = `${pos.y}%`;
+            stamp.style.left = `${pos.x}%`;
+            stamp.style.width = '10%';
+            stamp.style.aspectRatio = '1/1';
+            stamp.style.transform = 'translate(-50%, -50%)';
+            stamp.style.display = 'flex';
+            stamp.style.alignItems = 'center';
+            stamp.style.justifyContent = 'center';
+
+            const img = document.createElement('img');
+            img.src = "{% static 'img/logo.png' %}";
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.borderRadius = '50%';
+            img.style.clipPath = 'circle(50% at 50% 50%)';
+            img.style.transition = 'none';
+
+            stamp.appendChild(img);
+            container.appendChild(stamp);
+        });
+    }
+
+    function openManualStampModal(id, code) {
+        currentStampCardId = id;
+        document.getElementById('stampCardCode').innerText = code;
+        document.getElementById('manualStampModal').style.display = 'flex';
+
+        fetch(`/fidelidade/api/${code}/`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.positions) renderModalStamps(data.positions);
+            });
+    }
+
+    function closeManualStampModal() {
+        document.getElementById('manualStampModal').style.display = 'none';
+
+        // Update the table row dynamically without reload
+        const code = document.getElementById('stampCardCode').innerText.trim().toUpperCase();
+        fetch(`/fidelidade/api/${code}/`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.exists) {
+                    // 1. Update the table row
+                    const rows = document.querySelectorAll(`tbody tr`);
+                    rows.forEach(row => {
+                        const codeDiv = row.querySelector('td:first-child div');
+                        if (codeDiv && codeDiv.innerText.trim().toUpperCase() === code) {
+                            const scell = row.querySelector('td:nth-child(2) span');
+                            if (scell) scell.innerText = data.stamps;
+
+                            // Update progress bar
+                            const pbar = row.querySelector('td:nth-child(2) div[style*="background: #eee"] div');
+                            if (pbar) {
+                                pbar.style.width = data.stamps >= 7 ? '100%' : (data.stamps * 14.2) + '%';
+                            }
+
+                            // Update reward badge in table if needed
+                            const statusCol = row.querySelector('td:nth-child(2)');
+                            let rewardBadge = statusCol.querySelector('span[style*="background: #e8f5e9"]');
+                            if (data.stamps >= 7) {
+                                if (!rewardBadge) {
+                                    const badge = document.createElement('span');
+                                    badge.style.cssText = 'background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: bold;';
+                                    badge.innerHTML = '<i class="fas fa-gift"></i> PRÊMIO PRONTO';
+                                    statusCol.appendChild(badge);
+                                }
+                                if (pbar) pbar.parentElement.style.display = 'none';
+                            } else {
+                                if (rewardBadge) rewardBadge.remove();
+                                if (pbar) pbar.parentElement.style.display = 'block';
+                            }
+                        }
+                    });
+
+                    // 2. Also update the 3D Card if it happens to be the same one
+                    const currentSearchCode = "{{ card.id_code|default:'' }}".toUpperCase();
+                    if (code === currentSearchCode) {
+                        updateFullUIWithData(data);
+                    }
+                }
+            });
+    }
+
+    function undoLastStamp() {
+        if (!currentStampCardId) return;
+        fetch(`/fidelidade/stamp-remove/${currentStampCardId}/?ajax=1`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    renderModalStamps(data.positions);
+
+                    // Update table row count in the asset list
+                    const stampCardCode = document.getElementById('stampCardCode').innerText.trim().toUpperCase();
+                    const rows = document.querySelectorAll(`tbody tr`);
+                    rows.forEach(row => {
+                        const codeDiv = row.querySelector('td:first-child div');
+                        if (codeDiv && codeDiv.innerText.trim().toUpperCase() === stampCardCode) {
+                            const scell = row.querySelector('td:nth-child(2) span');
+                            if (scell) scell.innerText = data.stamps;
+
+                            // Update progress bar
+                            const pbar = row.querySelector('td:nth-child(2) div[style*="background: #eee"] div');
+                            if (pbar) {
+                                pbar.style.width = data.stamps >= 7 ? '100%' : (data.stamps * 14.2) + '%';
+                            }
+                        }
+                    });
+
+                    // If it's the currently viewed card, update the card preview
+                    const currentSearchCode = "{{ card.id_code|default:'' }}".toUpperCase();
+                    if (stampCardCode === currentSearchCode) {
+                        data.exists = true;
+                        updateFullUIWithData(data);
+                    }
+                }
+            });
+    }
+
+    // Modal Canvas Event Handlers
+    const stampCanvas = document.getElementById('stampCanvas');
+    const stampPreview = document.getElementById('stampPreview');
+
+    // Add a target dot for ultra-precision if not present
+    if (stampCanvas && !document.getElementById('targetDot')) {
+        const dot = document.createElement('div');
+        dot.id = 'targetDot';
+        dot.style.cssText = 'position:absolute; width:4px; height:4px; background:white; border-radius:50%; border:1px solid #ff4081; transform:translate(-50%, -50%); pointer-events:none; z-index:100; box-shadow:0 0 5px rgba(0,0,0,0.5);';
+        stampPreview.appendChild(dot);
+
+        const vLine = document.createElement('div');
+        vLine.id = 'vLine';
+        vLine.style.cssText = 'position:absolute; width:1px; height:100%; top:0; left:0; background:rgba(255,255,255,0.3); pointer-events:none; display:none; z-index:5; border-left:1px dashed rgba(0,0,0,0.1);';
+        const hLine = document.createElement('div');
+        hLine.id = 'hLine';
+        hLine.style.cssText = 'position:absolute; height:1px; width:100%; top:0; left:0; background:rgba(255,255,255,0.3); pointer-events:none; display:none; z-index:5; border-top:1px dashed rgba(0,0,0,0.1);';
+        stampCanvas.appendChild(vLine);
+        stampCanvas.appendChild(hLine);
+    }
+
+    if (stampCanvas) {
+        const vLine = document.getElementById('vLine');
+        const hLine = document.getElementById('hLine');
+
+        stampCanvas.onmousemove = function (e) {
+            const rect = stampCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            stampPreview.style.display = 'block';
+            vLine.style.display = 'block';
+            hLine.style.display = 'block';
+
+            stampPreview.style.left = x + 'px';
+            stampPreview.style.top = y + 'px';
+            vLine.style.left = x + 'px';
+            hLine.style.top = y + 'px';
+
+            document.getElementById('targetDot').style.left = '50%';
+            document.getElementById('targetDot').style.top = '50%';
+        };
+
+        stampCanvas.onmouseleave = function () {
+            stampPreview.style.display = 'none';
+            if (vLine) vLine.style.display = 'none';
+            if (hLine) hLine.style.display = 'none';
+        };
+
+        stampCanvas.onclick = function (e) {
+            e.preventDefault();
+            const rect = stampCanvas.getBoundingClientRect();
+            const xPerc = ((e.clientX - rect.left) / rect.width) * 100;
+            const yPerc = ((e.clientY - rect.top) / rect.height) * 100;
+
+            const formData = new FormData();
+            formData.append('x', xPerc.toFixed(6));
+            formData.append('y', yPerc.toFixed(6));
+            formData.append('ajax', '1');
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            // Optimistic UI
+            const tempStamp = document.createElement('div');
+            tempStamp.style.cssText = `position:absolute; top:${yPerc}%; left:${xPerc}%; width:10%; aspect-ratio:1/1; transform:translate(-50%, -50%); pointer-events:none; opacity:0.8;`;
+            tempStamp.innerHTML = `<img src="{% static 'img/logo.png' %}" style="width:100%; border-radius:50%; clip-path:circle(50% at 50% 50%);">`;
+            document.getElementById('modalStampsContainer').appendChild(tempStamp);
+
+            if (currentStampCardId) {
+                fetch(`/fidelidade/stamp-add/${currentStampCardId}/`, {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            renderModalStamps(data.positions);
+
+                            // Update table row count in the asset list
+
+                            // Update table row count in the asset list
+                            const stampCardCode = document.getElementById('stampCardCode').innerText.trim().toUpperCase();
+                            const rows = document.querySelectorAll(`tbody tr`);
+                            rows.forEach(row => {
+                                const codeDiv = row.querySelector('td:first-child div');
+                                if (codeDiv && codeDiv.innerText.trim().toUpperCase() === stampCardCode) {
+                                    const scell = row.querySelector('td:nth-child(2) span');
+                                    if (scell) scell.innerText = data.stamps;
+                                }
+                            });
+
+
+                            // If it's the currently viewed card, update the card preview
+                            const currentSearchCode = "{{ card.id_code|default:'' }}".toUpperCase();
+                            if (stampCardCode === currentSearchCode) {
+                                data.exists = true;
+                                updateFullUIWithData(data);
+                            }
+                        }
+                    });
+            }
+        };
+    }
+
+    let pendingRemoveId = null;
+    let pendingRemoveCode = null;
+
+    function tableRemoveStamp(btn, id, code) {
+        pendingRemoveId = id;
+        pendingRemoveCode = code;
+        document.getElementById('removeCardCode').innerText = code;
+        document.getElementById('removeStampModal').style.display = 'flex';
+    }
+
+    function closeRemoveStampModal() {
+        document.getElementById('removeStampModal').style.display = 'none';
+        pendingRemoveId = null;
+        pendingRemoveCode = null;
+    }
+
+    function confirmRemoveStamp() {
+        if (!pendingRemoveId) return;
+
+        const url = `/fidelidade/stamp-remove/${pendingRemoveId}/`;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                updateTableRowUI(pendingRemoveId, data);
+                update3DCardStampsIfActive(pendingRemoveId, data.positions);
+                closeRemoveStampModal();
+            })
+            .catch(err => {
+                console.error("Erro ao remover selo:", err);
+                alert("Erro ao remover selo. Tente novamente.");
+            });
+    }
+
+    function openManualStampModal(id, code) {
+        currentStampCardId = id;
+        document.getElementById('stampCardCode').innerText = code;
+        document.getElementById('modalStampsContainer').innerHTML = '';
+
+        // Use correct API URL to get positions
+        fetch(`/fidelidade/api/${code}/`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.exists) {
+                    renderModalStamps(data.positions);
+                }
+                document.getElementById('manualStampModal').style.display = 'flex';
+            });
+    }
+
+    function closeManualStampModal() {
+        document.getElementById('manualStampModal').style.display = 'none';
+        if (currentStampCardId) {
+            // Get data-code from the modal text since we need it for the API
+            const code = document.getElementById('stampCardCode').innerText;
+            fetch(`/fidelidade/api/${code}/`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.exists) {
+                        // Normalize data for updateTableRowUI (which expects stamps_count)
+                        data.stamps_count = data.stamps;
+                        updateTableRowUI(currentStampCardId, data);
+                        update3DCardStampsIfActive(currentStampCardId, data.positions);
+                    }
+                });
+        }
+    }
+
+    function update3DCardStampsIfActive(id, positions) {
+        const container = document.getElementById('stampsContainer');
+        const stampCardCode = document.getElementById('stampCardCode')?.innerText.trim().toUpperCase();
+        const currentSearchCode = "{{ card.id_code|default:'' }}".toUpperCase();
+
+        if (container && (id === "{{ card.id|default:'' }}" || stampCardCode === currentSearchCode)) {
+            container.innerHTML = positions.map(pos => `
+                <div class="stamp-item is-filled" style="position: absolute; top: ${pos.y}%; left: ${pos.x}%; width: 10%; aspect-ratio: 1/1; transform: translate(-50%, -50%) scale(1.1); display: flex; align-items: center; justify-content: center;">
+                    <img src="/static/img/logo.png" class="stamp-logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; clip-path: circle(50% at 50% 50%);">
+                </div>
+            `).join('');
+        }
+    }
+
+    function openDeleteModalTrigger(btn) {
+        const url = btn.getAttribute('data-url');
+        const idCode = btn.getAttribute('data-code');
+        document.getElementById('deleteCardCode').innerText = idCode;
+        document.getElementById('confirmDeleteBtn').href = url;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    window.onclick = function (event) {
+        if (event.target == document.getElementById('deleteModal')) closeDeleteModal();
+        if (event.target == document.getElementById('manualStampModal')) closeManualStampModal();
+    }
+
+    const sortSelect = document.getElementById('sortSelect');
+
+    if (sortSelect) {
+        sortSelect.onchange = function () {
+            triggerAjaxSearch();
+        };
+    }
+
+    // Initial progress bars calibration
+    function initAllProgressBars() {
+        document.querySelectorAll('.init-progress').forEach(bar => {
+            const stamps = parseInt(bar.getAttribute('data-stamps') || 0);
+            const perc = Math.min(100, (stamps / 7) * 100);
+            setTimeout(() => {
+                bar.style.width = perc + "%";
+            }, 100);
+        });
+    }
+
+    // Run on load
+    document.addEventListener('DOMContentLoaded', initAllProgressBars);
+
+    function triggerAjaxSearch() {
+        const mForm = document.getElementById('mainSearchForm');
+        const sSelect = document.getElementById('sortSelect');
+        const section = document.getElementById('assetsListSection');
+        if (!mForm || !section) return;
+        section.style.opacity = '0.5';
+
+        const formData = new FormData(mForm);
+        if (sSelect) formData.set('sort', sSelect.value);
+
+        const params = new URLSearchParams(formData).toString();
+        const url = `${window.location.pathname}?${params}`;
+        window.history.pushState(null, '', url);
+
+        fetch(url)
+            .then(r => r.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newSection = doc.getElementById('assetsListSection');
+                if (newSection) {
+                    section.innerHTML = newSection.innerHTML;
+                    section.style.opacity = '1';
+                    initAllProgressBars(); // Recalibrate after search
+                }
+            })
+            .catch(e => {
+                console.error('Error:', e);
+                section.style.opacity = '1';
+            });
+    }
+
+    function updateTableRowUI(id, data) {
+        const countSpan = document.getElementById(`stamp-count-${id}`);
+        const progressDiv = document.getElementById(`progress-bar-${id}`);
+        const container = document.getElementById(`stamp-container-${id}`);
+        const currentCount = parseInt(data.stamps_count || data.stamps || 0);
+
+        if (countSpan) countSpan.innerText = currentCount;
+        if (progressDiv) {
+            // Precise calculation for 7 stamps
+            const perc = Math.min(100, (currentCount / 7) * 100);
+            progressDiv.style.width = perc + "%";
+        }
+        if (container) {
+            let badge = document.getElementById(`ready-badge-${id}`);
+            if (currentCount >= 7) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.id = `ready-badge-${id}`;
+                    badge.style = "background: #e8f5e9; color: #2e7d32; padding: 2px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: bold; margin-top: 5px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid #c8e6c9;";
+                    badge.innerHTML = '<i class="fas fa-gift"></i> PRÊMIO PRONTO';
+                    container.appendChild(badge);
+                }
+            } else if (badge) {
+                badge.remove();
+            }
+        }
+    }
+
+    function confirmRemoveStamp() {
+        if (!pendingRemoveId) return;
+        // Added ?ajax=1 to ensure JSON response
+        fetch(`/fidelidade/stamp-remove/${pendingRemoveId}/?ajax=1`)
+            .then(r => r.json())
+            .then(data => {
+                updateTableRowUI(pendingRemoveId, data);
+                update3DCardStampsIfActive(pendingRemoveId, data.positions);
+                closeRemoveStampModal();
+            }).catch(e => {
+                console.error("Erro ao remover selo:", e);
+                alert("Erro ao remover selo. Verifique a conexão.");
+            });
+    }
+
+    function openManualStampModal(id, code) {
+        currentStampCardId = id;
+        document.getElementById('stampCardCode').innerText = code;
+        document.getElementById('modalStampsContainer').innerHTML = '';
+        fetch(`/fidelidade/api/${code}/`).then(r => r.json()).then(data => {
+            if (data.exists) renderModalStamps(data.positions);
+            document.getElementById('manualStampModal').style.display = 'flex';
+        });
+    }
+
+    function closeManualStampModal() {
+        document.getElementById('manualStampModal').style.display = 'none';
+        if (currentStampCardId) {
+            const code = document.getElementById('stampCardCode').innerText;
+            fetch(`/fidelidade/api/${code}/`).then(r => r.json()).then(data => {
+                if (data.exists) {
+                    data.stamps_count = data.stamps;
+                    updateTableRowUI(currentStampCardId, data);
+                    update3DCardStampsIfActive(currentStampCardId, data.positions);
+                }
+            });
+        }
+    }
+</script>
+
+{% if user.is_superuser %}
+<!-- Manual Stamp Modal -->
+<div id="manualStampModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:20000; align-items:center; justify-content:center; backdrop-filter: blur(8px);">
+    <div
+        style="background:var(--card-bg); padding:20px; border-radius:25px; max-width:600px; width:95%; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); border: 1px solid var(--input-border);">
+        <h3 style="margin-bottom:10px; color:var(--text-color);">Carimbar Cartão <span id="stampCardCode"></span></h3>
+        <p style="color:var(--text-light); margin-bottom:15px; font-size: 0.9rem;">Clique onde deseja colocar o carimbo.
+        </p>
+        <div id="stampCanvas">
+            <div id="modalStampsContainer"
+                style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></div>
+            <div id="stampPreview"
+                style="position: absolute; width:10%; aspect-ratio:1/1; pointer-events:none; display:none; transform:translate(-50%,-50%); z-index:10;">
+                <img src="{% static 'img/logo.png' %}" style="width:100%; border-radius:50%; opacity:0.7;">
+            </div>
+        </div>
+        <div style="display:flex; gap:12px; justify-content:center; margin-top:20px;">
+            <button onclick="undoLastStamp()" class="btn"
+                style="background:#ff9800; color:white; border:none; padding:10px 20px;"><i class="fas fa-undo"></i>
+                Desfazer</button>
+            <button onclick="closeManualStampModal()" class="btn"
+                style="background:#f5f5f5; color:#666;">Concluído</button>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Stamp Confirmation Modal -->
+<div id="removeStampModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:20000; align-items:center; justify-content:center; backdrop-filter: blur(8px);">
+    <div
+        style="background:var(--card-bg); padding:30px; border-radius:25px; max-width:400px; width:90%; text-align:center; border: 1px solid var(--input-border); animation: modalPop 0.3s forwards;">
+        <div
+            style="width: 70px; height: 70px; background: rgba(255, 193, 7, 0.1); color: #ffc107; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px;">
+            <i class="fas fa-minus-circle"></i></div>
+        <h3 style="margin-bottom:10px; color:var(--text-color);">Remover Selo?</h3>
+        <p style="color:var(--text-light); margin-bottom: 30px; font-size: 0.95rem;">Deseja remover 1 selo do cartão
+            <strong id="removeCardCode"></strong>?</p>
+        <div style="display:flex; gap:15px; justify-content:center;">
+            <button onclick="closeRemoveStampModal()"
+                style="flex:1; padding:12px 0; border-radius:12px; border:1px solid var(--input-border); background:var(--input-bg); color:var(--text-light); font-weight:600; cursor:pointer;">Cancelar</button>
+            <button onclick="confirmRemoveStamp()"
+                style="flex:1; padding:12px 0; border-radius:12px; border:none; background:#ffc107; color:white; font-weight:bold; cursor:pointer; box-shadow:0 4px 10px rgba(255,193,7,0.3);">Remover</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:20000; align-items:center; justify-content:center; backdrop-filter: blur(8px);">
+    <div
+        style="background:var(--card-bg); padding:30px; border-radius:25px; max-width:400px; width:90%; text-align:center; border: 1px solid var(--input-border); animation: modalPop 0.3s forwards;">
+        <div
+            style="width: 70px; height: 70px; background: rgba(244, 67, 54, 0.1); color: #f44336; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px;">
+            <i class="fas fa-trash-alt"></i></div>
+        <h3 style="margin-bottom:10px; color:var(--text-color);">Excluir Cartão <span id="deleteCardCode"></span>?</h3>
+        <p style="color:var(--text-light); margin-bottom:30px; font-size: 0.95rem;">Todos os selos serão perdidos. Ação
+            irreversível.</p>
+        <div style="display:flex; gap:15px; justify-content:center;">
+            <button onclick="closeDeleteModal()"
+                style="flex:1; padding:12px 0; border-radius:12px; border:1px solid var(--input-border); background:var(--input-bg); color:var(--text-light); font-weight:600; cursor:pointer;">Cancelar</button>
+            <a id="confirmDeleteBtn" href="#"
+                style="flex:1; padding:12px 0; border-radius:12px; border:none; background:#f44336; color:white; font-weight:bold; text-decoration:none; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(244,67,54,0.3);">Excluir</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

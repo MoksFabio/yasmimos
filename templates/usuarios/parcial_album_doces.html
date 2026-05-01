@@ -1,0 +1,56 @@
+<style>
+    .tracking-day-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 15px 10px;
+        border-radius: 12px;
+        transition: all 0.3s;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+    }
+    .tracking-day-card.completed {
+        background: rgba(233, 30, 99, 0.1);
+        border: 2px solid var(--accent-color);
+    }
+    .tracking-day-card.past {
+        border: 1px dashed var(--input-border);
+        opacity: 0.6;
+    }
+    .tracking-day-title {
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: var(--text-color);
+    }
+    .tracking-day-title.completed {
+        color: var(--accent-color);
+    }
+</style>
+{% if tracking_days %}
+<div id="tracker-container">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px;">
+        {% for day in tracking_days %}
+            <div class="tracking-day-card {% if day.is_completed %}completed{% elif day.is_past %}past{% endif %}">
+                <span class="tracking-day-title {% if day.is_completed %}completed{% endif %}">{{ day.label }}</span>
+                {% if day.is_completed %}
+                    <i class="fas fa-cookie-bite" style="font-size: 1.8rem; color: var(--accent-color); filter: drop-shadow(0 2px 4px rgba(233, 30, 99, 0.3));"></i>
+                {% elif day.is_past %}
+                    <i class="fas fa-times-circle" style="font-size: 1.5rem; color: #999;"></i>
+                {% else %}
+                    <i class="fas fa-box" style="font-size: 1.5rem; color: var(--text-light);"></i>
+                {% endif %}
+                
+                {% if day.is_completed %}
+                    <span style="font-size: 0.65rem; color: var(--accent-color); font-weight: bold; margin-top: 5px; text-transform: uppercase;">OK!</span>
+                {% elif day.is_past %}
+                    <span style="font-size: 0.65rem; color: #999; margin-top: 5px;">Passou</span>
+                {% else %}
+                    <span style="font-size: 0.65rem; color: var(--text-light); margin-top: 5px;">Aguardando</span>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

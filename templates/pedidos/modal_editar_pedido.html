@@ -1,0 +1,328 @@
+<style>
+    .modal-compact {
+        background: var(--bg-color, #fff); 
+        padding: 0; 
+        border-radius: 20px; 
+        max-width: 95%; 
+        width: 800px; 
+        box-shadow: 0 25px 60px rgba(0,0,0,0.25); 
+        border: 1px solid rgba(255,255,255,0.1);
+        max-height: 90vh; 
+        overflow: hidden; 
+        position: relative; 
+        display: flex;
+        flex-direction: column;
+        animation: modalZoom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+        font-family: var(--font-main, 'Outfit', sans-serif);
+    }
+    
+    :root[data-theme="dark"] .modal-compact,
+    .dark-theme .modal-compact {
+         box-shadow: 0 25px 60px rgba(0,0,0,0.6); 
+    }
+
+    @keyframes modalZoom {
+        from { opacity: 0; transform: scale(0.95) translateY(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Scrollbar estilizada visível no modal inteiro */
+    .modal-compact ::-webkit-scrollbar { width: 8px; height: 8px; }
+    .modal-compact ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); border-radius: 4px; }
+    .modal-compact ::-webkit-scrollbar-thumb { background: rgba(var(--accent-color-rgb, 255,105,180), 0.3); border-radius: 4px; border: 2px solid var(--bg-color); }
+    .modal-compact ::-webkit-scrollbar-thumb:hover { background: rgba(var(--accent-color-rgb, 255,105,180), 0.6); }
+
+    .m-header {
+        background: linear-gradient(135deg, var(--accent-color), #ff5e62);
+        padding: 20px 24px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
+    
+    .m-header h3 {
+        margin: 0; font-family: var(--font-serif); font-size: 1.5rem; color: white; display: flex; align-items: center; gap: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .m-close {
+        background: rgba(255,255,255,0.2); border: none; font-size: 1.2rem; color: white; cursor: pointer; line-height: 1; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; backdrop-filter: blur(5px);
+    }
+    .m-close:hover { background: rgba(255,255,255,0.4); transform: rotate(90deg); }
+
+    /* Correção do BUG da rolagem (O Form deve ser um flex container com min-height 0) */
+    #editOrderForm {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0; /* Permite que o scroll funcione dentro dos filhos do Flexbox */
+    }
+
+    .m-body {
+        padding: 24px;
+        overflow-y: auto; /* Permite o SCROLL dentro do formulário! */
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        background: var(--bg-color);
+        flex: 1; /* Preenche a tela e habilita scroll */
+    }
+
+    .m-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    .m-card {
+        background: var(--card-bg);
+        border: 1px solid var(--manage-border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.02);
+        position: relative;
+    }
+    
+    .m-card.highlight {
+        border-color: rgba(var(--accent-color-rgb, 255,105,180), 0.3);
+        box-shadow: 0 8px 25px rgba(var(--accent-color-rgb, 255,105,180), 0.08);
+    }
+    .m-card.highlight::before {
+        content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 4px; background: var(--accent-color); border-radius: 16px 0 0 16px;
+    }
+
+    .m-card h4 {
+        color: var(--manage-text); margin: 0 0 16px 0; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .m-card h4 i { color: var(--accent-color); font-size: 1.1rem; }
+
+    .info-list { display: flex; flex-direction: column; gap: 10px; }
+    .info-pill {
+        display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--input-bg); border-radius: 10px; border: 1px solid var(--input-border);
+    }
+    .info-pill span.label { font-size: 0.75rem; font-weight: 700; color: var(--manage-text-sec); text-transform: uppercase; letter-spacing: 0.5px; }
+    .info-pill span.value { font-size: 0.9rem; font-weight: 600; color: var(--text-color); }
+    .info-pill.special { background: rgba(var(--accent-color-rgb, 255,105,180), 0.05); border-color: rgba(var(--accent-color-rgb, 255,105,180), 0.2); }
+    .info-pill.special span.value { color: var(--accent-color); }
+
+    .modal-compact label {
+        color: var(--manage-text-sec); font-size: 0.75rem; font-weight: 700; margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .modal-compact .input-field {
+        width: 100%; box-sizing: border-box; border-radius: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); padding: 10px 14px; font-size: 0.95rem; transition: all 0.25s; outline: none; font-family: inherit; font-weight: 500;
+    }
+    .modal-compact .input-field:focus {
+        border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb, 255,105,180), 0.15); background: var(--card-bg);
+    }
+
+    .item-row {
+        display: flex; gap: 12px; align-items: center; margin-bottom: 10px; background: var(--input-bg); padding: 12px; border-radius: 12px; border: 1px solid transparent; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    }
+    .item-row:hover { border-color: rgba(var(--accent-color-rgb, 255,105,180), 0.3); transform: translateX(2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+    .btn-save-big {
+        width: 100%; padding: 16px; background: linear-gradient(135deg, var(--accent-color), #ff5e62); color: white; border-radius: 12px; font-weight: 800; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.1rem; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(var(--accent-color-rgb, 255,105,180), 0.35); margin-top: 5px; margin-bottom: 5px; flex-shrink: 0;
+    }
+    .btn-save-big:hover { filter: brightness(1.1); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(var(--accent-color-rgb, 255,105,180), 0.45); }
+    .btn-save-big:active { transform: translateY(0); box-shadow: 0 5px 15px rgba(var(--accent-color-rgb, 255,105,180), 0.3); }
+
+    .btn-add-modern {
+        background: transparent; color: var(--accent-color); border: 2px dashed rgba(var(--accent-color-rgb, 255,105,180), 0.4); width: 100%; padding: 12px; font-size: 0.9rem; font-weight: 800; border-radius: 10px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-add-modern:hover { border-color: var(--accent-color); background: rgba(var(--accent-color-rgb, 255,105,180), 0.08); transform: translateY(-1px); }
+
+    /* ADAPTAÇÃO ULTRA COMPACTA PARA CELULARES (Bottom Sheet Native Feel) */
+    @media (max-width: 650px) {
+        .modal-compact {
+            max-height: 98vh; /* Quase a tela toda mas deixa uma bordinha topo */
+            width: 100%; 
+            max-width: 100%; 
+            border-radius: 20px 20px 0 0; /* Arredondado só no topo */
+            position: absolute; 
+            bottom: 0; /* Fica colado em baixo na tela (Bottom Sheet modal) */
+            animation: slideUpMobile 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+        @keyframes slideUpMobile { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .m-header { padding: 16px 20px; }
+        .m-header h3 { font-size: 1.25rem; }
+        .m-close { width: 32px; height: 32px; font-size: 1.1rem; }
+        
+        .m-body { padding: 16px; gap: 14px; }
+        .m-grid { display: flex; flex-direction: column; gap: 14px; }
+        
+        .m-card { padding: 14px; border-radius: 12px; }
+        .m-card h4 { margin-bottom: 12px; font-size: 0.85rem; }
+        
+        /* Torna os labels e info pills bem visíveis na tela compacta */
+        .info-pill { padding: 8px 12px; border-radius: 8px; }
+        .info-pill span.label { font-size: 0.7rem; }
+        .info-pill span.value { font-size: 0.85rem; }
+        
+        .modal-compact label { font-size: 0.7rem; margin-bottom: 4px; }
+        .modal-compact .input-field { padding: 10px 12px; font-size: 0.9rem; border-radius: 8px; margin-bottom: 0; }
+        
+        /* Torna o bloco de produtos uma matriz quebrada em mobile pra ajustar fácil os cliques */
+        .item-row { flex-wrap: wrap; padding: 12px; gap: 8px; border-radius: 10px; margin-bottom: 8px; position: relative; }
+        .item-row .item-product { flex: 0 0 100% !important; margin-bottom: 4px; padding: 12px !important; }
+        .item-row .item-qty { flex: 1 !important; padding: 10px !important; }
+        .item-row > div { flex: 2 !important; }
+        .item-row > div .item-price { padding: 10px 10px 10px 30px !important; }
+        
+        .btn-save-big { padding: 16px; font-size: 1.05rem; margin-bottom: 10px; margin-top: 10px; border-radius: 10px; }
+    }
+</style>
+
+<div class="modal-compact">
+    <div class="m-header">
+        <h3><i class="fas fa-file-invoice-dollar"></i> Pedido #{{ order.id }}</h3>
+        <button type="button" class="m-close" onclick="closeEditModal()">&times;</button>
+    </div>
+
+    <!-- O FORM PRECISA SER UM FLEX CONTAINER PARA A ROLAGEM FUNCIONAR NO CSS -->
+    <form id="editOrderForm" onsubmit="submitEditOrder(event, '{{ order.id }}')">
+        <div class="m-body">
+            
+            <div class="m-grid">
+                
+                <!-- Coluna Esquerda: Info & Cliente -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    
+                    <div class="m-card highlight">
+                        <h4><i class="fas fa-radar"></i> Rastreio & Auditoria</h4>
+                        <div class="info-list">
+                            <div class="info-pill">
+                                <span class="label">Criado Em</span>
+                                <span class="value">{{ order.created|date:"d M \à\s H:i" }}</span>
+                            </div>
+                            <div class="info-pill">
+                                <span class="label">Última Ação</span>
+                                <span class="value">{{ order.updated|date:"d M \à\s H:i" }}</span>
+                            </div>
+                            <div class="info-pill special">
+                                <span class="label">Responsável pela Criação</span>
+                                <span class="value" style="font-size: 0.85rem;">
+                                    {% if order.user %}
+                                        {% if order.user.is_superuser %}💼 {{ order.user.username|title|truncatechars:18 }}{% else %}📱 {{ order.user.username|title|truncatechars:18 }}{% endif %}
+                                    {% else %}
+                                        🌐 Visitante
+                                    {% endif %}
+                                </span>
+                            </div>
+                            {% if order.coupon %}
+                            <div class="info-pill">
+                                <span class="label">Cupom Usado</span>
+                                <span class="value" style="background: var(--accent-color); color: white; padding: 2px 8px; border-radius: 6px;">{{ order.coupon.code }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="m-card">
+                        <h4><i class="fas fa-user-circle"></i> Dados do Cliente</h4>
+                        <div style="margin-bottom: 8px;">
+                            <label>Nome do Cliente</label>
+                            <input type="text" id="editGuestName" class="input-field" value="{{ order.guest_name|default:'' }}" {% if order.user %}disabled title="Vende para Usuário Web"{% endif %} placeholder="Nome completo...">
+                        </div>
+                        <div>
+                            <label>WhatsApp / Telefone</label>
+                            <input type="text" id="editGuestPhone" class="input-field" value="{{ order.guest_phone|default:'' }}" {% if order.user %}disabled title="Vende para Usuário Web"{% endif %} placeholder="(81) 90000-0000">
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Coluna Direita: Financeiro & Props -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    
+                    <div class="m-card">
+                        <h4><i class="fas fa-sliders-h"></i> Financeiro e Status</h4>
+                        
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 12px;">
+                            <div>
+                                <label>Fase do Pedido</label>
+                                <select id="editStatus" class="input-field" style="font-weight: 700;">
+                                    {% for val, label in status_choices %}
+                                    <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                    <option value="deleted" {% if order.status == 'deleted' %}selected{% endif %}>✖ Lixeira</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Gorjeta Adicional</label>
+                                <input type="number" step="0.01" id="editTip" class="input-field" style="color: var(--accent-color); font-weight: 800; text-align: center;" value="{{ order.tip_amount|stringformat:'.2f'|default:'0.00' }}">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 12px;">
+                            <label>Método de Pagamento</label>
+                            <select id="editPaymentMethod" class="input-field">
+                                {% if order.payment_method == 'pix' or order.payment_method == 'pix_automatic' %}
+                                <option value="pix" selected>⚡ PIX Automático</option>
+                                {% endif %}
+                                <option value="pix_manual" {% if order.payment_method == 'pix_manual' %}selected{% endif %}>📱 PIX Manual (WhatsApp)</option>
+                                <option value="cash" {% if order.payment_method == 'cash' or order.payment_method == 'cash_manual' %}selected{% endif %}>💵 Dinheiro Físico na Mão</option>
+                                <option value="point" {% if order.payment_method == 'point' %}selected{% endif %}>💳 Maquineta Cartão/NFC</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label>Observações Internas (Visíveis no Recibo)</label>
+                            <textarea id="editObservations" rows="2" class="input-field" placeholder="Ex: Entregar na recepção..." style="resize: vertical;">{{ order.observations|default:'' }}</textarea>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Full Width: Itens do Pedido -->
+            <div class="m-card" style="margin-top: 5px;">
+                <h4><i class="fas fa-shopping-bag"></i> Produtos Comprados</h4>
+                
+                <div id="editItemsContainer" style="margin-bottom: 12px;">
+                    {% for item in order.items.all %}
+                    <div class="item-row" data-id="{{ item.id }}">
+                        <select class="item-product input-field" style="flex: 2; padding: 10px;">
+                            {% for p in products %}
+                            <option value="{{ p.id }}" {% if p.id == item.product.id %}selected{% endif %}>{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="number" class="item-qty input-field" min="1" style="flex: 0.5; text-align: center;" value="{{ item.quantity }}" title="Quantidade">
+                        <div style="flex: 0.8; position: relative;">
+                            <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--manage-text-sec); font-size: 0.8rem; font-weight: bold;">R$</span>
+                            <input type="number" step="0.01" class="item-price input-field" style="padding-left: 30px;" value="{{ item.price|stringformat:'.2f'|default:'0.00' }}" title="Preço Unitário">
+                        </div>
+                        <button type="button" onclick="this.parentElement.remove()" style="background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.2); color: #ff4757; cursor: pointer; padding: 10px 14px; border-radius: 10px; font-size: 1rem; transition: all 0.2s;" onmouseover="this.style.background='#ff4757'; this.style.color='white';" onmouseout="this.style.background='rgba(255, 71, 87, 0.1)'; this.style.color='#ff4757';">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <button type="button" onclick="document.getElementById('editItemsContainer').insertAdjacentHTML('beforeend', document.getElementById('newRowTemplate').innerHTML);" class="btn-add-modern">
+                    <i class="fas fa-plus"></i> Inserir Novo Produto
+                </button>
+            </div>
+
+            <button type="submit" id="btnSaveEdit" class="btn-save-big">
+                <i class="fas fa-check-circle" style="font-size: 1.3rem;"></i> Atualizar Pedido
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Template escondido para novas linhas -->
+<div id="newRowTemplate" style="display: none;">
+    <div class="item-row" data-id="new" style="animation: modalZoom 0.2s ease;">
+        <select class="item-product input-field" style="flex: 2; padding: 10px;">
+            {% for p in products %}
+            <option value="{{ p.id }}">{{ p.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="number" class="item-qty input-field" min="1" style="flex: 0.5; text-align: center;" value="1" title="Quantidade">
+        <div style="flex: 0.8; position: relative;">
+            <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--manage-text-sec); font-size: 0.8rem; font-weight: bold;">R$</span>
+            <input type="number" step="0.01" class="item-price input-field" style="padding-left: 30px;" value="0.00" title="Preço Unitário">
+        </div>
+        <button type="button" onclick="this.parentElement.remove()" style="background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.2); color: #ff4757; cursor: pointer; padding: 10px 14px; border-radius: 10px; font-size: 1rem; transition: all 0.2s;" onmouseover="this.style.background='#ff4757'; this.style.color='white';" onmouseout="this.style.background='rgba(255, 71, 87, 0.1)'; this.style.color='#ff4757';">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+    </div>
+</div>

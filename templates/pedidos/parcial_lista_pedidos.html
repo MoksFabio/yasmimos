@@ -1,65 +1,128 @@
 {% for order in orders %}
 <tr>
-    <td><span class="id-badge">#{{ order.id }}</span></td>
-    <td style="font-weight: 500;">
-        {% if order.user %}
-            {{ order.user.username }}
+    <td data-label="ID"><span class="id-badge">#{{ order.id }}</span></td>
+    <td data-label="Cliente">
+        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
+            {% if order.user %}
+            <span style="font-weight: 600; color: var(--manage-text);">{{ order.user.username }}</span>
+            {% if order.user.phone_number %}
+            <small style="font-size: 0.8em; color: var(--manage-text-sec);">
+                <i class="fas fa-phone-alt" style="font-size: 0.8em;"></i> {{ order.user.phone_number }}
+            </small>
+            {% endif %}
+            {% else %}
+            {% if order.guest_name == "Visitante" %}
+            <span style="font-weight: 600; color: var(--manage-text);">Visitante</span>
+            {% else %}
+            <span style="font-weight: 600; color: var(--manage-text);">{{ order.guest_name }} <small
+                    style="color: #ed8936; font-weight: normal;">(Visitante)</small></span>
+            {% endif %}
+            {% if order.guest_phone %}
+            <small style="font-size: 0.8em; color: var(--manage-text-sec);">
+                <i class="fas fa-phone-alt" style="font-size: 0.8em;"></i> {{ order.guest_phone }}
+            </small>
+            {% endif %}
+            {% endif %}
+
+            {% if order.observations %}
+            <div title="{{ order.observations }}" style="margin-top: 5px; background: #fffaf0; border: 1px solid #feebc8; padding: 2px 6px; border-radius: 4px; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: help;">
+                <small style="font-size: 0.7rem; color: #c05621;">
+                    <i class="fas fa-comment-dots"></i> {{ order.observations|truncatechars:25 }}
+                </small>
+            </div>
+            {% endif %}
+        </div>
+    </td>
+    <td data-label="Itens" style="font-size: 0.85em; color: var(--manage-text-sec);">
+        <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end; width: 100%;">
+            {% for item in order.items.all %}
+            <div style="width: 100%; text-align: right;">
+                {% if item.metadata and item.metadata.description %}
+                <button onclick="openOrderItemDetailsModal('{{ item.metadata.description|escapejs }}')"
+                    style="background: #fff5f8; border: 1px solid #ffe3ec; padding: 4px 10px; border-radius: 10px; color: var(--accent-color); font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 0.85rem; transition: transform 0.2s; white-space: normal; text-align: right; max-width: 100%;">
+                    <i class="fas fa-magic"></i> {{ item.quantity }}x {{ item.product.name }}
+                </button>
+                {% else %}
+                <div style="font-weight: 500; color: var(--manage-text); padding: 2px 0; white-space: normal;">
+                    {{ item.quantity }}x {{ item.product.name }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </td>
+    <td data-label="Data" style="color: var(--manage-text-sec);">{{ order.created|date:"d/m/Y H:i" }}</td>
+    <td data-label="Total" style="font-weight: bold; color: var(--manage-text);">R$ {{ order.total_amount }}</td>
+    <td data-label="Pagamento">
+        {% if order.payment_method == 'cash' %}
+        <span class="status-pill" style="background-color: #e0e0e0; color: #333;">Dinheiro</span>
+        {% elif order.payment_method == 'cash_manual' %}
+        <span class="status-pill" style="background-color: #e0e0e0; color: #333;">Dinheiro - M</span>
+        {% elif order.payment_method == 'pix_manual' %}
+        <span class="status-pill" style="background-color: #e1f5fe; color: #0277bd;">PIX - M</span>
+        {% elif order.payment_method == 'point' %}
+        <span class="status-pill" style="background-color: #fff3e0; color: #e65100;">Maquineta</span>
         {% else %}
-            {{ order.guest_name }} <small style="color: #888;">(Visitante)</small>
-            <br><small style="font-size: 0.8em; color: #666;">{{ order.guest_phone }}</small>
+        <span class="status-pill" style="background-color: #e1f5fe; color: #0277bd;">PIX - A</span>
         {% endif %}
     </td>
-    <td style="font-size: 0.85em; color: #555;">
-        {% for item in order.items.all %}
-            <div style="margin-bottom: 2px;">{{ item.quantity }}x {{ item.product.name }}</div>
-        {% endfor %}
-    </td>
-    <td style="color: #666;">{{ order.created|date:"d/m/Y H:i" }}</td>
-    <td style="font-weight: bold; color: #333;">R$ {{ order.total_amount }}</td>
-    <td>
+    <td data-label="Status">
         {% if order.status == 'paid' %}
-            <span class="status-pill status-paid">Pago</span>
+        <span class="status-badge badge-paid">Pago</span>
         {% elif order.status == 'pending' %}
-            <span class="status-pill status-pending">Pendente</span>
+        <span class="status-badge badge-pending">Pendente</span>
+        {% elif order.status == 'preparing' %}
+        <span class="status-badge" style="background-color: #ff9800; color: white;">Em Produção</span>
+        {% elif order.status == 'ready' %}
+        <span class="status-badge" style="background-color: #00bcd4; color: white;">Pedido Pronto</span>
         {% elif order.status == 'shipped' %}
-            <span class="status-pill status-shipped">Enviado</span>
+        <span class="status-badge badge-shipped">Enviado</span>
         {% elif order.status == 'cancelled' %}
-            <span class="status-pill status-cancelled">Cancelado</span>
+        <span class="status-badge badge-cancelled">Cancelado</span>
         {% elif order.status == 'refunded' %}
-            <span class="status-pill status-refunded">Reembolsado</span>
+        <span class="status-badge badge-cancelled" style="background-color: #f3e5f5; color: #7b1fa2;">Reembolsado</span>
+        {% elif order.status == 'deleted' %}
+        <span class="status-badge badge-deleted" style="background-color: #d32f2f; color: white;">Excluído</span>
         {% else %}
-            <span class="status-pill">{{ order.get_status_display }}</span>
+        <span class="status-badge">{{ order.get_status_display }}</span>
         {% endif %}
     </td>
-    <td>
+    <td data-label="Ações">
         <div class="action-buttons">
-            {% if order.status == 'pending' %}
-                <a href="javascript:void(0);" data-id="{{ order.id }}" onclick="updateOrderStatus(event, this.dataset.id, 'paid')" class="btn-action btn-approve" title="Aprovar Pagamento"><i class="fas fa-check"></i></a>
-            {% elif order.status == 'paid' %}
-                <a href="javascript:void(0);" data-id="{{ order.id }}" onclick="updateOrderStatus(event, this.dataset.id, 'shipped')" class="btn-action btn-ship" title="Marcar Enviado"><i class="fas fa-shipping-fast"></i></a>
-            {% endif %}
-            
-            {% if order.status != 'cancelled' and order.status != 'refunded' and order.status != 'shipped' %}
-                <a href="javascript:void(0);" data-id="{{ order.id }}" onclick="updateOrderStatus(event, this.dataset.id, 'cancelled')" class="btn-action btn-cancel" title="Cancelar Pedido"><i class="fas fa-times"></i></a>
-            {% endif %}
-            
-            {% if order.status == 'paid' or order.status == 'shipped' %}
-                 <a href="javascript:void(0);" data-id="{{ order.id }}" onclick="updateOrderStatus(event, this.dataset.id, 'refunded')" class="btn-action btn-cancel" title="Reembolsar" style="background-color: #f3e5f5; color: #7b1fa2;"><i class="fas fa-undo"></i></a>
-            {% endif %}
-            
-            <a href="javascript:void(0);" data-id="{{ order.id }}" onclick="deleteOrder(this.dataset.id)" class="btn-action btn-delete-permanent" title="Excluir Permanentemente" style="background-color: #ffcdd2; color: #b71c1c; margin-left: 5px;">
+            <a href="{% url 'pedidos:order_detail' order.id %}" class="action-btn" title="Ver Detalhes/Comprovante"
+                style="background-color: #edf2f7; color: #4a5568;">
+                <i class="fas fa-file-alt"></i>
+            </a>
+
+            <a href="{% url 'pedidos:order_created' order.id %}" class="action-btn" title="Ver QR Code / Página Pix"
+                style="background-color: #00bcd4; color: white;">
+                <i class="fas fa-qrcode"></i>
+            </a>
+
+            <a href="javascript:void(0);"
+                onclick="openOrderStatusModal('{{ order.id }}', '{{ order.status }}', '{{ order.has_customizable_items }}' === 'True')"
+                class="action-btn" title="Alterar Status" style="background-color: var(--accent-color); color: white;">
+                <i class="fas fa-tasks"></i>
+            </a>
+
+            <a href="javascript:void(0);"
+                onclick="openEditOrderModal('{{ order.id }}')"
+                class="action-btn" title="Editar Pedido Completo" style="background-color: #ff9800; color: white;">
+                <i class="fas fa-edit"></i>
+            </a>
+
+            <a href="javascript:void(0);" data-id="{{ order.id }}" onclick="deleteOrder(this.dataset.id)"
+                class="action-btn btn-delete" title="{% if order.status == 'deleted' %}Excluir Permanentemente{% else %}Mover para Lixeira{% endif %}">
                 <i class="fas fa-trash"></i>
             </a>
         </div>
     </td>
 </tr>
 {% empty %}
-<tr>
-<tr>
-    <td colspan="7" style="padding: 40px; text-align: center; color: #999;">
+<tr class="empty-row">
+    <td colspan="8" style="padding: 40px; text-align: center; color: #999;">
         <i class="far fa-folder-open" style="font-size: 2em; margin-bottom: 10px; display: block;"></i>
         Nenhum pedido recente.
     </td>
-</tr>
 </tr>
 {% endfor %}

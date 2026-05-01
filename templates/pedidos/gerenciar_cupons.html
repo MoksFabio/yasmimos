@@ -1,0 +1,633 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Gerenciar Cupons{% endblock %}
+
+{% block content %}
+<!-- Custom Styles -->
+<style>
+    /* Desktop & General Styles */
+    .coupon-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        align-items: end;
+    }
+
+    .mobile-row-2 {
+        display: contents;
+        /* Desktop: Children become grid items */
+    }
+
+    .date-row {
+        display: flex;
+        gap: 10px;
+    }
+
+    /* Desktop Positioning */
+    .c-code {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .c-discount {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .c-uses {
+        grid-column: 3;
+        grid-row: 1;
+    }
+
+    .c-min {
+        grid-column: 4;
+        grid-row: 1;
+    }
+
+    .c-validity {
+        grid-column: 1 / span 2;
+        grid-row: 2;
+    }
+
+    .c-btn {
+        grid-column: 3 / span 2;
+        grid-row: 2;
+    }
+
+    .c-btn button {
+        height: 46px;
+        /* Match input height roughly */
+        font-size: 1.1rem;
+    }
+
+    /* Table Centering */
+    .premium-table th,
+    .premium-table td {
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+
+    /* Mobile Only Containers */
+    .mobile-cards-container {
+        display: none;
+    }
+
+    /* Modal Styles */
+    .custom-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(4px);
+    }
+
+    .custom-modal-content {
+        background: var(--card-bg);
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        max-width: 400px;
+        width: 90%;
+        text-align: center;
+        animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes modalPop {
+        from {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    /* Mobile Responsive - Safe Flexbox Layout */
+    @media (max-width: 768px) {
+
+        /* Container Reset */
+        .container {
+            padding: 0 15px !important;
+        }
+
+        .form-card {
+            padding: 20px !important;
+        }
+
+        /* Main Form Layout - Stacked */
+        .coupon-grid {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 15px !important;
+            width: 100% !important;
+        }
+
+        /* Ensure all direct children are full width by default */
+        .coupon-grid>div {
+            width: 100% !important;
+        }
+
+        /* Specific Side-by-Side Row */
+        .mobile-row-2 {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 15px !important;
+        }
+
+        .mobile-row-2>div {
+            flex: 1;
+            /* Split 50/50 */
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Date Row Side-by-Side */
+        .date-row {
+            display: flex !important;
+            gap: 10px !important;
+        }
+
+        .date-row input {
+            flex: 1;
+        }
+
+        /* Labels */
+        .coupon-grid label {
+            font-size: 0.85rem !important;
+            color: var(--text-light);
+            font-weight: 500;
+            margin-bottom: 5px !important;
+            display: block;
+        }
+
+        /* Specific Alignment for 'Limite Usos' (2nd item in row) */
+        .mobile-row-2>div:nth-child(2) label {
+            text-align: center;
+        }
+
+        .coupon-grid input {
+            width: 100% !important;
+            padding: 12px 10px !important;
+            font-size: 0.95rem !important;
+            border-radius: 10px !important;
+            box-sizing: border-box !important;
+            background: var(--input-bg) !important;
+            color: var(--text-color) !important;
+            border: 1px solid var(--input-border) !important;
+        }
+
+        .c-min input {
+            padding-left: 35px !important;
+        }
+
+        .c-btn button {
+            width: 100% !important;
+            margin-top: 5px;
+            padding: 15px !important;
+        }
+
+        /* Hide Desktop Table */
+        .desktop-table-container {
+            display: none !important;
+        }
+
+        /* Show Mobile Cards */
+        .mobile-cards-container {
+            display: flex !important;
+            overflow-x: auto;
+            gap: 15px;
+            padding: 10px 5px 30px 5px;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .coupon-card {
+            min-width: 280px;
+            width: 280px;
+            background: var(--card-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            scroll-snap-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
+            position: relative;
+        }
+
+        .card-row {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .card-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .card-value {
+            font-size: 0.95rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .card-highlight {
+            color: var(--accent-color);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+    }
+</style>
+
+<div class="container" style="padding: 40px 20px; max-width: 1100px;">
+    <section class="hero-wrapper" style="margin-bottom: 10px; padding: 50px 0 10px 0; border-radius: 20px;">
+        <div class="hero-content" style="position: relative; z-index: 2; text-align: center;">
+            <h1 class="hero-title" style="margin-bottom: 10px; font-size: 3rem;">Gerenciar Cupons</h1>
+            <p class="hero-subtitle" style="margin-bottom: 30px; font-size: 1.1rem; opacity: 0.9;">Crie códigos de
+                desconto para seus clientes</p>
+        </div>
+    </section>
+
+    <!-- Add New Coupon Card -->
+    <div class="form-card"
+        style="background: var(--card-bg); padding: 35px; border-radius: 25px; box-shadow: 0 5px 25px rgba(0,0,0,0.08); margin-bottom: 40px;">
+        <h3
+            style="margin-bottom: 25px; color: var(--text-color); font-size: 1.4rem; border-bottom: 1px dashed var(--input-border); padding-bottom: 15px;">
+            Novo Cupom</h3>
+
+        <div class="coupon-grid">
+            <div class="c-code">
+                <label
+                    style="display: block; margin-bottom: 8px; color: var(--text-light); font-size: 0.95rem; font-weight: 600;">Código</label>
+                <input type="text" id="code" placeholder="Ex: BEMVINDO10"
+                    style="width: 100%; padding: 12px 15px; border: 1px solid var(--input-border); border-radius: 12px; text-transform: uppercase; font-weight: bold; color: var(--accent-color); background: var(--input-bg);">
+            </div>
+
+            <div class="mobile-row-2">
+                <div class="c-discount">
+                    <label
+                        style="display: block; margin-bottom: 8px; color: var(--text-light); font-size: 0.95rem; font-weight: 600;">Desconto
+                        (%)</label>
+                    <input type="number" id="discount" placeholder="10.5" min="0" max="100" step="0.01"
+                        style="width: 100%; padding: 12px 15px; border: 1px solid var(--input-border); border-radius: 12px; background: var(--input-bg); color: var(--text-color);">
+                </div>
+                <div class="c-uses">
+                    <label
+                        style="display: block; margin-bottom: 8px; color: var(--text-light); font-size: 0.95rem; font-weight: 600;">Limite
+                        Usos</label>
+                    <input type="number" id="max_uses" placeholder="∞" min="1"
+                        style="width: 100%; padding: 12px 15px; border: 1px solid var(--input-border); border-radius: 12px; background: var(--input-bg); color: var(--text-color);">
+                </div>
+            </div>
+
+            <div class="c-validity">
+                <label
+                    style="display: block; margin-bottom: 8px; color: var(--text-light); font-size: 0.95rem; font-weight: 600;">Validade
+                    (De - Até)</label>
+                <div class="date-row">
+                    <input type="date" id="valid_from"
+                        style="width: 100%; padding: 12px 15px; border: 1px solid var(--input-border); border-radius: 12px; background: var(--input-bg); color: var(--text-color);">
+                    <input type="date" id="valid_to"
+                        style="width: 100%; padding: 12px 15px; border: 1px solid var(--input-border); border-radius: 12px; background: var(--input-bg); color: var(--text-color);">
+                </div>
+            </div>
+
+            <div class="c-min">
+                <label
+                    style="display: block; margin-bottom: 8px; color: var(--text-light); font-size: 0.95rem; font-weight: 600;">Mín.
+                    Compra (R$)</label>
+                <div style="position: relative;">
+                    <span
+                        style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-light);">R$</span>
+                    <input type="number" id="min_purchase" placeholder="0.00" step="0.01"
+                        style="width: 100%; padding: 12px 15px 12px 35px; border: 1px solid var(--input-border); border-radius: 12px; background: var(--input-bg); color: var(--text-color);">
+                </div>
+            </div>
+
+            <div class="c-btn">
+                <button onclick="addCoupon()"
+                    style="width: 100%; background: var(--accent-color); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3); transition: transform 0.2s;">
+                    <i class="fas fa-plus-circle"></i> Criar Cupom
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coupons List Section -->
+    <div
+        style="background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
+        <h3 style="margin-bottom: 20px; color: var(--text-color); font-size: 1.3rem;">Cupons Ativos e Recentes</h3>
+
+        <!-- Desktop Table View -->
+        <div class="table-container desktop-table-container">
+            <table class="premium-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="min-width: 100px;">Código</th>
+                        <th>Desconto</th>
+                        <th>Regras</th>
+                        <th>Usos</th>
+                        <th>Validade</th>
+                        <th>Status</th>
+                        <th style="text-align: center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="couponsListDesktop">
+                    <!-- Loaded via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Horizontal Scrolling Cards View -->
+        <div id="couponsListMobile" class="mobile-cards-container">
+            <!-- Loaded via JS -->
+        </div>
+
+    </div>
+
+    <div style="margin-top: 30px; text-align: center; margin-bottom: 30px;">
+        <a href="{% url 'produtos:gerenciar' %}" class="btn"
+            style="background: #e91e63; color: white; border: none; padding: 15px 30px; border-radius: 30px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; text-transform: uppercase; box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);">
+            <i class="fas fa-arrow-left"></i> Voltar para Gerenciar Loja
+        </a>
+    </div>
+
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="custom-modal">
+    <div class="custom-modal-content">
+        <div
+            style="width: 70px; height: 70px; background: var(--input-bg); color: #f44336; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px;">
+            <i class="fas fa-trash-alt"></i>
+        </div>
+        <h3 style="margin: 0 0 10px; font-family: var(--font-serif); color: var(--text-color);">Excluir Cupom?</h3>
+        <p style="color: var(--text-light); margin-bottom: 30px; line-height: 1.5;">O código deixará de funcionar
+            imediatamente. Essa ação é irreversível.</p>
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <button onclick="closeDeleteModal()"
+                style="flex: 1; padding: 12px 0; border-radius: 12px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-light); cursor: pointer; font-weight: 600; transition: all 0.2s;">Cancelar</button>
+            <button id="confirmDeleteBtn"
+                style="flex: 1; padding: 12px 0; border-radius: 12px; border: none; background: #f44336; color: white; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(244, 67, 54, 0.3);">Excluir</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* Toast Notification Styles */
+    const style = document.createElement('style');
+    style.innerHTML = `
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            animation: slideIn 0.3s ease-out forwards;
+            min-width: 250px;
+        }
+        .toast.success { background: #48bb78; }
+        .toast.error { background: #f56565; }
+        .toast i { font-size: 1.1rem; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateY(10px); }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Toast Container
+    const toastContainer = document.createElement('div');
+    toastContainer.id = 'toast-container';
+    document.body.appendChild(toastContainer);
+
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        const icon = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>';
+
+        toast.innerHTML = `${icon} <span>${message}</span>`;
+        toastContainer.appendChild(toast);
+
+        // Remove after 3s
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadCoupons);
+
+    function loadCoupons() {
+        fetch('{% url "pedidos:api_list_coupons" %}')
+            .then(res => res.json())
+            .then(data => {
+                const listDesktop = document.getElementById('couponsListDesktop');
+                const listMobile = document.getElementById('couponsListMobile');
+
+                listDesktop.innerHTML = '';
+                listMobile.innerHTML = '';
+
+                if (data.coupons.length === 0) {
+                    const emptyMsg = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-light);">Nenhum cupom criado.</td></tr>';
+                    listDesktop.innerHTML = emptyMsg;
+                    listMobile.innerHTML = '<div style="width: 100%; text-align: center; color: var(--text-light); padding: 20px;">Nenhum cupom criado.</div>';
+                    return;
+                }
+
+                data.coupons.forEach(c => {
+                    // Constraints info
+                    let rules = [];
+                    if (c.min_purchase > 0) rules.push(`Mín: R$ ${c.min_purchase}`);
+                    const usesInfo = c.max_uses ? `${c.used_count}/${c.max_uses}` : `${c.used_count} (∞)`;
+
+                    // Desktop Row
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                    <td style="font-weight: bold; color: var(--accent-color); font-size: 1.1rem;">${c.code}</td>
+                    <td>${c.discount}%</td>
+                    <td style="font-size: 0.85rem; color: #555;">${rules.join('<br>') || '-'}</td>
+                    <td style="font-size: 0.85rem;">${usesInfo}</td>
+                    <td>${c.valid_from.split('-').reverse().join('/')} a ${c.valid_to.split('-').reverse().join('/')}</td>
+                    <td>
+                        <span class="badge" 
+                              style="background: ${c.active ? '#48bb78' : '#cbd5e0'}; color: white; padding: 6px 12px; border-radius: 10px; font-size: 0.8rem; cursor: pointer;"
+                              onclick="toggleCoupon(${c.id})">
+                            ${c.active ? 'Ativo' : 'Inativo'}
+                        </span>
+                    </td>
+                    <td style="text-align: center;">
+                        <button onclick="openDeleteModal(${c.id})" style="background: #f56565; color: white; width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(245, 101, 101, 0.3);">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                    listDesktop.appendChild(tr);
+
+                    // Mobile Card
+                    const card = document.createElement('div');
+                    card.className = 'coupon-card';
+                    card.innerHTML = `
+                    <div class="card-row">
+                        <span class="card-label">Código</span>
+                        <span class="card-value card-highlight">${c.code}</span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 1px dashed #eee; border-bottom: 1px dashed #eee; padding: 10px 0;">
+                        <div class="card-row">
+                            <span class="card-label">Desconto</span>
+                            <span class="card-value" style="color: #48bb78;">${c.discount}%</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Usos</span>
+                            <span class="card-value">${usesInfo}</span>
+                        </div>
+                    </div>
+                     
+                    <div style="padding: 10px 0; font-size: 0.85rem; color: #666; text-align: center;">
+                       ${rules.length ? rules.join(' • ') : 'Sem restrições extras'}
+                    </div>
+
+                    <div class="card-row">
+                        <span class="card-label">Validade</span>
+                        <span class="card-value" style="font-size: 0.9rem;">${c.valid_from.split('-').reverse().join('/')} <br>até<br> ${c.valid_to.split('-').reverse().join('/')}</span>
+                    </div>
+                    
+                    <div style="margin: 10px 0;">
+                         <span onclick="toggleCoupon(${c.id})" style="color: white; background: ${c.active ? '#48bb78' : '#aaa'}; padding: 5px 15px; border-radius: 15px; font-size: 0.8rem; cursor: pointer; display: inline-block;">
+                                ${c.active ? 'Ativo' : 'Inativo'}
+                         </span>
+                    </div>
+
+                    <div style="width: 100%; display: flex; justify-content: center; margin-top: auto;">
+                        <button onclick="openDeleteModal(${c.id})" style="background: #f56565; color: white; width: 40px; height: 40px; border-radius: 10px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(245, 101, 101, 0.3);">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                    listMobile.appendChild(card);
+                });
+            });
+    }
+
+    function addCoupon() {
+        const code = document.getElementById('code').value;
+        const discount = document.getElementById('discount').value;
+        const valid_from = document.getElementById('valid_from').value;
+        const valid_to = document.getElementById('valid_to').value;
+        const min_purchase = document.getElementById('min_purchase').value;
+        const max_uses = document.getElementById('max_uses').value;
+
+        if (!code || !discount || !valid_from || !valid_to) {
+            showToast('Preencha os campos obrigatórios (Código, Desconto, Validade).', 'error');
+            return;
+        }
+
+        fetch('{% url "pedidos:api_add_coupon" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ code, discount, valid_from, valid_to, min_purchase, max_uses })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Cupom criado com sucesso!', 'success');
+                    document.getElementById('code').value = '';
+                    document.getElementById('discount').value = '';
+                    document.getElementById('min_purchase').value = '';
+                    document.getElementById('max_uses').value = '';
+                    loadCoupons();
+                } else {
+                    showToast('Erro: ' + (data.error || 'Desconhecido'), 'error');
+                }
+            });
+    }
+
+    function toggleCoupon(id) {
+        fetch('{% url "pedidos:api_toggle_coupon" 0 %}'.replace('0', id), {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        })
+            .then(res => res.json())
+            .then(() => {
+                showToast('Status do cupom atualizado!', 'success');
+                loadCoupons();
+            });
+    }
+
+    // Modal Logic
+    let couponToDeleteId = null;
+
+    function openDeleteModal(id) {
+        couponToDeleteId = id;
+        document.getElementById('deleteModal').style.display = 'flex';
+        // Setup confirm button
+        document.getElementById('confirmDeleteBtn').onclick = function () {
+            confirmDeleteCoupon();
+        };
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+        couponToDeleteId = null;
+    }
+
+    function confirmDeleteCoupon() {
+        if (!couponToDeleteId) return;
+
+        fetch('{% url "pedidos:api_delete_coupon" 0 %}'.replace('0', couponToDeleteId), {
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        })
+            .then(res => res.json())
+            .then(() => {
+                showToast('Cupom excluído.', 'success');
+                closeDeleteModal();
+                loadCoupons();
+            });
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function (event) {
+        const modal = document.getElementById('deleteModal');
+        if (event.target == modal) {
+            closeDeleteModal();
+        }
+    }
+</script>
+{% endblock %}

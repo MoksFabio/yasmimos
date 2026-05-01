@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width: 500px; margin: 0 auto; background: var(--card-bg); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center;">
+    <h1 style="font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 20px;">Senha Alterada!</h1>
+    <p style="margin-bottom: 20px; color: var(--text-light);">
+        Sua senha foi redefinida com sucesso. Você já pode acessar sua conta.
+    </p>
+    <a href="{% url 'usuarios:login' %}" class="btn">Entrar Agora</a>
+</div>
+{% endblock %}

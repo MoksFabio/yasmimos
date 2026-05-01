@@ -1,0 +1,186 @@
+@media (max-width: 768px) {
+            #pending-order-popup {
+                bottom: 15px !important;
+                left: 15px !important;
+            }
+        }
+
+        @keyframes pulse-wallet {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .pending-list-hidden {
+            display: none;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            margin-top: 2px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 0;
+            opacity: 0;
+        }
+
+        .pending-list-hidden.active {
+            display: block;
+            max-height: 180px;
+            opacity: 1;
+            margin-top: 4px;
+        }
+
+        .pending-item-small {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 8px;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 5px;
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 0.65rem;
+            transition: all 0.25s ease;
+            transform-origin: center;
+        }
+
+        .pending-item-small:hover {
+            background: rgba(233, 30, 99, 0.06);
+            transform: scale(1.02);
+        }
+
+        .pending-item-animating-out {
+            opacity: 0;
+            transform: scale(0.8) translateY(-10px);
+            filter: blur(4px);
+            margin-bottom: -30px;
+            pointer-events: none;
+        }
+
+/* ==================== */
+
+/* --- GLOBAL ACCESSIBILITY STYLES --- */
+
+            /* High Contrast */
+            .high-contrast {
+                --bg-color: #ffffff !important;
+                --text-color: #000000 !important;
+                --card-bg: #ffffff !important;
+                filter: contrast(120%);
+            }
+
+            [data-theme="dark"] .high-contrast {
+                --bg-color: #000000 !important;
+                --text-color: #ffff00 !important;
+                /* Yellow specifically good for dark contrast */
+                --card-bg: #000000 !important;
+            }
+
+            /* Dyslexic Font - Fallback to generic sans-serif if not loaded, really demands a font file */
+            @font-face {
+                font-family: 'OpenDyslexic';
+                src: url('https://cdn.jsdelivr.net/npm/opendyslexic@2.1.0-beta/open-dyslexic-regular.woff') format('woff');
+                font-weight: normal;
+                font-style: normal;
+                font-display: swap;
+            }
+
+            .dyslexia-font,
+            .dyslexia-font * {
+                font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif !important;
+                line-height: 1.6 !important;
+            }
+
+            /* Spacing */
+            .extra-spacing,
+            .extra-spacing * {
+                letter-spacing: 0.1em !important;
+                line-height: 1.8 !important;
+                word-spacing: 0.2em !important;
+            }
+
+            /* Focus Highlight */
+            .highlight-focus *:focus {
+                outline: 4px solid #ffeb3b !important;
+                outline-offset: 2px !important;
+                box-shadow: 0 0 10px #ffeb3b !important;
+            }
+
+            /* Highlight Links */
+            .highlight-links a,
+            .highlight-links button {
+                text-decoration: underline !important;
+                text-decoration-thickness: 2px !important;
+                text-underline-offset: 4px !important;
+            }
+
+            /* Reduce Motion */
+            .reduce-motion *,
+            .reduce-motion *::before,
+            .reduce-motion *::after {
+                animation: none !important;
+                transition: none !important;
+                scroll-behavior: auto !important;
+            }
+
+            /* Large Cursor */
+            .large-cursor,
+            .large-cursor * {
+                cursor: default !important;
+                /* In a real app, use a custom large SVG cursor url */
+            }
+
+            /* Large Buttons */
+            .large-buttons button,
+            .large-buttons .btn,
+            .large-buttons a {
+                min-height: 48px !important;
+                min-width: 48px !important;
+                /* Touch target size */
+                padding: 12px 24px !important;
+            }
+
+            /* Font Sizes */
+            .font-lg {
+                font-size: 110% !important;
+            }
+
+            .font-xl {
+                font-size: 125% !important;
+            }
+
+            .font-xxl {
+                font-size: 150% !important;
+            }
+
+            /* Color Blindness Filters */
+            html[data-color-profile="protanopia"] {
+                filter: url(#protanopia-filter);
+            }
+
+            html[data-color-profile="deuteranopia"] {
+                filter: url(#deuteranopia-filter);
+            }
+
+            html[data-color-profile="tritanopia"] {
+                filter: url(#tritanopia-filter);
+            }
+
+            /* Focus Mode already handled in settings.html styles but repeated here for coverage */
+            body.focus-mode header,
+            body.focus-mode footer,
+            body.focus-mode .delivery-warning,
+            body.focus-mode .hero-wrapper {
+                display: none !important;
+            }
+
+            body.focus-mode .container {
+                max-width: 900px;
+                margin-top: 20px;
+            }

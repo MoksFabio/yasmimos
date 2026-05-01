@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fale Conosco{% endblock %}
+
+{% block content %}
+<div
+    style="min-height: 75vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px;">
+    {% if messages %}
+    <div id="alert-container">
+        {% for message in messages %}
+        <div class="system-alert"
+            style="margin-bottom: 20px; padding: 15px 25px; background: #fff3f3; color: #d32f2f; border-radius: 15px; border: 1px solid #ffcdd2; font-weight: 500; display: flex; align-items: center; gap: 10px; animation: slideDown 0.3s ease;">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    <script>
+        setTimeout(() => {
+            const container = document.getElementById('alert-container');
+            if (container) {
+                container.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                container.style.opacity = '0';
+                container.style.transform = 'translateY(-20px)';
+                setTimeout(() => container.remove(), 500);
+            }
+        }, 5000);
+    </script>
+    {% endif %}
+    <div
+        style="background: var(--card-bg); padding: 40px; border-radius: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); width: 100%; max-width: 550px; text-align: center;">
+        <div
+            style="width: 70px; height: 70px; background: var(--input-bg); color: var(--accent-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px;">
+            <i class="fas fa-comments"></i>
+        </div>
+        <h2 style="font-family: var(--font-serif); margin-bottom: 10px; color: var(--text-color); font-size: 2rem;">Fale
+            Conosco</h2>
+        <p style="color: var(--text-light); margin-bottom: 30px;">Olá! Como podemos te ajudar hoje?</p>
+
+        <form method="post" action="{% url 'chat:start_chat_guest' %}" id="chat-form">
+            {% csrf_token %}
+
+            <!-- Step 1: Identification (Only for guests) -->
+            <div id="step-name" style="text-align: left; margin-bottom: 30px;">
+                <label for="visitor_name"
+                    style="display: block; margin-bottom: 10px; font-weight: 600; color: var(--text-light); font-size: 0.95rem;">Como
+                    gostaria de ser chamado?</label>
+                <input type="text" id="visitor_name" name="visitor_name" required
+                    style="width: 100%; padding: 15px; border: 1px solid var(--input-border); border-radius: 15px; font-size: 1rem; transition: all 0.3s; background: var(--input-bg); color: var(--text-color);"
+                    placeholder="Seu nome ou apelido"
+                    onfocus="this.style.borderColor='var(--accent-color)'; this.style.boxShadow='0 0 0 4px rgba(233, 30, 99, 0.05)'"
+                    onblur="this.style.borderColor='var(--input-border)'; this.style.boxShadow='none'">
+            </div>
+
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label
+                    style="display: block; margin-bottom: 15px; font-weight: 600; color: var(--text-light); font-size: 0.95rem;">Qual
+                    o objetivo do contato?</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;" id="topic-grid">
+                    <label class="topic-card">
+                        <input type="radio" name="topic" value="Dúvida sobre um Pedido" required>
+                        <div class="topic-content">
+                            <i class="fas fa-box"></i>
+                            <span>Meu Pedido</span>
+                        </div>
+                    </label>
+                    <label class="topic-card">
+                        <input type="radio" name="topic" value="Dúvidas sobre os Doces">
+                        <div class="topic-content">
+                            <i class="fas fa-candy-cane"></i>
+                            <span>Sobre os Doces</span>
+                        </div>
+                    </label>
+                    <label class="topic-card">
+                        <input type="radio" name="topic" value="Sugestões">
+                        <div class="topic-content">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>Sugestões</span>
+                        </div>
+                    </label>
+                    <label class="topic-card">
+                        <input type="radio" name="topic" value="Pagamentos e Pix">
+                        <div class="topic-content">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Pagamentos</span>
+                        </div>
+                    </label>
+                    <label class="topic-card">
+                        <input type="radio" name="topic" value="Elogios ou Sugestões">
+                        <div class="topic-content">
+                            <i class="fas fa-heart"></i>
+                            <span>Feedback</span>
+                        </div>
+                    </label>
+                    <label class="topic-card">
+                        <input type="radio" name="topic" value="Outros Assuntos">
+                        <div class="topic-content">
+                            <i class="fas fa-ellipsis-h"></i>
+                            <span>Outros</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn"
+                style="width: 100%; padding: 16px; border-radius: 15px; background: var(--accent-color); color: white; font-weight: bold; font-size: 1.1rem; cursor: pointer; border: none; transition: all 0.3s; box-shadow: 0 8px 20px rgba(233, 30, 99, 0.2); margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                Iniciar Chat <i class="fas fa-arrow-right"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+    @keyframes slideDown {
+        from {
+            transform: translateY(-10px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .topic-card {
+        cursor: pointer;
+        position: relative;
+    }
+
+    .topic-card input {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .topic-content {
+        background: var(--input-bg);
+        border: 2px solid var(--input-border);
+        border-radius: 15px;
+        padding: 15px 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+
+    .topic-content i {
+        font-size: 1.2rem;
+        color: var(--text-light);
+        transition: color 0.2s;
+    }
+
+    .topic-content span {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-color);
+    }
+
+    .topic-card input:checked+.topic-content {
+        background: var(--card-bg);
+        border-color: var(--accent-color);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(233, 30, 99, 0.1);
+    }
+
+    .topic-card input:checked+.topic-content i {
+        color: var(--accent-color);
+    }
+
+    .topic-card input:checked+.topic-content span {
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+
+    .topic-card:hover .topic-content {
+        border-color: var(--input-border);
+        background: var(--input-bg);
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

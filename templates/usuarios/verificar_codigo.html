@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Verificar Código{% endblock %}
+
+{% block content %}
+<div
+    style="max-width: 400px; margin: 0 auto; background: var(--card-bg); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+    <h1 style="text-align: center; font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 20px;">
+        Verificar Código</h1>
+
+    <p style="text-align: center; color: var(--text-color); margin-bottom: 30px;">
+        Enviamos um código de 8 dígitos para o seu e-mail <strong>{{ email }}</strong>.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="id_code"
+                style="color: var(--text-color); text-align: center; display: block; margin-bottom: 10px;">Código de
+                Verificação</label>
+            {{ form.code }}
+            {% if form.code.errors %}
+            <div style="color: red; font-size: 0.9rem; text-align: center; margin-top: 5px;">{{ form.code.errors.0 }}
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button type="submit" class="btn" style="width: 100%;">Verificar</button>
+        </div>
+    </form>
+
+    <div style="text-align: center; margin-top: 25px;">
+        <a href="{% url 'usuarios:password_reset' %}" class="btn"
+            style="background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); width: 100%; box-sizing: border-box; text-decoration: none; display: inline-block;">Reenviar
+            código (Alterar E-mail)</a>
+    </div>
+</div>
+
+<style>
+    /* Custom style for the large code input */
+    input[name="code"] {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid var(--input-border);
+        border-radius: 8px;
+        margin-bottom: 10px;
+        background-color: var(--input-bg);
+        color: var(--text-color);
+        font-family: monospace;
+    }
+
+    input[name="code"]:focus {
+        border-color: var(--accent-color);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.1);
+    }
+</style>
+{% endblock %}

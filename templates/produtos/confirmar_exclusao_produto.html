@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
-<div style="max-width: 500px; margin: 0 auto; background: var(--white); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center;">
+<div style="max-width: 500px; margin: 0 auto; background: var(--card-bg); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center;">
     <h1 style="font-family: var(--font-serif); color: red; margin-bottom: 20px;">Excluir Produto</h1>
     <p style="margin-bottom: 30px;">Tem certeza que deseja excluir o produto <strong>{{ product.name }}</strong>?</p>
     <form method="post">
         {% csrf_token %}
         <div style="display: flex; gap: 20px; justify-content: center;">
             <button type="submit" class="btn" style="background-color: red;">Sim, excluir</button>
-            <a href="{% url 'products:manage_products' %}" class="btn" style="background-color: #ccc;">Cancelar</a>
+            <a href="{% url 'produtos:gerenciar' %}" class="btn" style="background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border);">Cancelar</a>
         </div>
     </form>
 </div>

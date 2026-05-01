@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fale Conosco{% endblock %}
+
+{% block content %}
+<div
+    style="min-height: 75vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px;">
+    {% if messages %}
+    <div id="alert-container">
+        {% for message in messages %}
+        <div class="system-alert-error">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    <script>
+        setTimeout(() => {
+            const container = document.getElementById('alert-container');
+            if (container) {
+                container.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                container.style.opacity = '0';
+                container.style.transform = 'translateY(-20px)';
+                setTimeout(() => container.remove(), 500);
+            }
+        }, 5000);
+    </script>
+    {% endif %}
+    <div
+        style="background: var(--card-bg); padding: 40px; border-radius: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); width: 100%; max-width: 550px; text-align: center;">
+        <div
+            style="width: 70px; height: 70px; background: var(--input-bg); color: var(--accent-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px;">
+            <i class="fas fa-headset"></i>
+        </div>
+        <h2 style="font-family: var(--font-serif); margin-bottom: 10px; color: var(--text-color); font-size: 2rem;">
+            Central de Atendimento</h2>
+        <p style="color: var(--text-light); margin-bottom: 30px;">Olá, <strong>{{ client_name }}</strong>! Qual o motivo
+            do seu contato hoje?
+        </p>
+
+        {% if active_sessions %}
+        <div style="text-align: left; margin-bottom: 35px;">
+            <p
+                style="font-size: 0.8rem; text-transform: uppercase; color: var(--accent-color); font-weight: 700; margin-bottom: 12px; letter-spacing: 1px;">
+                <i class="fas fa-comment-dots"></i> Suas conversas em aberto
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                {% for session in active_sessions %}
+                <a href="{% url 'chat:room' session.id %}"
+                    style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 12px; text-decoration: none; color: var(--text-color); transition: all 0.2s;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 10px; height: 10px; border-radius: 50%; background: #4caf50;"></div>
+                        <span style="font-weight: 600;">{{ session.topic }}</span>
+                    </div>
+                    <i class="fas fa-chevron-right" style="font-size: 0.8rem; color: var(--text-light);"></i>
+                </a>
+                {% endfor %}
+            </div>
+            <div style="margin-top: 25px; border-top: 1px solid var(--input-border); padding-top: 15px;">
+                <p
+                    style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-light); font-weight: 700; margin-bottom: 15px; letter-spacing: 1px;">
+                    Ou inicie um novo assunto:
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'chat:start_chat' %}" id="chat-form">
+            {% csrf_token %}
+
+            <div style="text-align: left; margin-bottom: 15px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;" id="topic-grid">
+                    <label class="topic-card">
+                        <input type="radio" name="topic" value="Dúvida sobre um Pedido" required>
+                        <div class="topic-content">
+                            <i class="fas fa-box"></i>
+                            <span>Meu Pedido</span>
+                        </div>
+                    </label>
+                    <label class="topic-card">
+                        <input type="radio" name="topic" value="Dúvidas sobre os Doces">
+                        <div class="topic-content">
+                            <i class="fas fa-candy-cane"></i>
+                            <span>Sobre os Doces</span>
+                        </div>
+                    </label>
+                    <label class="topic-card">
+                        <input type="radio" name="topic" value="Sugestões">
+                        <div class="topic-content">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>Sugestões</span>
+                        </div>
+                    </label>
+                    <label class="topic-card">
+                        <input type="radio" name="topic" value="Pagamentos e Pix">
+                        <div class="topic-content">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Pagamentos</span>
+                        </div>
+                    </label>
+                    <label class="topic-card">
+                        <input type="radio" name="topic" value="Elogios ou Sugestões">
+                        <div class="topic-content">
+                            <i class="fas fa-heart"></i>
+                            <span>Feedback</span>
+                        </div>
+                    </label>
+                    <label class="topic-card">
+                        <input type="radio" name="topic" value="Outros Assuntos">
+                        <div class="topic-content">
+                            <i class="fas fa-ellipsis-h"></i>
+                            <span>Outros</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn"
+                style="width: 100%; padding: 16px; border-radius: 15px; background: var(--accent-color); color: white; font-weight: bold; font-size: 1.1rem; cursor: pointer; border: none; transition: all 0.3s; box-shadow: 0 8px 20px rgba(233, 30, 99, 0.2); margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                Falar com Suporte <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+    @keyframes slideDown {
+        from {
+            transform: translateY(-10px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .topic-card {
+        cursor: pointer;
+        position: relative;
+    }
+
+    .topic-card input {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .topic-content {
+        background: var(--input-bg);
+        border: 2px solid var(--input-border);
+        border-radius: 15px;
+        padding: 15px 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+
+    .topic-content i {
+        font-size: 1.2rem;
+        color: var(--text-light);
+        transition: color 0.2s;
+    }
+
+    .topic-content span {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-color);
+    }
+
+    .topic-card input:checked+.topic-content {
+        background: var(--card-bg);
+        border-color: var(--accent-color);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(233, 30, 99, 0.1);
+    }
+
+    .topic-card input:checked+.topic-content i {
+        color: var(--accent-color);
+    }
+
+    .topic-card input:checked+.topic-content span {
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+
+    .topic-card:hover .topic-content {
+        border-color: var(--input-border);
+        background: var(--input-bg);
+        transform: translateY(-2px);
+    }
+
+    /* System Alert Styles for Dark Mode Compatibility */
+    .system-alert-error {
+        margin-bottom: 20px;
+        padding: 15px 25px;
+        background: var(--card-bg);
+        color: var(--error-color);
+        border: 2px solid var(--error-color);
+        border-radius: 15px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideDown 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}

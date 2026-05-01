@@ -1,147 +1,906 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Pedido Realizado com Sucesso{% endblock %}
+
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <div style="text-align: center; padding: 50px 0;">
-    <i class="fas fa-check-circle" style="font-size: 4rem; color: #4caf50; margin-bottom: 20px;"></i>
-    <h1 style="font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 20px;">Pedido Realizado com Sucesso!</h1>
-    <p style="font-size: 1.2rem; margin-bottom: 30px;">Seu pedido #{{ order.id }} foi registrado.</p>
-    
-    <div style="background: var(--white); padding: 30px; border-radius: 15px; max-width: 600px; margin: 0 auto; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);">
+
+    <br>
+    <i id="top-icon" class="fas fa-check-circle" style="font-size: 4rem; color: #4caf50; margin-bottom: 20px;"></i>
+    <h1 id="top-title" style="font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 20px;">Pedido
+        Realizado com Sucesso!</h1>
+    <p id="top-desc" style="font-size: 1.2rem; margin-bottom: 30px;">Seu pedido #{{ order.id }} foi registrado.</p>
+
+    <div
+        style="background: var(--card-bg); padding: 30px; border-radius: 15px; max-width: 600px; margin: 0 auto; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);">
         <h2 style="color: var(--text-color); margin-bottom: 20px;">Valor Total: R$ {{ order.total_amount }}</h2>
-        
+
+
         <div id="qr-code-section" class="{% if order.status != 'pending' %}d-none{% endif %}">
-            <p style="margin-bottom: 10px;">Escaneie o QR Code abaixo para pagar:</p>
-            <!-- QR Code generated via API -->
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ pix_copia_cola|urlencode }}" alt="QR Code Pix" style="margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 10px;">
-            
-            <p style="margin-bottom: 10px; font-size: 0.9rem; color: #666;">Ou copie e cole o código abaixo:</p>
-            
-            <div style="display: flex; gap: 10px; margin-bottom: 30px; align-items: center;">
-                <input type="text" id="pixCode" value="{{ pix_copia_cola }}" readonly style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; background-color: #f9f9f9;">
-                <button onclick="copyPixCode('pixCode')" class="btn" style="padding: 12px 20px; white-space: nowrap; background-color: var(--accent-color); color: white; border: none; border-radius: 8px; cursor: pointer;">
-                    <i class="far fa-copy"></i> Copiar
+            {% if is_point_payment %}
+            <!-- Point Payment View -->
+            <div style="text-align: center; margin-bottom: 25px;">
+                <br>
+                <div
+                    style="width: 80px; height: 80px; background: #fff8e1; color: #ffc107; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 20px;">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+
+                <h3 style="color: var(--text-color); margin-bottom: 10px;">Cobrar na Maquininha</h3>
+                <p style="color: var(--text-light); margin-bottom: 30px;">Clique abaixo para abrir o App do Mercado Pago
+                    e cobrar <strong>R$ {{ order.total_amount }}</strong>.</p>
+
+                <a href="{{ deep_link }}" class="btn"
+                    style="background-color: #009ee3; color: white; width: 100%; display: block; padding: 15px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0, 158, 227, 0.3); text-decoration: none;">
+                    <i class="fas fa-credit-card"></i> Cobrar com Point
+                </a>
+
+                <p style="margin-top: 15px; font-size: 0.85rem; color: var(--text-light);">
+                    Se o App não abrir, abra manualmente e depois clique abaixo:
+                </p>
+
+                <button onclick="approveManualOrder('{{ order.id }}')" class="btn"
+                    style="background-color: #28a745; color: white; width: 100%; display: block; margin-top: 15px; padding: 15px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">
+                    <i class="fas fa-check"></i> Já Cobrei na Maquininha
                 </button>
+            </div>
+            {% elif order.payment_method == 'cash' %}
+            <div style="text-align: center; margin-bottom: 30px;">
+                <i class="fas fa-money-bill-wave" style="font-size: 4rem; color: #2e7d32; margin-bottom: 20px;"></i>
+                <h2 style="margin-bottom: 10px; color: var(--text-color);">Pagamento em Dinheiro</h2>
+                <p style="color: var(--text-light); font-size: 1.1rem; line-height: 1.6;">
+                    O pagamento de <strong>R$ {{ order.total_amount }}</strong> será realizado no momento da entrega ou
+                    retirada.
+                </p>
+                <p style="margin-top: 20px; font-size: 0.9rem; color: var(--text-light);">
+                    Aguarde a confirmação do atendente.
+                </p>
+            </div>
+            {% elif is_manual_pix %}
+            <!-- Manual Pix View (BR Code) -->
+            <div style="text-align: center; margin-bottom: 25px;">
+                <p style="margin-bottom: 15px; font-weight: 500; color: var(--text-color);">Escaneie o QR Code abaixo
+                    para pagar:</p>
+
+                <!-- QR Code generated from the manual payload -->
+                <img id="manual-qr"
+                    src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ pix_copia_cola|urlencode }}"
+                    alt="QR Code Pix"
+                    style="margin-bottom: 20px; border: 1px solid var(--input-border); padding: 10px; border-radius: 10px; background: white; width: 250px; height: 250px;">
+
+                <p style="margin-bottom: 10px; font-size: 0.9rem; color: var(--text-light);">Ou copie e cole o código:
+                </p>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+                    <input type="text" id="pixCode" value="{{ pix_copia_cola }}" readonly
+                        style="width: 100%; padding: 12px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 0.9rem; background-color: var(--input-bg); color: var(--text-color);">
+                    <button id="copyBtn" onclick="copyPixCode('pixCode', this)" class="btn"
+                        style="padding: 12px 20px; white-space: nowrap; background-color: var(--accent-color); color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.4s ease;">
+                        <i class="far fa-copy"></i> <span>Copiar</span>
+                    </button>
+                </div>
+
+                <div
+                    style="background: var(--input-bg); padding: 15px; border-radius: 12px; border: 1px dashed var(--accent-color); text-align: left;">
+                    <p style="font-size: 0.85rem; color: var(--text-color); margin-bottom: 0;">
+                        <i class="fas fa-user-check" style="color: var(--accent-color);"></i> Beneficiário:
+                        <strong>YASMIM POLIANA FRANCA NASCIMENTO</strong>
+                    </p>
+                </div>
+
+
+            </div>
+            {% else %}
+            <!-- Automatic Pix View (Mercado Pago) -->
+            <p style="margin-bottom: 15px; font-weight: 500;">Escaneie o QR Code abaixo para pagar:</p>
+            {% if qr_code_base64 %}
+            <img src="data:image/png;base64,{{ qr_code_base64 }}" alt="QR Code Pix"
+                style="margin-bottom: 20px; border: 1px solid var(--input-border); padding: 10px; border-radius: 10px; width: 250px; height: 250px; background: white;">
+            {% else %}
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ pix_copia_cola|urlencode }}"
+                alt="QR Code Pix"
+                style="margin-bottom: 20px; border: 1px solid var(--input-border); padding: 10px; border-radius: 10px; background: white;">
+            {% endif %}
+
+            <p style="margin-bottom: 10px; font-size: 0.9rem; color: var(--text-light);">Ou copie e cole o código:</p>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+                <input type="text" id="pixCode" value="{{ pix_copia_cola }}" readonly
+                    style="width: 100%; padding: 12px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 0.9rem; background-color: var(--input-bg); color: var(--text-color);">
+                <button id="copyBtnAuto" onclick="copyPixCode('pixCode', this)" class="btn"
+                    style="padding: 12px 20px; white-space: nowrap; background-color: var(--accent-color); color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.4s ease;">
+                    <i class="far fa-copy"></i> <span>Copiar</span>
+                </button>
+            </div>
+
+            {% if beneficiary_name %}
+            <div
+                style="background: var(--input-bg); padding: 15px; border-radius: 12px; border: 1px dashed var(--accent-color); text-align: left; margin-bottom: 20px;">
+                <p style="font-size: 0.85rem; color: var(--text-color); margin-bottom: 0;">
+                    <i class="fas fa-user-check" style="color: var(--accent-color);"></i> Beneficiário:
+                    <strong>{{ beneficiary_name }}</strong>
+                </p>
+            </div>
+            {% endif %}
+
+
+            {% endif %}
+        </div>
+
+
+        <div id="payment-success"
+            class="alert-box alert-success {% if order.status == 'paid' or order.status == 'preparing' or order.status == 'ready' or order.status == 'shipped' or order.status == 'completed' %}{% else %}d-none{% endif %}">
+            <div class="alert-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <h3 class="alert-title">Pagamento Concluído!</h3>
+            <p class="alert-text">Obrigado pela compra!</p>
+
+            {% if order.clube_plan_name %}
+            <!-- Welcome to Clube Info -->
+            <div id="clube-welcome-info" class="location-box" style="background: linear-gradient(135deg, rgba(233, 30, 99, 0.05), rgba(233, 30, 99, 0.1)); border-color: var(--accent-color);">
+                <h4 class="location-title" style="color: var(--accent-color); font-size: 0.9rem;">
+                    <i class="fas fa-gem" style="margin-right: 5px;"></i> Boas-vindas ao Clube!
+                </h4>
+                <p class="location-text" style="color: var(--manage-text);">
+                    Sua assinatura do <strong>{{ order.clube_plan_name }}</strong> foi ativada.
+                    <br><span style="font-size: 0.9rem; font-weight: normal; margin-top: 5px; display: inline-block;">Acesse sua <a href="{% url 'usuarios:profile' %}" style="color: var(--accent-color); font-weight: bold; text-decoration: none;">página de perfil</a> para acompanhar.</span>
+                </p>
+            </div>
+            {% else %}
+            <!-- Location Info for Approved Orders -->
+            <div id="location-info" class="location-box">
+                <h4 class="location-title">
+                    <i class="fas fa-map-marker-alt" style="margin-right: 5px;"></i> Onde nos encontrar agora:
+                </h4>
+                <p id="dynamic-location-text" class="location-text">
+                    {% if store_settings.delivery_notice %}
+                    {{ store_settings.delivery_notice }}
+                    {% else %}
+                    Verifique o status da loja para saber o local.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+
+
+
+            {% if order.has_customizable_items and not order.clube_plan_name %}
+            <!-- Tracking Timeline for Success Page -->
+            <div id="success-tracking"
+                style="margin-top: 30px; border-top: 1px dashed rgba(76, 175, 80, 0.3); padding-top: 20px;">
+                <p
+                    style="text-align: center; font-size: 0.8rem; color: #1b5e20; margin-bottom: 20px; font-weight: 700; text-transform: uppercase;">
+                    Acompanhe sua Caixinha Personalizada:
+                </p>
+                <div class="tracking-timeline-simple">
+                    <div id="step-s-pending"
+                        class="step-s {% if order.status == 'pending' %}active{% else %}completed{% endif %}">
+                        <div class="step-s-icon"><i class="fas fa-clock"></i></div>
+                        <div class="step-s-label">Pendente</div>
+                    </div>
+                    <div id="step-s-paid"
+                        class="step-s {% if order.status == 'paid' %}active{% elif order.status != 'pending' %}completed{% endif %}">
+                        <div class="step-s-icon"><i class="fas fa-check"></i></div>
+                        <div class="step-s-label">Pago</div>
+                    </div>
+                    <div id="step-s-preparing"
+                        class="step-s {% if order.status == 'preparing' %}active{% elif order.status == 'ready' or order.status == 'shipped' or order.status == 'delivered' %}completed{% endif %}">
+                        <div class="step-s-icon"><i class="fas fa-magic"></i></div>
+                        <div class="step-s-label">Em Preparo</div>
+                    </div>
+                    <div id="step-s-ready"
+                        class="step-s {% if order.status == 'ready' %}active{% elif order.status == 'shipped' or order.status == 'delivered' %}completed{% endif %}">
+                        <div class="step-s-icon"><i class="fas fa-gift"></i></div>
+                        <div class="step-s-label">Finalizado</div>
+                    </div>
+                    <div id="step-s-shipped"
+                        class="step-s {% if order.status == 'shipped' %}active{% elif order.status == 'delivered' %}completed{% endif %}">
+                        <div class="step-s-icon"><i class="fas fa-truck"></i></div>
+                        <div class="step-s-label">Enviado</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div id="payment-refunded"
+            class="alert-box alert-refunded {% if order.status != 'refunded' %}d-none{% endif %}">
+            <div class="alert-icon">
+                <i class="fas fa-undo"></i>
+            </div>
+            <h3 class="alert-title">Pedido Reembolsado</h3>
+            <p class="alert-text">O valor deste pedido foi devolvido com sucesso.</p>
+        </div>
+
+        <div id="payment-cancelled"
+            class="alert-box alert-cancelled {% if order.status != 'cancelled' %}d-none{% endif %}">
+            <div class="alert-icon">
+                <i class="fas fa-times"></i>
+            </div>
+            <h3 class="alert-title">Pedido Cancelado</h3>
+            <p class="alert-text">Este pedido não está mais ativo.</p>
+        </div>
+
+        <!-- Resumo do Pedido Unificado -->
+        <div style="background: var(--input-bg); padding: 20px; border-radius: 12px; margin-top: 20px; text-align: left; border: 1px solid var(--input-border);">
+            <h3 style="font-size: 1rem; margin-bottom: 15px; color: var(--text-color); border-bottom: 1px solid var(--input-border); padding-bottom: 8px;">
+                <i class="fas fa-shopping-basket"></i> Resumo do Pedido
+            </h3>
+            <div style="font-size: 0.9rem;">
+                {% for item in order.items.all %}
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--text-color);">
+                    <div style="display: flex; flex-direction: column;">
+                        <span>{{ item.quantity }}x {{ item.product.name }}</span>
+                        {% if item.metadata and item.metadata.description %}
+                        <small style="font-size: 0.75rem; color: #a0aec0; font-style: italic; margin-left: 10px;">
+                            {{ item.metadata.description }}
+                        </small>
+                        {% endif %}
+                    </div>
+                    <span>R$ {{ item.get_cost }}</span>
+                </div>
+                {% endfor %}
+                {% if order.tip_amount > 0 %}
+                <div style="display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--input-border);">
+                    <span style="color: var(--text-light); font-weight: bold;">Gorjeta</span>
+                    <span style="color: var(--text-light); font-weight: bold;">+ R$ {{ order.tip_amount }}</span>
+                </div>
+                {% endif %}
+                <div style="display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--input-border); font-weight: bold; font-size: 1rem; color: var(--accent-color);">
+                    <span>Total</span>
+                    <span>R$ {{ order.total_amount }}</span>
+                </div>
             </div>
         </div>
 
-        <div id="payment-status" class="{% if order.status == 'pending' %}status-flex{% else %}d-none{% endif %}" style="margin-bottom: 20px; padding: 15px; border-radius: 10px; background-color: #fff3cd; color: #856404; font-size: 0.95rem;">
-            <div class="loader" style="border: 3px solid #f3f3f3; border-top: 3px solid #856404; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite;"></div>
-            <span>Aguardando confirmação do pagamento...</span>
+        {% if user.is_superuser %}
+        <!-- Painel de Gestão para Superuser -->
+        <div style="margin-top: 20px; padding: 20px; background: rgba(0,0,0,0.03); border-radius: 15px; border: 1px solid var(--input-border); text-align: left;">
+            <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); margin-bottom: 15px;">
+                <i class="fas fa-user-shield"></i> Informações do Pedido (Admin)
+            </h4>
+            <div style="margin-bottom: 15px; font-size: 0.95rem; color: var(--text-color);">
+                <strong>Cliente:</strong> {{ order.guest_name }} <br>
+                <strong>Telefone:</strong> {{ order.guest_phone }}
+            </div>
+            
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                {% if order.payment_method != 'pix_auto' and order.payment_method != 'pix' %}
+                <div id="manual-approval-wrapper" class="{% if order.status != 'pending' and order.status != 'pending_manual' %}d-none{% endif %}">
+                    <button onclick="approveManualOrder('{{ order.id }}')" class="btn"
+                        style="background: #28a745; color: white; border-radius: 20px; font-size: 0.85em; padding: 10px 20px; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2);">
+                        <i class="fas fa-check"></i> Aprovar Pagamento
+                    </button>
+                </div>
+                {% endif %}
+                
+                <div id="mark-shipped-wrapper" class="{% if order.status == 'shipped' or order.status == 'delivered' or order.status == 'completed' or order.status == 'cancelled' or order.status == 'refunded' %}d-none{% endif %}">
+                    <button id="markShippedBtn" onclick="markOrderShipped('{{ order.id }}')" class="btn"
+                        style="background: #2196f3; color: white; border-radius: 20px; font-size: 0.85em; padding: 10px 20px; box-shadow: 0 4px 10px rgba(33, 150, 243, 0.2);">
+                        <i class="fas fa-shipping-fast"></i> Marcar como Enviado
+                    </button>
+                </div>
+                <a href="{% url 'produtos:gerenciar' %}" class="btn"
+                    style="background: #e91e63; color: white; border-radius: 20px; font-size: 0.85em; padding: 10px 20px; text-decoration: none; box-shadow: 0 4px 10px rgba(233,30,99,0.2);">
+                    <i class="fas fa-store"></i> Menu Gestão
+                </a>
+            </div>
         </div>
+        {% endif %}
 
-        <div id="payment-success" class="{% if order.status == 'paid' or order.status == 'shipped' or order.status == 'completed' %}{% else %}d-none{% endif %}" style="margin-bottom: 30px; padding: 20px; border-radius: 10px; background-color: #d4edda; color: #155724; text-align: center;">
-            <i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 10px;"></i>
-            <h3 style="margin: 0;">Pagamento Concluído!</h3>
-            <p style="margin-top: 5px;">Seu pedido foi processado com sucesso.</p>
-        </div>
+        <hr style="border: 0; border-top: 1px solid var(--input-border); margin: 20px 0;">
 
-        <div id="payment-refunded" class="{% if order.status != 'refunded' %}d-none{% endif %}" style="margin-bottom: 30px; padding: 20px; border-radius: 10px; background-color: #f3e5f5; color: #6a1b9a; text-align: center;">
-            <i class="fas fa-undo-alt" style="font-size: 3rem; margin-bottom: 10px;"></i>
-            <h3 style="margin: 0;">Pedido Reembolsado</h3>
-            <p style="margin-top: 5px;">O valor deste pedido foi reembolsado.</p>
-        </div>
-
-        <div id="payment-cancelled" class="{% if order.status != 'cancelled' %}d-none{% endif %}" style="margin-bottom: 30px; padding: 20px; border-radius: 10px; background-color: #f8d7da; color: #721c24; text-align: center;">
-            <i class="fas fa-times-circle" style="font-size: 3rem; margin-bottom: 10px;"></i>
-            <h3 style="margin: 0;">Pedido Cancelado</h3>
-            <p style="margin-top: 5px;">Este pedido foi cancelado.</p>
-        </div>
-
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-
-        <p style="margin-bottom: 20px;">Você também pode enviar o comprovante manualmente:</p>
-        
-        <a href="{{ whatsapp_url }}" target="_blank" class="btn" style="background-color: #25d366; color: white;">
-            <i class="fab fa-whatsapp"></i> Enviar Comprovante
+        {% if order.payment_method == 'pix_manual' %}
+        {% if user.is_superuser %}
+        <a href="{% url 'produtos:gerenciar' %}" class="btn"
+            style="background-color: #e91e63; color: white; width: 100%; display: block; margin-top: 20px; text-transform: uppercase; font-weight: 700; padding: 15px; border-radius: 30px; box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);">
+            <i class="fas fa-arrow-left"></i> Voltar a Gerenciar Pedidos
         </a>
+        {% endif %}
+        {% endif %}
+
+        <!-- Trust Seals -->
+        <div
+            style="margin-top: 25px; padding: 15px; border-top: 1px solid var(--input-border); display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <div style="display: flex; gap: 15px; align-items: center; opacity: 0.6; color: var(--text-color);">
+                <i class="fas fa-shield-halved" style="font-size: 1.2rem;"></i>
+                <i class="fas fa-lock" style="font-size: 1.1rem;"></i>
+                <i class="fas fa-user-shield" style="font-size: 1.2rem;"></i>
+            </div>
+            <p
+                style="font-size: 0.75rem; color: var(--text-light); margin: 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">
+                Pagamento Processado com Segurança
+            </p>
+            <div style="font-size: 0.65rem; color: var(--text-light); opacity: 0.5;">
+                Criptografia de ponta a ponta via SSL
+            </div>
+        </div>
     </div>
 </div>
 
 <style>
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-.d-none { display: none; }
-.status-flex {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
+    .alert-box {
+        margin: 20px 0 30px;
+        padding: 25px;
+        border-radius: 15px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        width: 100%;
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+    }
+
+    .alert-icon {
+        color: white;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 1.3rem;
+    }
+
+    .alert-title {
+        margin: 0;
+        font-family: var(--font-serif);
+        font-size: 1.5rem;
+    }
+
+    .alert-text {
+        margin: 8px 0 0;
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+
+    /* Success Alert */
+    .alert-success {
+        background: rgba(76, 175, 80, 0.1);
+        border: 1px solid rgba(76, 175, 80, 0.3);
+        color: #1b5e20;
+    }
+
+    .alert-success .alert-icon {
+        background: #4caf50;
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    }
+
+    html[data-theme='dark'] .alert-success {
+        background: rgba(76, 175, 80, 0.15);
+        color: #a5d6a7;
+    }
+
+    /* Refunded Alert */
+    .alert-refunded {
+        background: rgba(156, 39, 176, 0.08);
+        border: 1px solid rgba(156, 39, 176, 0.3);
+        color: #4a148c;
+    }
+
+    .alert-refunded .alert-icon {
+        background: #9c27b0;
+        box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+    }
+
+    html[data-theme='dark'] .alert-refunded {
+        background: rgba(156, 39, 176, 0.12);
+        color: #e1bee7;
+    }
+
+    /* Cancelled Alert */
+    .alert-cancelled {
+        background: rgba(244, 67, 54, 0.08);
+        border: 1px solid rgba(244, 67, 54, 0.3);
+        color: #b71c1c;
+    }
+
+    .alert-cancelled .alert-icon {
+        background: #f44336;
+        box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+    }
+
+    html[data-theme='dark'] .alert-cancelled {
+        background: rgba(244, 67, 54, 0.12);
+        color: #ffcdd2;
+    }
+
+    /* Location Box */
+    .location-box {
+        margin-top: 25px;
+        text-align: left;
+        background: rgba(255, 255, 255, 0.6);
+        padding: 18px;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .location-title {
+        color: inherit;
+        font-size: 0.8rem;
+        margin: 0 0 8px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 800;
+        opacity: 0.7;
+    }
+
+    .location-text {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: inherit;
+        line-height: 1.3;
+    }
+
+    html[data-theme='dark'] .location-box {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    html[data-theme='dark'] .location-text {
+        color: white;
+    }
+
+    @keyframes heartbeat {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4);
+        }
+
+        50% {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .pulse-status {
+        animation: heartbeat 2s infinite ease-in-out;
+    }
+
+    .d-none {
+        display: none;
+    }
+
+    .status-flex {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    /* Tracking Timeline for Success Page */
+    .tracking-timeline-simple {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+    }
+
+    .tracking-timeline-simple::before {
+        content: '';
+        position: absolute;
+        top: 15px;
+        left: 10px;
+        right: 10px;
+        height: 2px;
+        background: rgba(76, 175, 80, 0.2);
+        z-index: 1;
+    }
+
+    .step-s {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 2;
+        position: relative;
+        flex: 1;
+    }
+
+    .step-s-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid rgba(76, 175, 80, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        color: rgba(76, 175, 80, 0.4);
+        margin-bottom: 8px;
+        transition: all 0.3s;
+    }
+
+    .step-s.active .step-s-icon {
+        border-color: #4caf50;
+        background: #4caf50;
+        color: white;
+    }
+
+    .step-s.completed .step-s-icon {
+        border-color: #4caf50;
+        background: #4caf50;
+        color: white;
+    }
+
+    .step-s-label {
+        font-size: 0.6rem;
+        font-weight: 700;
+        color: rgba(76, 175, 80, 0.6);
+        text-transform: uppercase;
+        text-align: center;
+    }
+
+    .step-s.active .step-s-label,
+    .step-s.completed .step-s-label {
+        color: #1b5e20;
+    }
 </style>
 
 <script>
-function copyPixCode(elementId) {
-    if (!elementId) elementId = "pixCode";
-    var copyText = document.getElementById(elementId);
-    copyText.select();
-    copyText.setSelectionRange(0, 99999); /* For mobile devices */
-    
-    try {
-        if(navigator.clipboard) {
-            navigator.clipboard.writeText(copyText.value).then(() => {
-                alert("Código Pix copiado!");
-            });
-        } else {
-            document.execCommand("copy");
-            alert("Código Pix copiado!");
+    function copyPixCode(elementId, btn) {
+        if (!elementId) elementId = "pixCode";
+        var copyText = document.getElementById(elementId);
+        if (!copyText) return;
+
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+
+        const originalContent = btn.innerHTML;
+        const originalBg = btn.style.backgroundColor || 'var(--accent-color)';
+
+        const handleSuccess = () => {
+            btn.innerHTML = '<i class="fas fa-check"></i> Copiado';
+            btn.style.backgroundColor = '#28a745'; // Green
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.style.backgroundColor = ''; // Restore to default (pink from CSS/inline)
+            }, 3000);
+        };
+
+        try {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(copyText.value).then(handleSuccess);
+            } else {
+                document.execCommand("copy");
+                handleSuccess();
+            }
+        } catch (err) {
+            btn.innerText = "Erro!";
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+            }, 2000);
         }
-    } catch(err) {
-        alert("Erro ao copiar. Por favor selecione e copie manualmente.");
     }
-}
 
-// Polling for Payment Status
-const orderId = "{{ order.id }}";
-const statusUrl = "/orders/status/" + orderId + "/";
+    function triggerCelebration() {
+        if (typeof confetti !== 'function') return;
 
-function checkStatus() {
-    fetch(statusUrl)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'paid' || data.status === 'shipped' || data.status === 'completed') {
-                // Payment Confirmed
-                document.getElementById('payment-status').style.display = 'none';
-                document.getElementById('payment-success').style.display = 'block';
-                document.getElementById('payment-cancelled').style.display = 'none';
-                
-                // Hide QR Code section
+        const duration = 5 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 99999 };
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        const interval = setInterval(function () {
+            const timeLeft = animationEnd - Date.now();
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+
+            const particleCount = 50 * (timeLeft / duration);
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+        }, 250);
+
+        // Initial big burst
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#e91e63', '#ffffff', '#ffd700']
+        });
+    }
+
+    // Polling for Payment Status
+    function showOrderNotFound() {
+        clearInterval(pollingInterval);
+        localStorage.removeItem('yas_pending_order_id');
+        const container = document.querySelector('div[style*="text-align: center; padding: 50px 0;"]');
+        if (container) {
+            container.innerHTML = `
+            <i class="fas fa-exclamation-circle" style="font-size: 4rem; color: #dc3545; margin-bottom: 20px;"></i>
+            <h1 style="font-family: var(--font-serif); color: #dc3545; margin-bottom: 20px;">Esse pedido não foi encontrado.</h1>
+            <p style="font-size: 1.2rem; margin-bottom: 30px;">Talvez ele tenha sido excluído ou o link esteja incorreto.</p>
+            <a href="/" class="btn" style="background-color: var(--accent-color); color: white; margin-top: 20px;">Voltar ao Início</a>
+        `;
+        }
+    }
+
+    const orderId = "{{ order.id }}";
+    const statusUrl = "/pedidos/status/" + orderId + "/";
+
+    // Manage multiple IDs in localStorage
+    function updatePendingLocalStorage(id, action) {
+        let ids = localStorage.getItem('yas_pending_order_ids');
+        ids = ids ? ids.split(',') : [];
+
+        if (action === 'add') {
+            if (!ids.includes(id.toString())) {
+                ids.push(id.toString());
+            }
+        } else if (action === 'remove') {
+            ids = ids.filter(i => i !== id.toString());
+        }
+
+        if (ids.length > 0) {
+            localStorage.setItem('yas_pending_order_ids', ids.join(','));
+            // Legacy support for single ID
+            localStorage.setItem('yas_pending_order_id', ids[ids.length - 1]);
+        } else {
+            localStorage.removeItem('yas_pending_order_ids');
+            localStorage.removeItem('yas_pending_order_id');
+        }
+    }
+
+    if ("{{ order.status }}" === 'pending' || "{{ order.status }}" === 'pending_manual') {
+        updatePendingLocalStorage(orderId, 'add');
+    } else if (["paid", "shipped", "completed", "cancelled", "refunded"].includes("{{ order.status }}")) {
+        updatePendingLocalStorage(orderId, 'remove');
+    }
+
+    function updateTrackingSteps(status) {
+        const steps = ['pending', 'paid', 'preparing', 'ready', 'shipped'];
+        const container = document.getElementById('success-tracking');
+        if (!container) return;
+
+        steps.forEach((stepName, index) => {
+            const stepEl = document.getElementById('step-s-' + stepName);
+            if (!stepEl) return;
+
+            stepEl.classList.remove('active', 'completed');
+
+            if (status === stepName || (status === 'pending_manual' && stepName === 'pending')) {
+                stepEl.classList.add('active');
+            } else {
+                // Determine if this step is completed
+                let isCompleted = false;
+                const statusIndex = steps.indexOf(status === 'pending_manual' ? 'pending' : status);
+                if (statusIndex > index || status === 'delivered') {
+                    isCompleted = true;
+                }
+                if (isCompleted) stepEl.classList.add('completed');
+            }
+        });
+    }
+
+    function checkStatus() {
+        fetch(statusUrl)
+            .then(response => {
+                if (response.status === 404) {
+                    showOrderNotFound();
+                    throw new Error("Order deleted");
+                }
+                return response.json();
+            })
+            .then(data => {
+                const status = data.status;
+                const successBox = document.getElementById('payment-success');
+                const cancelledBox = document.getElementById('payment-cancelled');
+                const refundedBox = document.getElementById('payment-refunded');
                 const qrSection = document.getElementById('qr-code-section');
-                if (qrSection) qrSection.style.display = 'none';
+                const manualBtn = document.getElementById('manual-approval-wrapper');
+
+                const toggleBox = (el, show, displayType = 'block') => {
+                    if (!el) return;
+                    if (show) {
+                        el.classList.remove('d-none');
+                        el.style.display = displayType;
+                    } else {
+                        el.classList.add('d-none');
+                        el.style.display = 'none';
+                    }
+                };
+
+                // 1. Handle Pending State (Reversion or initial)
+                if (status === 'pending' || status === 'pending_manual') {
+                    updatePendingLocalStorage(orderId, 'add');
+                    toggleBox(qrSection, true, 'block');
+                    toggleBox(successBox, false);
+                    toggleBox(cancelledBox, false);
+                    toggleBox(refundedBox, false);
+                    toggleBox(refundedBox, false);
+                }
+
+                // 2. Handle Success State
+                else if (['paid', 'shipped', 'completed', 'preparing', 'ready', 'delivered'].includes(status)) {
+                    const isFirstTimeSuccess = qrSection && !qrSection.classList.contains('d-none') && qrSection.style.display !== 'none';
+                    if (isFirstTimeSuccess) triggerCelebration();
+
+                    updatePendingLocalStorage(orderId, 'remove');
+                    toggleBox(qrSection, false);
+                    toggleBox(successBox, true, 'block');
+                    toggleBox(cancelledBox, false);
+                    toggleBox(refundedBox, false);
+                }
+                // 3. Handle Cancelled State
+                else if (status === 'cancelled') {
+                    updatePendingLocalStorage(orderId, 'remove');
+                    toggleBox(qrSection, false);
+                    toggleBox(successBox, false);
+                    toggleBox(cancelledBox, true, 'block');
+                    toggleBox(refundedBox, false);
+                }
+                // 4. Handle Refunded State
+                else if (status === 'refunded') {
+                    updatePendingLocalStorage(orderId, 'remove');
+                    toggleBox(qrSection, false);
+                    toggleBox(successBox, false);
+                    toggleBox(cancelledBox, false);
+                    toggleBox(refundedBox, true, 'block');
+                }
+
+                // --- Admin Buttons Visibility ---
+                const isAutoPix = "{{ order.payment_method }}" === 'pix_auto' || "{{ order.payment_method }}" === 'pix';
                 
-                // NOT stopping polling here anymore to handle post-payment cancellation
-                // clearInterval(pollingInterval);
-            } else if (data.status === 'cancelled') {
-                // Payment Cancelled
-                document.getElementById('payment-status').style.display = 'none';
-                document.getElementById('payment-success').style.display = 'none';
-                document.getElementById('payment-cancelled').style.display = 'block';
+                // Approve button only if NOT Auto Pix
+                if (manualBtn) {
+                    if (!isAutoPix && (status === 'pending' || status === 'pending_manual')) {
+                        toggleBox(manualBtn, true, 'block');
+                    } else {
+                        toggleBox(manualBtn, false);
+                    }
+                }
 
-                // Hide QR Code section
-                const qrSection = document.getElementById('qr-code-section');
-                if (qrSection) qrSection.style.display = 'none';
+                // Shipped button for everyone
+                const shippedWrapper = document.getElementById('mark-shipped-wrapper');
+                if (shippedWrapper) {
+                    if (['shipped', 'delivered', 'completed', 'cancelled', 'refunded'].includes(status)) {
+                        toggleBox(shippedWrapper, false);
+                    } else {
+                        toggleBox(shippedWrapper, true, 'block');
+                    }
+                }
 
-                // Stop polling only on final cancelled state (or you could keep it running, but cancelled is usually final)
-                clearInterval(pollingInterval);
-            } else if (data.status === 'refunded') {
-                // Payment Refunded
-                document.getElementById('payment-status').style.display = 'none';
-                document.getElementById('payment-success').style.display = 'none';
-                document.getElementById('payment-cancelled').style.display = 'none';
-                document.getElementById('payment-refunded').style.display = 'block';
+                // Update Tracking Steps if they exist
+                updateTrackingSteps(status);
+            })
+            .catch(err => {
+                if (err.message !== "Order deleted") {
+                    console.error("Error checking status:", err);
+                }
+            });
 
-                const qrSection = document.getElementById('qr-code-section');
-                if (qrSection) qrSection.style.display = 'none';
-                
-                clearInterval(pollingInterval);
+        // Also update location text for approved orders
+        fetch("{% url 'sistema:get_status' %}")
+            .then(res => res.json())
+            .then(data => {
+                const locText = document.getElementById('dynamic-location-text');
+                if (locText && data.notice) {
+                    locText.innerHTML = data.notice;
+                }
+            });
+    }
+
+</script>
+
+<!-- Custom Confirmation Modal for Manual Approval -->
+<div id="manualApprovalModal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+    <div
+        style="background: var(--card-bg); padding: 30px; border-radius: 20px; max-width: 90%; width: 350px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+        <i class="fas fa-check-circle" style="font-size: 3rem; color: #28a745; margin-bottom: 20px;"></i>
+        <h3 style="margin-bottom: 10px; color: var(--text-color);">Confirmar Pagamento?</h3>
+        <p style="color: var(--text-light); margin-bottom: 25px;">Deseja marcar este pedido manual como PAGO?</p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button onclick="closeManualModal()" class="btn"
+                style="background: var(--input-bg); color: var(--text-light); border: 1px solid var(--input-border); flex: 1;">Cancelar</button>
+            <button id="confirmManualBtn" class="btn"
+                style="background: #28a745; color: white; flex: 1;">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    // Check every 2 seconds
+    const pollingInterval = setInterval(checkStatus, 2000);
+
+    let currentManualOrderId = null;
+
+    function approveManualOrder(oid) {
+        currentManualOrderId = oid;
+        document.getElementById('manualApprovalModal').style.display = 'flex';
+    }
+
+    function closeManualModal() {
+        document.getElementById('manualApprovalModal').style.display = 'none';
+        currentManualOrderId = null;
+    }
+
+    function markOrderShipped(oid) {
+        const url = "/pedidos/update-status/" + oid + "/shipped/";
+        const btn = document.getElementById('markShippedBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Atualizando...';
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
             }
         })
-        .catch(err => console.error("Error checking status:", err));
-}
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                checkStatus(); // Update UI immediately
+            } else {
+                alert("Erro ao marcar como enviado.");
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-shipping-fast"></i> Marcar como Enviado';
+            }
+        });
+    }
 
-// Check every 5 seconds
-const pollingInterval = setInterval(checkStatus, 5000);
+    document.getElementById('confirmManualBtn').addEventListener('click', function () {
+        if (!currentManualOrderId) return;
+
+        const oid = currentManualOrderId;
+        const url = "/pedidos/update-status/" + oid + "/paid/";
+
+        // Disable button to prevent double click
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    checkStatus(); // Update UI immediately
+                    closeManualModal();
+                    // Optional: Show a toast or small success message, but checkStatus handles the main UI switch
+                } else {
+                    alert("Erro ao aprovar."); // Fallback for error
+                    closeManualModal();
+                }
+                // Reset button
+                document.getElementById('confirmManualBtn').disabled = false;
+                document.getElementById('confirmManualBtn').innerHTML = 'Confirmar';
+            });
+    });
+
 </script>
 {% endblock %}

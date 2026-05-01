@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Sem Conexão - YasMimos{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; padding: 20px;">
+    <i class="fas fa-wifi" style="font-size: 4rem; color: #ccc; margin-bottom: 20px;"></i>
+    <h2 style="color: var(--text-color);">Você está offline</h2>
+    <p style="color: var(--text-light); max-width: 400px; margin-bottom: 30px;">
+        Parece que você perdeu a conexão com a internet. Verifique seu sinal e tente novamente.
+    </p>
+    <a href="/" class="btn-primary" style="text-decoration: none;">
+        <i class="fas fa-sync-alt"></i> Tentar Novamente
+    </a>
+</div>
+{% endblock %}

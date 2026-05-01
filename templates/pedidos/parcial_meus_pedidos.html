@@ -1,0 +1,288 @@
+﻿{% if active_orders %}
+<div id="active-orders-section">
+    <h4
+        style="font-size:0.85rem;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:15px;border-bottom:1px solid var(--input-border);padding-bottom:5px;">
+        <i class="fas fa-circle-notch fa-spin" style="margin-right:5px;font-size:0.75rem;"></i> Pedidos Ativos
+    </h4>
+    <div style="display:flex;flex-direction:column;gap:15px;">
+        {% for order in active_orders %}
+        <div class="order-card" data-status="{{ order.status }}"
+            style="background:var(--card-bg);padding:20px;border-radius:12px;border:1px solid var(--input-border);box-shadow:0 2px 5px rgba(0,0,0,0.05); transition: opacity 0.3s ease;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:15px;">
+                <div>
+                    <h3 style="margin:0;font-size:1.05rem;color:var(--text-color);">Pedido #{{ order.id }}</h3>
+                    <p style="margin:4px 0 0;color:var(--text-light);font-size:0.82rem;">
+                        {{ order.created|date:"d/m/Y" }}
+                    </p>
+                </div>
+                <div style="text-align:right;">
+                    <span class="my-status-badge my-status-{{ order.status }}">{{ order.get_status_display }}</span>
+                    <p style="margin:4px 0 0;font-weight:bold;color:var(--accent-color);">R$ {{ order.total_amount }}
+                    </p>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <a href="{% url 'pedidos:order_detail' order.id %}" class="my-btn-sm">
+                    <i class="fas fa-info-circle"></i> Detalhes
+                </a>
+                {% if order.status == 'pending' %}
+                <a href="{% url 'pedidos:order_created' order.id %}" class="my-btn-sm my-btn-green">
+                    <i class="fas fa-qrcode"></i> Pagar
+                </a>
+                {% endif %}
+                {% if order.has_customizable_items %}
+                <button onclick="toggleTracking('{{ order.id }}')" class="my-btn-sm my-btn-pink">
+                    <i class="fas fa-route"></i> Acompanhar
+                </button>
+                {% endif %}
+            </div>
+            <div id="tracking-{{ order.id }}"
+                style="display:none;margin-top:15px;padding-top:15px;border-top:1px dashed var(--input-border);">
+                <p
+                    style="text-align:center;font-size:0.72rem;color:var(--text-light);margin-bottom:12px;font-weight:700;text-transform:uppercase;">
+                    Progresso da Caixinha</p>
+                <div class="my-timeline">
+                    <div class="my-step {% if order.status == 'pending' %}s-active{% else %}s-done{% endif %}">
+                        <div class="my-step-dot"><i class="fas fa-clock"></i></div>
+                        <div class="my-step-lbl">Pendente</div>
+                    </div>
+                    <div
+                        class="my-step {% if order.status == 'paid' %}s-active{% elif order.status == 'preparing' or order.status == 'ready' or order.status == 'shipped' or order.status == 'delivered' %}s-done{% endif %}">
+                        <div class="my-step-dot"><i class="fas fa-check"></i></div>
+                        <div class="my-step-lbl">Pago</div>
+                    </div>
+                    <div
+                        class="my-step {% if order.status == 'preparing' %}s-active{% elif order.status == 'ready' or order.status == 'shipped' or order.status == 'delivered' %}s-done{% endif %}">
+                        <div class="my-step-dot"><i class="fas fa-magic"></i></div>
+                        <div class="my-step-lbl">Preparo</div>
+                    </div>
+                    <div
+                        class="my-step {% if order.status == 'ready' %}s-active{% elif order.status == 'shipped' or order.status == 'delivered' %}s-done{% endif %}">
+                        <div class="my-step-dot"><i class="fas fa-gift"></i></div>
+                        <div class="my-step-lbl">Finalizado</div>
+                    </div>
+                    <div
+                        class="my-step {% if order.status == 'shipped' %}s-active{% elif order.status == 'delivered' %}s-done{% endif %}">
+                        <div class="my-step-dot"><i class="fas fa-truck"></i></div>
+                        <div class="my-step-lbl">Enviado</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if history_orders %}
+<div id="history-orders-section" style="margin-top:10px;">
+    <button onclick="toggleHistory()"
+        style="width:100%;background:transparent;border:1px solid var(--input-border);padding:10px 15px;border-radius:8px;color:var(--text-light);font-size:0.85rem;display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+        <span><i class="fas fa-history" style="margin-right:6px;"></i>Historico de Pedidos</span>
+        <i id="history-chevron" class="fas fa-chevron-down"></i>
+    </button>
+    <div id="history-content" style="display:none;flex-direction:column;gap:8px;margin-top:10px;">
+        {% for order in history_orders %}
+        <div class="order-card" data-status="{{ order.status }}"
+            style="background:var(--input-bg);padding:12px 15px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--input-border);opacity:0.85; transition: opacity 0.3s ease;">
+            <div>
+                <span style="font-weight:bold;font-size:0.9rem;color:var(--text-color);">#{{ order.id }}</span>
+                <small style="color:var(--text-light);">
+                    ({{ order.created|date:"d/m/y" }})
+                </small>
+                <br>
+                <span style="font-size:0.75rem;color:var(--text-light);font-weight:600;">{{ order.get_status_display }}
+                    - R$ {{ order.total_amount }}</span>
+            </div>
+            <a href="{% url 'pedidos:order_detail' order.id %}"
+                style="color:var(--accent-color);font-size:0.82rem;font-weight:bold;text-decoration:none;padding:5px 10px;border:1px solid var(--accent-color);border-radius:6px;white-space:nowrap;">
+                Ver Recibo
+            </a>
+        </div>
+        {% endfor %}
+        {% if has_more_history %}
+        <p style="text-align:center;font-size:0.75rem;color:var(--text-light);font-style:italic;margin-top:5px;">
+            Exibindo as 5 compras mais recentes.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if not active_orders and not history_orders %}
+<div style="text-align:center;padding:40px 20px;opacity:0.6;">
+    <i class="fas fa-shopping-bag" style="font-size:3rem;margin-bottom:15px;color:var(--text-light);"></i>
+    <p>Voce ainda nao fez nenhum pedido.</p>
+</div>
+{% endif %}
+
+<script>
+    function toggleHistory() {
+        var content = document.getElementById('history-content');
+        var chevron = document.getElementById('history-chevron');
+        if (content.style.display === 'none') {
+            content.style.display = 'flex';
+            chevron.classList.replace('fa-chevron-down', 'fa-chevron-up');
+        } else {
+            content.style.display = 'none';
+            chevron.classList.replace('fa-chevron-up', 'fa-chevron-down');
+        }
+    }
+</script>
+
+<style>
+    .my-btn-sm {
+        flex: 1;
+        text-align: center;
+        padding: 8px 10px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        background: transparent;
+        color: var(--accent-color);
+        border: 1px solid var(--accent-color);
+        border-radius: 8px;
+        text-decoration: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        transition: opacity 0.2s;
+    }
+
+    .my-btn-sm:hover {
+        opacity: 0.75;
+    }
+
+    .my-btn-green {
+        background: #28a745;
+        color: white;
+        border-color: #28a745;
+    }
+
+    .my-btn-pink {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .my-status-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .my-status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .my-status-paid {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .my-status-preparing {
+        background: #fffaf0;
+        color: #c05621;
+        border: 1px solid #feebc8;
+    }
+
+    .my-status-ready {
+        background: #e6fffa;
+        color: #234e52;
+        border: 1px solid #b2f5ea;
+    }
+
+    .my-status-shipped {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .my-status-delivered {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+
+    .my-status-cancelled {
+        background: #fed7d7;
+        color: #c53030;
+    }
+
+    .my-status-refunded {
+        background: #edf2f7;
+        color: #2d3748;
+    }
+
+    .my-timeline {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        position: relative;
+        padding: 0 5px;
+    }
+
+    .my-timeline::before {
+        content: '';
+        position: absolute;
+        top: 12px;
+        left: 15px;
+        right: 15px;
+        height: 2px;
+        background: #e2e8f0;
+        z-index: 0;
+    }
+
+    .my-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        position: relative;
+        z-index: 1;
+    }
+
+    .my-step-dot {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--card-bg);
+        border: 2px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        color: #a0aec0;
+        margin-bottom: 5px;
+    }
+
+    .my-step.s-active .my-step-dot {
+        border-color: var(--accent-color);
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .my-step.s-done .my-step-dot {
+        border-color: #48bb78;
+        background: #48bb78;
+        color: white;
+    }
+
+    .my-step-lbl {
+        font-size: 0.55rem;
+        font-weight: 800;
+        color: #a0aec0;
+        text-transform: uppercase;
+        text-align: center;
+    }
+
+    .my-step.s-active .my-step-lbl {
+        color: var(--accent-color);
+    }
+
+    .my-step.s-done .my-step-lbl {
+        color: #48bb78;
+    }
+</style>

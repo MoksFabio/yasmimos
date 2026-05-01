@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load socialaccount %}
+
+{% block title %}{% trans "Finalizar Cadastro" %}{% endblock %}
+
+{% block content %}
+<div
+    style="max-width: 500px; margin: 0 auto; background: var(--card-bg); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+    <h1 style="text-align: center; font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 20px;">
+        Finalizar Cadastro</h1>
+
+    <div style="text-align: center; margin-bottom: 20px;">
+        <p style="color: var(--text-light); font-size: 0.9rem;">
+            Se esta não é sua conta, clique em "Trocar Conta" abaixo.
+        </p>
+    </div>
+
+    <p style="text-align: center; color: var(--text-color); margin-bottom: 20px;">
+        Você está prestes a usar seu login do <strong>{{ account.get_provider.name }}</strong>. Como passo final, por
+        favor complete o formulário abaixo.
+    </p>
+
+    <form class="signup" id="signup_form" method="post" action="{% url 'socialaccount_signup' %}">
+        {% csrf_token %}
+
+        {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}" style="color: var(--text-color);">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+            <small style="color: var(--text-light); display: block; margin-bottom: 5px;">{{ field.help_text }}</small>
+            {% endif %}
+            {% for error in field.errors %}
+            <div style="color: red; font-size: 0.9rem;">{{ error }}</div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <a href="{% url 'account_logout' %}?next={% url 'usuarios:login' %}" class="btn"
+                style="flex: 1; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); text-align: center; text-decoration: none;">Trocar
+                Conta</a>
+            <button type="submit" class="btn" style="flex: 1;">Cadastrar-se</button>
+        </div>
+    </form>
+</div>
+
+<style>
+    input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--input-border);
+        border-radius: 5px;
+        margin-bottom: 10px;
+        background-color: var(--input-bg);
+        color: var(--text-color);
+    }
+
+    input:focus {
+        border-color: var(--accent-color);
+        outline: none;
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+        color: var(--text-light);
+    }
+</style>
+{% endblock %}

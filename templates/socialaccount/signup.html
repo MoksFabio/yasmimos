@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load socialaccount %}
+
+{% block title %}{% trans "Signup" %} - YasMimos{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card bg-dark text-white shadow-lg border-0" style="border-radius: 20px; background: rgba(20, 20, 20, 0.95) !important; border: 1px solid #333 !important;">
+                <div class="card-body p-4 p-md-5">
+                    <h2 class="text-center mb-4" style="color: #ff4d94; font-weight: 700; font-size: 2rem;">{% trans "Finalizar Cadastro" %}</h2>
+                    
+                    <p class="text-center mb-4" style="color: #aaa; font-size: 1.1rem;">
+                        {% blocktrans with provider_name=account.get_provider.name site_name=site.name %}Olá! Você está usando o {{provider_name}} para entrar na <strong>{{site_name}}</strong>. Só falta escolher seu nome e WhatsApp:{% endblocktrans %}
+                    </p>
+
+                    <form class="signup" id="signup_form" method="post" action="{% url 'socialaccount_signup' %}">
+                        {% csrf_token %}
+                        
+                        {% for field in form %}
+                            <div class="mb-4">
+                                <label class="form-label" style="color: #ccc;">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1">{{ field.errors }}</div>
+                                {% endif %}
+                                {% if field.help_text %}
+                                    <div class="text-muted small mt-1">{{ field.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        {% if redirect_field_value %}
+                            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                        {% endif %}
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-lg" style="background: linear-gradient(45deg, #ff4d94, #ff758c); color: white; border: none; border-radius: 10px; font-weight: 600;">
+                                {% trans "Concluir Cadastro" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    input {
+        width: 100%;
+        padding: 12px;
+        background: #2d2d2d !important;
+        border: 1px solid #444 !important;
+        border-radius: 8px !important;
+        color: white !important;
+    }
+    input:focus {
+        border-color: #ff4d94 !important;
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(255, 77, 148, 0.25);
+    }
+</style>
+{% endblock %}

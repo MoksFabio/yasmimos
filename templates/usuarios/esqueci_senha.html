@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Redefinir Senha{% endblock %}
+
+{% block content %}
+<div
+    style="max-width: 400px; margin: 0 auto; background: var(--card-bg); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+    <h1 style="text-align: center; font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 20px;">
+        Redefinir Senha</h1>
+
+    <p style="text-align: center; color: var(--text-color); margin-bottom: 30px; font-size: 0.95rem;">
+        Informe seu e-mail cadastrado e enviaremos um código para você criar uma nova senha.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="id_email"
+                style="color: var(--text-color); display: block; margin-bottom: 10px; text-align: center; font-weight: 500;">E-mail</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+            <div style="color: red; font-size: 0.9rem; margin-top: 5px; text-align: center;">{{ form.email.errors.0 }}
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button type="submit" class="btn"
+                style="width: 100%; padding: 12px; font-size: 1.1rem; border-radius: 8px;">Enviar Código</button>
+        </div>
+    </form>
+
+    <div style="text-align: center; margin-top: 25px;">
+        <a href="{% url 'usuarios:login' %}" class="btn"
+            style="background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); width: 100%; box-sizing: border-box; text-decoration: none; display: inline-block;">Voltar
+            para Login</a>
+    </div>
+</div>
+
+<style>
+    /* Input generic styles are overridden by inline styles in form widget, 
+       but we keep focus state here for interaction */
+    input:focus {
+        border-color: var(--accent-color) !important;
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(255, 20, 147, 0.1);
+    }
+
+    a:hover {
+        color: var(--accent-color) !important;
+    }
+</style>
+{% endblock %}

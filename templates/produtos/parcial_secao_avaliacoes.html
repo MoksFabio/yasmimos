@@ -1,0 +1,103 @@
+
+        <h2 style="font-family: var(--font-serif); margin-bottom: 30px; border-bottom: 2px solid var(--accent-color); display: inline-block; padding-bottom: 5px; color: var(--accent-color);">Avaliações de Clientes</h2>
+        
+        <div class="reviews-summary-box">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div style="text-align: center;">
+                    <span class="review-text-color" style="font-size: 3rem; font-weight: bold; line-height: 1;">{{ avg_rating }}</span>
+                    <span class="review-meta-color" style="display: block; font-size: 0.9rem;">de 5.0</span>
+                </div>
+                <div>
+                    <div style="color: #ffc107; font-size: 1.4rem; margin-bottom: 5px;">
+                        {% for i in "12345" %}
+                            {% if i|add:"0" <= avg_rating %}
+                                <i class="fas fa-star"></i>
+                            {% elif i|add:"0" <= avg_rating|add:"0.9" %} {# Simple hack for half stars roughly #}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <span class="review-meta-color" style="font-weight: 500;">Baseado em {{ reviews.count }} avaliações</span>
+                </div>
+            </div>
+            
+            {% if user.is_authenticated %}
+                <button id="add-review-btn" class="btn" onclick="openReviewForm()" style="width: auto; background-color: var(--accent-color);">Escrever Avaliação</button>
+            {% else %}
+                <a href="{% url 'usuarios:login' %}?next={{ request.path }}" class="btn" style="width: auto; text-decoration: none;">Faça Login para Avaliar</a>
+            {% endif %}
+        </div>
+
+        {% if user.is_authenticated %}
+            <div id="review-form-box" class="review-form-box">
+                <button onclick="closeReviewForm()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; color: var(--text-light); cursor: pointer;">&times;</button>
+                <h3 id="form-title" style="margin-bottom: 20px; color: var(--accent-color);">Sua Opinião é Importante</h3>
+                <form method="post" id="review-form" onsubmit="submitReview(event); return false;">
+                    {% csrf_token %}
+                    <input type="hidden" name="review_id" id="review_id_input">
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label class="review-label">Quantas estrelas este produto merece?</label>
+                        <div class="star-rating-selector" id="star-container">
+                            <i class="far fa-star" data-val="1" title="Ruim"></i>
+                            <i class="far fa-star" data-val="2" title="Razoável"></i>
+                            <i class="far fa-star" data-val="3" title="Bom"></i>
+                            <i class="far fa-star" data-val="4" title="Muito Bom"></i>
+                            <i class="far fa-star" data-val="5" title="Perfeito"></i>
+                            <input type="hidden" name="rating" id="selected-rating" required>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label class="review-label">Seu Comentário:</label>
+                        {{ review_form.comment }}
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" id="submit-btn" class="btn" style="width: auto; padding: 12px 30px;">Publicar Avaliação</button>
+                        <button type="button" onclick="closeReviewForm()" class="btn" style="width: auto; padding: 12px 30px; background-color: var(--input-bg); color: var(--text-light); border: 1px solid var(--input-border);">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+
+        <div class="reviews-list">
+            {% for review in reviews %}
+                <div class="review-card-item">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; align-items: flex-start;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 40px; height: 40px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">
+                                {{ review.user.username|make_list|first|upper }}
+                            </div>
+                            <div>
+                                <span class="review-text-color" style="font-weight: bold; font-size: 1rem; display: block;">{{ review.user.username }}</span>
+                                <div style="color: #ffc107; font-size: 0.8rem;">
+                                    {% for i in "12345" %}
+                                         {% if forloop.counter <= review.rating %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <small style="color: var(--text-light); display: block; margin-bottom: 5px;">{{ review.created_at|date:"d/m/Y" }}</small>
+                            {% if user.is_authenticated and user == review.user or user.is_superuser %}
+                                <div style="font-size: 0.9rem;">
+                                    <a href="#" onclick="editReview('{{ review.id }}', '{{ review.rating }}', '{{ review.comment|escapejs }}'); return false;" style="color: #2196F3; margin-right: 15px; font-size: 1.2rem;" title="Editar"><i class="fas fa-edit"></i></a>
+                                    <a href="#" data-url="{% url 'produtos:deletar_avaliacao' review.id %}" onclick="confirmDeleteReview(this.getAttribute('data-url')); return false;" style="color: #d32f2f; font-size: 1.2rem;" title="Excluir"><i class="fas fa-trash-alt"></i></a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <p class="review-text-color" style="line-height: 1.6; margin-left: 50px;">{{ review.comment|linebreaksbr }}</p>
+                </div>
+            {% empty %}
+                <div class="empty-reviews-box">
+                    <i class="far fa-comment-dots" style="font-size: 3rem; color: var(--input-border); margin-bottom: 15px;"></i>
+                    <p class="review-text-color" style="font-size: 1.1rem;">Este produto ainda não tem avaliações.</p>
+                    <p class="review-meta-color">Seja o primeiro a compartilhar sua experiência!</p>
+                </div>
+            {% endfor %}
+        </div>

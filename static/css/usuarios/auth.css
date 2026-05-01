@@ -1,0 +1,98 @@
+/* Container Principal */
+.auth-container {
+    margin: 0 auto;
+    background: var(--card-bg);
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+.auth-container.login { max-width: 400px; }
+.auth-container.cadastro { max-width: 500px; }
+
+/* Títulos */
+.auth-title {
+    text-align: center;
+    font-family: var(--font-serif);
+    color: var(--accent-color);
+    margin-bottom: 30px;
+}
+.auth-container.cadastro .auth-title { margin-bottom: 20px; }
+
+/* Botão do Google */
+.google-btn-wrapper {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.google-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background-color: white;
+    border: 1px solid #dadce0;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.google-btn img {
+    width: 24px;
+    height: 24px;
+}
+
+/* Divisor "OU" padronizado para Flexbox */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    color: var(--text-light);
+}
+.auth-divider .line {
+    flex-grow: 1;
+    height: 1px;
+    background-color: var(--input-border);
+}
+.auth-divider span {
+    padding: 0 10px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+/* Inputs globais de Auth */
+.auth-container input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    margin-bottom: 10px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+}
+.auth-container input:focus {
+    border-color: var(--accent-color);
+    outline: none;
+}
+.auth-container ul {
+    list-style: none;
+    padding: 0;
+    color: var(--text-light);
+}
+
+/* Textos e Links Auxiliares */
+.auth-footer-text {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--text-color);
+}
+.auth-footer-text a {
+    color: var(--primary-dark);
+    font-weight: bold;
+}
+.auth-forgot-password {
+    text-align: center;
+    margin-top: 15px;
+}
+.auth-forgot-password a {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}

@@ -2,32 +2,169 @@
 {% load static %}
 
 {% block content %}
-<section class="hero" style="text-align: center; margin-bottom: 40px;">
-    <h1 style="font-family: var(--font-serif); color: var(--accent-color); font-size: 3rem;">Bem-vindo à YasMimos</h1>
-    <p style="font-size: 1.2rem;">Doces artesanais feitos com amor para você.</p>
+<link rel="stylesheet" href="{% static 'css/produtos/lista.css' %}">
+
+<section class="hero-wrapper">
+    <!-- Animated Floating Circles moved to base.html -->
+
+    
+
+    <div class="container hero-content hero-content-grid">
+        <div class="hero-image-side">
+            <img src="{% static 'img/logo.png' %}?v=3" alt="YasMimos Destaque" class="hero-large-img">
+        </div>
+
+        <div class="hero-text-side">
+            <h1 class="hero-title">Bem-vindo à YasMimos</h1>
+            <p class="hero-subtitle">Doces artesanais feitos com amor para tornar cada momento especial. Experimente a
+                doçura em cada detalhe.</p>
+
+            <div class="badges-container"
+                style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 10px; flex-wrap: wrap;">
+                <!-- Pix Badge -->
+                <div
+                    style="display: flex; align-items: center; gap: 8px; background: var(--glass-bg); padding: 8px 16px; border-radius: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); backdrop-filter: blur(5px);">
+                    <i class="fa-brands fa-pix" style="color: #32BCAD; font-size: 1.2rem;"></i>
+                    <span style="font-weight: 600; color: var(--text-color); font-size: 0.9rem;">Aceitamos Pix</span>
+                </div>
+
+                <!-- Card Badge -->
+                <div
+                    style="display: flex; align-items: center; gap: 8px; background: var(--glass-bg); padding: 8px 16px; border-radius: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); backdrop-filter: blur(5px);">
+                    <i class="fas fa-credit-card" style="color: #FF9800; font-size: 1.2rem;"></i>
+                    <span style="font-weight: 600; color: var(--text-color); font-size: 0.9rem;">Crédito/Débito</span>
+                </div>
+
+                <!-- Cash Badge -->
+                <div
+                    style="display: flex; align-items: center; gap: 8px; background: var(--glass-bg); padding: 8px 16px; border-radius: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); backdrop-filter: blur(5px);">
+                    <i class="fas fa-money-bill-wave" style="color: #4CAF50; font-size: 1.2rem;"></i>
+                    <span style="font-weight: 600; color: var(--text-color); font-size: 0.9rem;">Dinheiro</span>
+                </div>
+            </div>
+
+            <!-- Loyalty Card Button -->
+            <div class="loyalty-btn-container" style="margin-top: 20px; width: 100%; display: flex; justify-content: flex-end;">
+                <a href="{% url 'fidelidade:loyalty_card_page' %}" class="btn loyalty-btn-home" 
+                   style="display: inline-flex; align-items: center; gap: 10px; padding: 12px 28px; border-radius: 50px; font-weight: 600; background: var(--accent-color); color: white; border: none; box-shadow: 0 10px 20px rgba(233, 30, 99, 0.2); transition: all 0.3s; text-decoration: none; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <i class="fas fa-id-card"></i> Cartão Fidelidade
+                </a>
+            </div>
+
+            
+        </div>
+    </div>
 </section>
 
-<div class="categories" style="text-align: center; margin-bottom: 30px;">
-    <a href="{% url 'products:product_list' %}" class="btn btn-category {% if not category %}active{% endif %}">Todos</a>
-    {% for c in categories %}
-        <a href="{% url 'products:product_list_by_category' c.slug %}" class="btn btn-category {% if category.slug == c.slug %}active{% endif %}">{{ c.name }}</a>
-    {% endfor %}
+<div class="categories-wrapper" id="categories-scroll">
+    <div class="container" style="display: inline-block; width: auto; padding: 0;">
+        <a href="{% url 'produtos:lista' %}" class="category-pill {% if not category %}active{% endif %}"
+            data-slug="">
+            <i class="fas fa-th-large"></i> Todos
+        </a>
+        {% for c in categories %}
+        <a href="{% url 'produtos:lista_por_categoria' c.slug %}"
+            class="category-pill {% if category.slug == c.slug %}active{% endif %}" data-slug="{{ c.slug }}">
+            {% if 'bolo' in c.name|lower %}<i class="fas fa-birthday-cake"></i>
+            {% elif 'brigadeiro' in c.name|lower %}<i class="fas fa-cookie"></i>
+            {% elif 'brownie' in c.name|lower %}<i class="fas fa-square"></i>
+            {% elif 'clube' in c.name|lower %}<i class="fas fa-gem"></i>
+            {% else %}<i class="fas fa-ice-cream"></i>{% endif %}
+            {{ c.name }}
+        </a>
+        {% endfor %}
+    </div>
 </div>
 
-<div class="product-grid" id="product-grid">
-    {% include 'produtos/parcial_grade_produtos.html' %}
+<div class="container" id="product-grid-section">
+    <div class="product-grid" id="product-grid">
+        {% include 'produtos/parcial_grade_produtos.html' %}
+    </div>
 </div>
 
 <script>
+    // Initialize with current content
+    let lastResponseContent = `{% filter escapejs %}{% include 'produtos/parcial_grade_produtos.html' %}{% endfilter %}`;
+    let currentCategorySlug = "{{ category.slug|default:'' }}";
+
+    // Handle Category Clicks
+    document.querySelectorAll('.category-pill').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const slug = this.getAttribute('data-slug');
+            const url = this.getAttribute('href');
+
+            // Do nothing if clicking current category
+            if (slug === currentCategorySlug && !this.classList.contains('active')) {
+                // allow proceed
+            } else if (slug === currentCategorySlug) {
+                return;
+            }
+
+            switchCategory(slug, url, this);
+        });
+    });
+
+    function switchCategory(slug, pushUrl, clickedBtn) {
+        currentCategorySlug = slug;
+
+        // Update Buttons
+        document.querySelectorAll('.category-pill').forEach(b => b.classList.remove('active'));
+        clickedBtn.classList.add('active');
+
+        // Update URL history
+        history.pushState({ slug: slug }, "", pushUrl);
+
+        // Visual Transition
+        const grid = document.getElementById('product-grid');
+        grid.style.opacity = '0';
+        grid.style.transform = 'translateY(20px)';
+
+        // Prepare API URL
+        let apiUrl = "{% url 'produtos:product_grid_api' %}";
+        if (slug) {
+            apiUrl += `?category=${slug}`;
+        }
+
+        // Fetch Data
+        setTimeout(() => {
+            fetch(apiUrl)
+                .then(response => response.text())
+                .then(html => {
+                    grid.innerHTML = html;
+                    lastResponseContent = html; // Update cache
+
+                    // Fade In
+                    grid.style.opacity = '1';
+                    grid.style.transform = 'translateY(0)';
+                })
+                .catch(error => console.error('Erro ao trocar categoria:', error));
+        }, 300);
+    }
+
+    // Polling Function (Quiet Update)
     function updateProductGrid() {
-        fetch("{% url 'products:product_grid_api' %}")
+        let url = "{% url 'produtos:product_grid_api' %}";
+        if (currentCategorySlug) {
+            url += `?category=${currentCategorySlug}`;
+        }
+
+        fetch(url)
             .then(response => response.text())
             .then(html => {
-                document.getElementById('product-grid').innerHTML = html;
+                if (html !== lastResponseContent) {
+                    document.getElementById('product-grid').innerHTML = html;
+                    lastResponseContent = html;
+                }
             })
             .catch(error => console.error('Erro ao atualizar vitrine:', error));
     }
-    // Atualiza a cada 5 segundos
-    setInterval(updateProductGrid, 5000);
+
+    window.addEventListener('popstate', function (event) {
+        location.reload();
+    });
+
+    // Subimos de 5 segundos para 60 segundos. Isso ajuda a abaixar massivamente o número de consultas na home.
+    setInterval(updateProductGrid, 60000);
 </script>
 {% endblock %}

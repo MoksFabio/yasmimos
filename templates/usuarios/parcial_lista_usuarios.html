@@ -1,17 +1,191 @@
+<style>
+    .user-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        padding: 10px 0;
+    }
+
+    .user-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border: 1px solid var(--manage-border);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        position: relative;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+    }
+
+    .user-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        border-color: var(--accent-color);
+    }
+
+    .user-card.is-assinante {
+        border-color: var(--accent-color);
+        background: linear-gradient(to bottom right, var(--card-bg), rgba(var(--accent-rgb, 255, 182, 193), 0.05));
+    }
+
+    .user-card-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .user-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--input-bg);
+        color: var(--manage-text-sec);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        border: 2px solid var(--manage-border);
+    }
+
+    .user-info h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: var(--manage-text);
+        font-family: var(--font-serif);
+        font-weight: 700;
+        transition: color 0.3s;
+    }
+
+    .user-card.is-assinante .user-info h3 {
+        color: var(--accent-color);
+    }
+
+    .user-date {
+        margin: 3px 0 0 0;
+        color: var(--text-light);
+        font-size: 0.85rem;
+    }
+
+    .user-phone-box {
+        background: var(--input-bg);
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid var(--input-border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: border-color 0.3s;
+    }
+
+    .user-card:hover .user-phone-box {
+        border-color: var(--manage-border);
+    }
+
+    .user-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: auto;
+        padding-top: 5px;
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: 10px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .btn-whatsapp { background: #25D366; color: white; }
+    .btn-whatsapp:hover { background: #128C7E; transform: scale(1.02); }
+
+    .btn-history { background: var(--input-border); color: var(--manage-text); }
+    .btn-history:hover { background: var(--manage-border); }
+
+    .btn-promote { background: var(--accent-color); color: white; }
+    .btn-promote:hover { opacity: 0.9; }
+
+    .btn-delete { background: var(--error-color); color: white; }
+    .btn-delete:hover { background: #c0392b; }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        padding: 60px 40px;
+        text-align: center;
+        color: var(--text-light);
+        background: var(--card-bg);
+        border-radius: 16px;
+        border: 2px dashed var(--manage-border);
+    }
+</style>
+
+<div class="user-cards-grid">
 {% for u in users %}
-<tr>
-    <td style="font-weight: 500;">{{ u.username }}</td>
-    <td>{{ u.phone_number }}</td>
-    <td>{{ u.date_joined|date:"d/m/Y" }}</td>
-    <td>
-        <div class="action-buttons">
-            <a href="https://wa.me/55{{ u.phone_number|cut:' '|cut:'-'|cut:'('|cut:')' }}" target="_blank" class="btn-action btn-ship" title="Conversar no WhatsApp" style="background-color: #25d366; color: white;"><i class="fab fa-whatsapp"></i></a>
-            <a href="javascript:void(0);" data-id="{{ u.id }}" onclick="deleteUser(this.dataset.id)" class="btn-action btn-delete-permanent" title="Excluir Cliente" style="background-color: #ffcdd2; color: #b71c1c;"><i class="fas fa-trash"></i></a>
+{% if not u.is_staff %}
+<div class="user-card {% if u.is_assinante %}is-assinante{% endif %}" 
+     data-name="{{ u.username|lower }}" 
+     data-date="{{ u.date_joined|date:'Y-m-d' }}" 
+     data-assinante="{% if u.is_assinante %}true{% else %}false{% endif %}">
+
+    <div class="user-card-header">
+        <div class="user-avatar">
+            {{ u.username.0 }}
         </div>
-    </td>
-</tr>
+        <div class="user-info">
+            <h3>
+                {{ u.username }} 
+                {% if u.is_assinante %}
+                    <i class="fas fa-gem" style="font-size: 0.9rem; margin-left: 5px;" title="Membro do Clube"></i>
+                {% endif %}
+            </h3>
+            <p class="user-date">
+                <i class="far fa-calendar-alt"></i> Cad: {{ u.date_joined|date:"d/m/Y" }}
+            </p>
+        </div>
+    </div>
+
+    <div class="user-phone-box">
+        <i class="fas fa-phone-alt" style="color: var(--manage-text-sec);"></i>
+        <span style="color: var(--text-color); font-weight: 500;">{{ u.phone_number|default:"Sem fone" }}</span>
+    </div>
+
+    <div class="user-actions">
+        <a href="https://wa.me/55{{ u.phone_number|cut:' '|cut:'-'|cut:'('|cut:')' }}" 
+           target="_blank" class="btn-action btn-whatsapp" title="WhatsApp">
+            <i class="fab fa-whatsapp"></i> Chat
+        </a>
+        <button onclick="openClientHistory('{{ u.id }}')" class="btn-action btn-history" title="Histórico">
+            <i class="fas fa-history"></i> Pedidos
+        </button>
+    </div>
+
+    <div class="user-actions" style="margin-top: 0;">
+        <button onclick="promoteUser('{{ u.id }}', '{{ u.username|escapejs }}')" class="btn-action btn-promote" title="Tornar Admin">
+            <i class="fas fa-user-shield"></i> Tornar Adm
+        </button>
+        <button onclick="deleteUser('{{ u.id }}')" class="btn-action btn-delete" title="Excluir">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+</div>
+{% endif %}
 {% empty %}
-<tr>
-    <td colspan="4" style="padding: 20px; text-align: center; color: #999;">Nenhum cliente cadastrado.</td>
-</tr>
+<div class="empty-state">
+    <i class="fas fa-user-slash" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
+    <h3 style="margin: 0; font-family: var(--font-serif); color: var(--manage-text);">Nenhum cliente cadastrado.</h3>
+</div>
 {% endfor %}
+</div>

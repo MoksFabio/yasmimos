@@ -1,44 +1,199 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Finalizar Pedido{% endblock %}
+
 {% block content %}
 <h1 style="font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 30px;">Finalizar Pedido</h1>
-<div class="order-summary" style="background: var(--white); padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+<div class="order-summary"
+    style="background: var(--card-bg); padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
     <h2 style="margin-bottom: 20px;">Resumo do Pedido</h2>
     <ul style="margin-bottom: 20px;">
         {% for item in cart %}
-            <li style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+        <li
+            style="display: flex; flex-direction: column; margin-bottom: 10px; border-bottom: 1px solid var(--input-border); padding-bottom: 5px; color: var(--text-color);">
+            <div style="display: flex; justify-content: space-between; width: 100%;">
                 <span>{{ item.quantity }}x {{ item.product.name }}</span>
                 <span>R$ {{ item.total_price }}</span>
-            </li>
+            </div>
+            {% if item.metadata and item.metadata.description %}
+            <small
+                style="font-size: 0.8rem; color: var(--text-light); margin-top: 2px; font-style: italic; padding-left: 20px;">
+                {{ item.metadata.description }}
+            </small>
+            {% endif %}
+        </li>
         {% endfor %}
     </ul>
-    <div class="total" style="text-align: right; font-size: 1.2rem; font-weight: bold; margin-bottom: 30px;">
-        Total: R$ {{ cart.get_total_price }}
-    </div>
-    
-    <div class="payment-info" style="background: #e3f2fd; padding: 20px; border-radius: 10px; margin-bottom: 30px; color: #0d47a1;">
-        <h3><i class="fas fa-info-circle"></i> Informação de Pagamento</h3>
-        <p>O pagamento é realizado via <strong>PIX</strong>.</p>
-        <p>Ao clicar em "Confirmar Pedido", você será redirecionado para o WhatsApp para enviar o comprovante.</p>
+    <div class="total"
+        style="text-align: right; font-size: 1.2rem; font-weight: bold; margin-bottom: 30px; color: var(--text-color);">
+        Total: R$ {{ carrinho.get_total_price }}
     </div>
 
-    <form action="{% url 'orders:order_create' %}" method="post">
+    <form action="{% url 'pedidos:order_create' %}" method="post">
         {% csrf_token %}
-        
-        {% if not user.is_authenticated %}
-        <div class="guest-info" style="margin-bottom: 25px; padding: 20px; background-color: #f8f9fa; border-radius: 10px; border: 1px solid #eee;">
-            <h3 style="margin-bottom: 15px; font-size: 1.1em; color: var(--text-color);"><i class="fas fa-user-circle"></i> Seus Dados (Obrigatório)</h3>
+        <div class="payment-info"
+            style="background: var(--input-bg); padding: 20px; border-radius: 10px; margin-bottom: 30px; color: var(--text-color); border: 1px solid var(--input-border);">
+            <h3><i class="fas fa-credit-card" style="color: var(--accent-color);"></i> Método de Pagamento</h3>
+
+            <div style="margin-top: 15px;">
+                <label
+                    style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; cursor: pointer; padding: 10px; border: 1px solid var(--input-border); border-radius: 8px;">
+                    <input type="radio" name="payment_method" value="pix" checked onchange="togglePaymentInfo('pix')">
+                    <i class="fa-brands fa-pix" style="color: #32BCAD; font-size: 1.4rem;"></i>
+                    <span><strong>PIX</strong></span>
+                </label>
+
+                <label
+                    style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; cursor: pointer; padding: 10px; border: 1px solid var(--input-border); border-radius: 8px;">
+                    <input type="radio" name="payment_method" value="cash" onchange="togglePaymentInfo('cash')">
+                    <i class="fas fa-money-bill-wave" style="color: #2e7d32;"></i>
+                    <span><strong>Dinheiro</strong></span>
+                </label>
+
+                {% if user.is_superuser %}
+                <label
+                    style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; cursor: pointer; padding: 10px; border: 1px solid var(--input-border); border-radius: 8px; background-color: #fff8e1;">
+                    <input type="radio" name="payment_method" value="point" onchange="togglePaymentInfo('point')">
+                    <i class="fas fa-mobile-alt" style="color: #ffc107;"></i>
+                    <span><strong>Maquininha Point</strong></span>
+                </label>
+                {% endif %}
+            </div>
+
+            <div id="info-pix" style="margin-top: 15px; font-size: 0.9em; color: var(--text-light);">
+                <p>Você receberá um QR Code para pagamento instantâneo.</p>
+            </div>
+            <div id="info-point" style="display: none; margin-top: 15px; font-size: 0.9em; color: var(--text-light);">
+                <p>O App do Mercado Pago será aberto neste dispositivo para cobrar o valor na Maquininha.</p>
+            </div>
+            <div id="info-cash" style="display: none; margin-top: 15px; font-size: 0.9em; color: var(--text-light);">
+                <p>Pagamento em dinheiro no momento da entrega ou retirada.</p>
+            </div>
+
+            <script>
+                function togglePaymentInfo(method) {
+                    document.getElementById('info-pix').style.display = method === 'pix' ? 'block' : 'none';
+                    document.getElementById('info-point').style.display = method === 'point' ? 'block' : 'none';
+                    document.getElementById('info-cash').style.display = method === 'cash' ? 'block' : 'none';
+                }
+            </script>
+        </div>
+
+
+
+        {% if user.is_superuser %}
+        <!-- Superuser Order Type Selection -->
+        <div class="order-type-selection"
+            style="margin-bottom: 25px; padding: 20px; background: var(--input-bg); border-radius: 12px; border: 2px solid var(--accent-color); color: var(--text-color);">
+            <h3 style="margin-bottom: 15px; font-size: 1.1em;"><i class="fas fa-user-cog"></i> Este pedido é para:</h3>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="radio" name="order_type" value="self" onclick="toggleClientInfo(false)">
+                    <strong>Para Mim (Uso Pessoal)</strong>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="radio" name="order_type" value="client" checked onclick="toggleClientInfo(true)">
+                    <strong>Para Cliente (Venda Direta)</strong>
+                </label>
+            </div>
+        </div>
+
+        <div id="superuser-client-info"
+            style="display: block; margin-bottom: 25px; padding: 20px; background-color: var(--bg-color); border-radius: 10px; border: 1px solid var(--input-border);">
+            <h3 style="margin-bottom: 15px; font-size: 1.1em; color: var(--text-color);"><i
+                    class="fas fa-user-edit"></i> Dados do Cliente</h3>
+
             <div style="margin-bottom: 15px;">
-                <label for="guest_name" style="display: block; margin-bottom: 5px; font-weight: 500;">Nome Completo</label>
-                <input type="text" name="name" id="guest_name" required class="form-control" placeholder="Ex: Maria Silva" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                <label for="client_user_id"
+                    style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-color);">Vincular a
+                    uma Conta (Opcional)</label>
+                <select name="client_user_id" id="client_user_id" class="form-control"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--input-border); border-radius: 5px; background: var(--input-bg); color: var(--text-color);"
+                    onchange="handleClientSelect(this)">
+                    <option value="">-- Sem Conta (Apenas Nome e WhatsApp) --</option>
+                    {% for client in clients %}
+                    <option value="{{ client.id }}" data-name="{{ client.first_name }} {{ client.last_name }}"
+                        data-username="{{ client.username }}" data-phone="{{ client.phone_number|default:'' }}">
+                        {{ client.username }}
+                        {% if client.first_name %}
+                        - {{ client.first_name }} {{ client.last_name }}
+                        {% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label for="client_name"
+                    style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-color);">Nome do
+                    Cliente</label>
+                <input type="text" name="name" id="client_name" class="form-control" placeholder="Ex: Maria Silva"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--input-border); border-radius: 5px; background: var(--input-bg); color: var(--text-color);">
             </div>
             <div>
-                <label for="guest_phone" style="display: block; margin-bottom: 5px; font-weight: 500;">WhatsApp (com DDD)</label>
-                <input type="tel" name="phone" id="guest_phone" required class="form-control" placeholder="Ex: 81 99999-9999" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                <label for="client_phone"
+                    style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-color);">WhatsApp do
+                    Cliente</label>
+                <input type="tel" name="phone" id="client_phone" class="form-control" placeholder="Ex: 81 99999-9999"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--input-border); border-radius: 5px; background: var(--input-bg); color: var(--text-color);">
+            </div>
+        </div>
+
+        <script>
+            function handleClientSelect(selectElement) {
+                const selectedOption = selectElement.options[selectElement.selectedIndex];
+                const clientNameInput = document.getElementById('client_name');
+                const clientPhoneInput = document.getElementById('client_phone');
+
+                if (selectedOption.value) {
+                    let name = selectedOption.getAttribute('data-name').trim();
+                    if (!name) name = selectedOption.getAttribute('data-username').trim();
+
+                    clientNameInput.value = name;
+                    clientPhoneInput.value = selectedOption.getAttribute('data-phone').trim();
+                } else {
+                    clientNameInput.value = '';
+                    clientPhoneInput.value = '';
+                }
+            }
+        </script>
+
+        <script>
+            function toggleClientInfo(show) {
+                const infoDiv = document.getElementById('superuser-client-info');
+                if (show) {
+                    infoDiv.style.display = 'block';
+                } else {
+                    infoDiv.style.display = 'none';
+                }
+            }
+        </script>
+        {% endif %}
+
+        {% if not user.is_authenticated %}
+        <div class="guest-info"
+            style="margin-bottom: 25px; padding: 20px; background-color: var(--bg-color); border-radius: 10px; border: 1px solid var(--input-border);">
+            <h3 style="margin-bottom: 15px; font-size: 1.1em; color: var(--text-color);"><i
+                    class="fas fa-user-circle"></i> Seus Dados (Opcional)</h3>
+            <div style="margin-bottom: 15px;">
+                <label for="guest_name"
+                    style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-color);">Nome
+                    Completo</label>
+                <input type="text" name="name" id="guest_name" class="form-control" placeholder="Ex: Maria Silva"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--input-border); border-radius: 5px; background: var(--input-bg); color: var(--text-color);">
+            </div>
+            <div>
+                <label for="guest_phone"
+                    style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-color);">WhatsApp
+                    (com DDD)</label>
+                <input type="tel" name="phone" id="guest_phone" class="form-control" placeholder="Ex: 81 99999-9999"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--input-border); border-radius: 5px; background: var(--input-bg); color: var(--text-color);">
             </div>
         </div>
         {% endif %}
+
+
         <button type="submit" class="btn" style="width: 100%; font-size: 1.2rem;">Confirmar Pedido</button>
     </form>
 </div>

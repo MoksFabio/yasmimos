@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Gerenciar Assinatura{% endblock %}
+
+{% block content %}
+<style>
+    .future-day-item {
+        padding: 12px 0;
+        border-bottom: 1px dashed var(--input-border);
+    }
+    .future-day-item:last-child {
+        border-bottom: none;
+    }
+</style>
+<div style="max-width: 600px; margin: 40px auto; background: var(--card-bg); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+    
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'usuarios:profile' %}" class="btn" style="width: auto; padding: 8px 15px; display: inline-flex; align-items: center; gap: 8px; background: transparent; border: 1px solid var(--accent-color); color: var(--accent-color); font-size: 0.9rem;">
+            <i class="fas fa-arrow-left"></i> Voltar ao Perfil
+        </a>
+    </div>
+
+    <h1 style="font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 30px; text-align: center;">Minha Assinatura</h1>
+
+    <!-- Card Principal -->
+    <div style="background: linear-gradient(135deg, var(--accent-color), #c2185b); border-radius: 20px; padding: 30px; color: white; margin-bottom: 30px; box-shadow: 0 10px 25px rgba(233, 30, 99, 0.3); position: relative; overflow: hidden;">
+        <!-- Decorativo -->
+        <i class="fas fa-gem" style="position: absolute; right: -20px; bottom: -20px; font-size: 8rem; opacity: 0.1; transform: rotate(-15deg);"></i>
+        
+        <div style="position: relative; z-index: 1;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+                    <i class="fas fa-crown" style="font-size: 1.8rem;"></i>
+                </div>
+                <div>
+                    <h2 style="margin: 0; font-family: var(--font-serif); font-size: 1.8rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">{{ active_plan_name }}</h2>
+                    <span style="display: inline-block; background: rgba(0,0,0,0.2); padding: 3px 10px; border-radius: 10px; font-size: 0.8rem; font-weight: bold; margin-top: 5px;">Plano Ativo</span>
+                </div>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.15); border-radius: 12px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <p style="margin: 0; font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px;">Expira em</p>
+                    <p style="margin: 5px 0 0 0; font-size: 1.2rem; font-weight: bold;">{{ expiration_date|date:"d M Y" }}</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin: 0; font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px;">Tempo Restante</p>
+                    <p style="margin: 5px 0 0 0; font-size: 1.2rem; font-weight: bold; color: #ffeb3b;">{{ days_remaining }} dias</p>
+                </div>
+            </div>
+
+            {% if can_renew %}
+            <form action="{% url 'carrinho:cart_add' active_plan_obj.id %}" method="post" style="margin: 0;">
+                {% csrf_token %}
+                <input type="hidden" name="quantity" value="1">
+                <button type="submit" style="width: 100%; padding: 12px; background: white; color: var(--accent-color); border: none; border-radius: 30px; font-weight: 800; font-size: 1rem; text-transform: uppercase; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.2s ease;">
+                    <i class="fas fa-sync-alt" style="margin-right: 5px;"></i> Renovar Plano Agora
+                </button>
+            </form>
+            <p style="margin: 10px 0 0 0; font-size: 0.75rem; text-align: center; opacity: 0.8;">Você tem menos de 5 dias restantes! Já pode garantir o próximo ciclo.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Resumo do Plano (Cardápio Base) -->
+    <div style="background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 15px; padding: 20px; margin-bottom: 30px;">
+        <h3 style="margin: 0 0 15px 0; font-size: 1.1rem; color: var(--accent-color); display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-calendar-check"></i> Cronograma de Retirada
+        </h3>
+        <p style="margin: 0 0 10px 0; font-size: 0.95rem; color: var(--text-color); line-height: 1.5;">
+            <strong>Frequência:</strong> {{ schedule_text }}
+        </p>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--text-light); line-height: 1.5; background: rgba(233, 30, 99, 0.05); padding: 10px; border-radius: 8px; border-left: 3px solid var(--accent-color);">
+            <i class="fas fa-info-circle" style="color: var(--accent-color);"></i> Lembre-se: Os mimos não resgatados nos dias corretos não acumulam. Fique de olho na localização da bolsa no campus!
+        </p>
+    </div>
+
+    <!-- Tracker de Mimos (Calendário de Retiradas) -->
+    {% if tracking_days %}
+    <div style="background: var(--card-bg); border: 1px solid var(--input-border); border-radius: 15px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
+        <h3 style="margin: 0 0 15px 0; font-family: var(--font-serif); font-size: 1.3rem; color: var(--accent-color); display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-check-double"></i> Meu Álbum de Doces
+        </h3>
+        <p style="margin: 0 0 20px 0; font-size: 0.9rem; color: var(--text-light);">Acompanhe os dias do seu ciclo em que você já retirou o mimo! <span style="font-weight: bold; color: var(--accent-color);">Rosa</span> significa retirado com sucesso.</p>
+        
+        <div id="tracker-refresh-zone">
+            {% include "usuarios/parcial_album_doces.html" %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Escolha de Sabores por Dia -->
+    {% if brigadeiros and future_tracking_days %}
+    <div style="background: var(--card-bg); border: 1px solid var(--input-border); border-radius: 15px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
+        <h3 style="margin: 0 0 10px 0; font-family: var(--font-serif); font-size: 1.3rem; color: var(--accent-color); display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-calendar-star"></i> Escolha seus Sabores!
+        </h3>
+        <p style="margin: 0 0 20px 0; font-size: 0.9rem; color: var(--text-light);">
+            Para cada data de retirada futura, escolha o que você vai querer receber! (Caso não escolha, enviaremos os sabores mais queridinhos do momento de forma sortida)
+        </p>
+        
+        <form id="flavors-form" style="display: flex; flex-direction: column; gap: 0;">
+            <div style="max-height: 280px; overflow-y: auto; padding-right: 8px; display: flex; flex-direction: column;" class="custom-scroll">
+                {% for fday in future_tracking_days %}
+                <div class="future-day-item">
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: var(--manage-text); display: flex; align-items: center; gap: 8px; font-size: 0.95rem;">
+                        <i class="far fa-calendar-alt" style="color: var(--accent-color);"></i> {{ fday.label }}
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px;">
+                        {% for slot_val in fday.slots_data %}
+                        <select class="flavor-select" data-date="{{ fday.date_str }}" style="width: 100%; max-width: 300px; padding: 10px 15px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); font-size: 0.9rem; outline: none; cursor: pointer; appearance: auto;">
+                            <option value="">Sortido (Surpresa!)</option>
+                            {% for product in brigadeiros %}
+                                <option value="{{ product.id }}" {% if product.id|stringformat:"s" == slot_val %}selected{% endif %}>
+                                    {{ product.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 15px; border-top: 1px solid var(--input-border); padding-top: 15px;">
+                <button type="button" onclick="saveDayFlavors()" id="btn-save-flavors"
+                        style="padding: 10px 20px; background: var(--accent-color); color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: transform 0.2s;">
+                    <i class="fas fa-save"></i> Salvar Agendamento
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Botão de WhatsApp para Dúvidas -->
+    <a href="https://wa.me/5581983964906?text=Oi%20Yasmim,%20tenho%20uma%20d%C3%BAvida%20sobre%20a%20minha%20assinatura%20do%20Clube%20({{ active_plan_name }})..." target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px; background: #25d366; color: white; border-radius: 15px; text-decoration: none; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2); transition: transform 0.2s ease;">
+        <i class="fab fa-whatsapp" style="font-size: 1.3rem;"></i> Tirar dúvida no WhatsApp
+    </a>
+
+</div>
+
+<script>
+    const maxFlavors = parseInt("{{ slots_per_day|default:0 }}");
+
+    function saveDayFlavors() {
+        const dayFlavors = {};
+        const selects = document.querySelectorAll('.flavor-select');
+        
+        selects.forEach(select => {
+            const date = select.getAttribute('data-date');
+            const val = select.value;
+            
+            if (!dayFlavors[date]) {
+                dayFlavors[date] = [];
+            }
+            // Add value (even if empty, to respect array positions)
+            dayFlavors[date].push(val);
+        });
+        
+        const btn = document.getElementById('btn-save-flavors');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+        btn.disabled = true;
+
+        fetch("{% url 'usuarios:save_day_flavors' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                'item_id': parseInt("{{ active_item_id|default:0 }}"),
+                'day_flavors': dayFlavors
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                btn.innerHTML = '<i class="fas fa-check"></i> Agendamento Salvo!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            } else {
+                alert('Erro ao salvar: ' + data.error);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        })
+        .catch(err => {
+            alert('Erro de conexão ao salvar.');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+
+    // Auto-refresh the tracker album every 3 seconds
+    setInterval(function () {
+        const zone = document.getElementById('tracker-refresh-zone');
+        if (!zone) return;
+        
+        fetch("{% url 'usuarios:manage_subscription_poll' %}")
+            .then(response => {
+                if (!response.ok) return;
+                return response.text();
+            })
+            .then(html => {
+                if (!html) return;
+                zone.innerHTML = html;
+            })
+            .catch(() => { }); // Silent fail
+    }, 3000);
+</script>
+{% endblock %}

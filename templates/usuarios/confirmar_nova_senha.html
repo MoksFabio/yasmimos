@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 0 auto; background: var(--card-bg); padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+    <h1 style="text-align: center; font-family: var(--font-serif); color: var(--accent-color); margin-bottom: 20px;">Nova Senha</h1>
+    
+    <p style="text-align: center; color: var(--text-color); margin-bottom: 30px;">
+        Código verificado. Agora, crie sua nova senha.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="{{ field.id_for_label }}" style="color: var(--text-color); margin-bottom: 5px; display: block;">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small style="color: #888; display: block; margin-top: 3px;">{{ field.help_text }}</small>
+                {% endif %}
+                {% if field.errors %}
+                    <div style="color: red; font-size: 0.9rem; margin-top: 5px;">{{ field.errors.0 }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <button type="submit" class="btn" style="width: 100%;">Definir Senha</button>
+        </div>
+    </form>
+</div>
+
+<style>
+    input { 
+        width: 100%; 
+        padding: 12px; 
+        border: 1px solid var(--input-border); 
+        border-radius: 6px; 
+        background-color: var(--input-bg);
+        color: var(--text-color);
+        box-sizing: border-box;
+    }
+    input:focus {
+        border-color: var(--accent-color);
+        outline: none;
+    }
+</style>
+{% endblock %}

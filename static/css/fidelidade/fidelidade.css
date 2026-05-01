@@ -1,0 +1,318 @@
+* {
+                box-sizing: border-box !important;
+            }
+
+            .loyalty-management-container {
+                overflow-x: hidden;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            @media (max-width: 800px) {
+                .loyalty-management-container {
+                    padding: 10px !important;
+                }
+
+                .loyalty-grid-wrapper {
+                    grid-template-columns: 1fr !important;
+                    gap: 20px !important;
+                    width: 100% !important;
+                }
+
+                .loyalty-management-container h1 {
+                    font-size: 1.8rem !important;
+                }
+
+                .card-section {
+                    padding: 15px !important;
+                    width: 100% !important;
+                    margin-left: 0 !important;
+                    margin-right: 0 !important;
+                }
+
+                .search-row {
+                    flex-direction: column !important;
+                }
+
+                .search-row input,
+                .search-row select,
+                .search-row button {
+                    width: 100% !important;
+                    margin: 2px 0;
+                }
+
+                .filter-pills-container {
+                    overflow-x: auto;
+                    padding-bottom: 10px;
+                    -webkit-overflow-scrolling: touch;
+                    width: 100%;
+                }
+            }
+
+            .loyalty-grid-wrapper.is-admin {
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+            }
+
+            .loyalty-grid-wrapper.is-customer {
+                grid-template-columns: 1fr;
+            }
+
+            .stamp-item.is-filled {
+                position: absolute;
+                top: var(--pos-y);
+                left: var(--pos-x);
+                width: 10%;
+                aspect-ratio: 1/1;
+                transform: translate(-50%, -50%) scale(1.1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: transparent !important;
+                border: none !important;
+            }
+
+            .stamp-item.is-empty {
+                background: white !important;
+                border: 2px solid #eee !important;
+            }
+
+            #stampCanvas {
+                position: relative;
+                width: 100%;
+                aspect-ratio: 1.58 / 1;
+                background-image: url('../../img/cartao_verso.png');
+                background-size: 100% 100%;
+                border-radius: 12px;
+                cursor: crosshair;
+                overflow: hidden;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                touch-action: none;
+            }
+
+            .reward-item.has-reward {
+                background: #FFD700 !important;
+            }
+
+            .reward-item.no-reward {
+                background: white !important;
+            }
+
+            .reward-icon.is-active {
+                color: white;
+            }
+
+            .reward-icon.is-inactive {
+                color: #eee;
+            }
+
+            @keyframes modalPop {
+                from {
+                    transform: scale(0.8);
+                    opacity: 0;
+                }
+
+                to {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+
+/* ==================== */
+
+.card-side.card-front {
+                    background-image: url('../../img/cartao_frente.png') !important;
+                }
+
+                .card-side.card-back {
+                    background-image: url('../../img/cartao_verso.png') !important;
+                }
+
+                .stamp-item {
+                    position: absolute;
+                    top: -100%;
+                    left: -100%;
+                    opacity: 0;
+                    background: transparent !important;
+                    border: none !important;
+                    transition: none !important;
+                    /* Prevent sliding from 0,0 */
+                }
+
+                .stamp-item.is-filled {
+                    opacity: 1 !important;
+                    transform: translate(-50%, -50%) scale(1.1);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: transparent !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                }
+
+                .stamp-logo {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 50%;
+                    background: transparent !important;
+                    clip-path: circle(50% at 50% 50%);
+                }
+
+                .card-3d-scene {
+                    position: relative;
+                    width: 100%;
+                    max-width: 500px;
+                    margin: 0 auto 15px;
+                    touch-action: manipulation;
+                    --zoom-val: 1;
+                    perspective: 1500px;
+                }
+
+                #fullscreenBtn {
+                    display: block;
+                    margin: 0 auto 30px;
+                    background: var(--accent-color);
+                    color: white;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 30px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    box-shadow: 0 4px 15px rgba(223, 75, 122, 0.3);
+                    transition: all 0.3s;
+                }
+
+                /* NEW Zoom Controls */
+                .zoom-controls {
+                    display: none;
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    z-index: 20000;
+                    gap: 10px;
+                    background: rgba(255, 255, 255, 0.9);
+                    padding: 10px;
+                    border-radius: 50px;
+                    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+                    backdrop-filter: blur(5px);
+                }
+
+                .zoom-controls button {
+                    background: var(--accent-color);
+                    color: white;
+                    border: none;
+                    width: 45px;
+                    height: 45px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.2rem;
+                }
+
+                .card-3d-scene:fullscreen {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    background: #fff;
+                    overflow: auto;
+                    perspective: 2000px;
+                }
+
+                .card-3d-scene:fullscreen .zoom-controls {
+                    display: flex;
+                }
+
+                .card-3d-scene:fullscreen .card-3d-inner {
+                    width: 75vw;
+                    max-width: 800px;
+                    transform: scale(var(--zoom-val)) rotateY(var(--flip-val, 0deg)) !important;
+                    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+
+/* ==================== */
+
+/* Custom Scrollbar for Chrome/Safari */
+                        .card-section div::-webkit-scrollbar {
+                            width: 6px;
+                        }
+
+                        .card-section div::-webkit-scrollbar-track {
+                            background: var(--input-bg);
+                            border-radius: 10px;
+                        }
+
+                        .card-section div::-webkit-scrollbar-thumb {
+                            background: var(--accent-color);
+                            border-radius: 10px;
+                        }
+
+/* ==================== */
+
+.manage-row:hover {
+                        transform: scale(1.01);
+                        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+                        z-index: 10;
+                    }
+
+                    .action-btn {
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 10px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: none;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        font-size: 0.8rem;
+                    }
+
+                    .action-btn.plus {
+                        background: #e8f5e9;
+                        color: #2e7d32;
+                    }
+
+                    .action-btn.minus {
+                        background: #fff3e0;
+                        color: #ef6c00;
+                    }
+
+                    .action-btn.delete {
+                        background: #ffebee;
+                        color: #c62828;
+                    }
+
+                    .action-btn:hover {
+                        transform: translateY(-2px);
+                        filter: brightness(0.9);
+                    }
+
+                    @media (max-width: 600px) {
+                        .manage-row td {
+                            padding: 10px 8px !important;
+                            font-size: 0.85rem;
+                        }
+
+                        #assetsListSection {
+                            padding: 15px 10px !important;
+                        }
+
+                        .action-btn {
+                            width: 28px;
+                            height: 28px;
+                        }
+
+                        #stamp-container-[id^="stamp-container-"] {
+                            gap: 5px !important;
+                        }
+                    }
+
+/* ==================== */
+
+.btn-sm:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.1);
+    }

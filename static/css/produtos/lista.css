@@ -1,0 +1,100 @@
+.hero-content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+            text-align: right;
+            /* Text aligned to right as requested/implied by placement? Or just block is on right. Let's default to right alignment for the block text for style */
+        }
+
+        .hero-text-side {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            /* Align items to the right */
+        }
+
+        .hero-image-side {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-title {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .hero-subtitle {
+            margin: 0 0 30px 0;
+            text-align: right;
+        }
+
+        .badges-container {
+            justify-content: flex-end !important;
+        }
+
+        .hero-large-img {
+            width: 100%;
+            max-width: 450px;
+            height: auto;
+            border-radius: 50%;
+            transform: rotate(3deg);
+            /* Rotate opposite way for left side */
+            transition: transform 0.3s;
+        }
+
+        .hero-large-img:hover {
+            transform: rotate(0deg) scale(1.02);
+        }
+
+        @media (max-width: 900px) {
+            .hero-content-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 30px;
+            }
+
+            .hero-text-side {
+                align-items: center;
+                order: 2;
+            }
+
+            .hero-image-side {
+                order: 1;
+            }
+
+            .hero-title {
+                text-align: center;
+                font-size: 2.8rem;
+            }
+
+            .hero-subtitle {
+                margin: 0 auto 25px;
+                text-align: center;
+            }
+
+            .badges-container {
+                justify-content: center !important;
+            }
+
+            .hero-large-img {
+                max-width: 300px;
+                transform: rotate(0deg);
+            }
+        }
+
+/* ==================== */
+
+@media (max-width: 900px) {
+                    .loyalty-btn-container {
+                        justify-content: center !important;
+                        margin-top: 25px !important;
+                    }
+                    .loyalty-btn-home {
+                        width: 90%;
+                        justify-content: center;
+                        padding: 15px 28px !important;
+                    }
+                }

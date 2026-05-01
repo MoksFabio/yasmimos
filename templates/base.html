@@ -1,53 +1,249 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
+<!-- YasMimos Django Rendered: v6.0 -->
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}YasMimos{% endblock %}</title>
+    <script>
+        // BLOCKING THEME SCRIPT: Runs before any CSS to prevent Flash of White
+        (function () {
+            var savedTheme = 'light';
+            try { savedTheme = localStorage.getItem('theme') || 'light'; } catch (e) { }
+
+            // 1. Set the attribute on HTML immediately
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            // 2. If 'dark', INJECT A STYLE TAG IMMEDIATELY to force black background
+            // This prevents the browser from ever painting white, even for a millisecond.
+            if (savedTheme === 'dark') {
+                var css = 'html, body { background-color: #121212 !important; background: #121212 !important; color: #E0E0E0; }';
+                var style = document.createElement('style');
+                style.type = 'text/css';
+                style.id = 'force-dark-mode';
+                if (style.styleSheet) {
+                    style.styleSheet.cssText = css;
+                } else {
+                    style.appendChild(document.createTextNode(css));
+                }
+                document.head.appendChild(style);
+            }
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=0.8, user-scalable=no">
+    <title>{% block title %}Início{% endblock %} - YasMimos</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-    <header>
-        <div class="container">
-            <a href="{% url 'products:product_list' %}" class="logo">YasMimos</a>
-            <div class="menu-toggle" id="mobile-menu-btn">
-                <i class="fas fa-bars"></i>
-            </div>
-            <nav class="nav-menu" id="nav-menu">
-                <ul>
-                    <li><a href="{% url 'products:product_list' %}">Início</a></li>
-                    <li><a href="#" id="about-btn">Sobre Mim</a></li>
-                    <li>
-                        <a href="{% url 'cart:cart_detail' %}">
-                            Carrinho 
-                            {% if cart|length > 0 %}
-                                <span class="badge">{{ cart|length }}</span>
-                            {% endif %}
-                        </a>
-                    </li>
-                    {% if user.is_authenticated %}
-                        {% if user.is_superuser %}
-                            <li><a href="{% url 'products:manage_products' %}" style="color: var(--accent-color); font-weight: bold;">Gerenciar Loja</a></li>
-                        {% endif %}
-                        <li><a href="{% url 'users:profile' %}">Olá, {{ user.username }}</a></li>
-                        <li><a href="{% url 'users:logout' %}">Sair</a></li>
-                    {% else %}
-                        <li><a href="{% url 'users:login' %}">Entrar</a></li>
-                        <li><a href="{% url 'users:register' %}">Cadastrar</a></li>
-                    {% endif %}
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=block"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=16.0">
+    <link rel="stylesheet" href="{% static 'css/base_extras.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        referrerpolicy="no-referrer" crossorigin="anonymous">
+    <link rel="icon" href="{% static 'img/logo.png' %}">
+    <link rel="manifest" href="{% url 'manifest' %}">
+    <meta name="theme-color" content="#FFC0CB">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('SW registered!', reg.scope))
+                    .catch(err => console.log('SW failed', err));
+            });
+        }
+    </script>
+    <style>
+        /* CRITICAL: Force Fixed Header */
+        .sticky-nav-wrapper {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            z-index: 9999 !important;
+        }
 
-    <div class="delivery-warning">
-        <p><i class="fas fa-exclamation-circle"></i> Não realizamos entregas no momento. Apenas retirada.</p>
+        body {
+            padding-top: 100px !important;
+            /* Default desktop padding */
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 120px !important;
+                /* Mobile padding for header + warning */
+            }
+
+            /* Force Sidebar Footer to Bottom */
+            .nav-menu ul {
+                flex-grow: 1 !important;
+            }
+            /* FORCE IMMEDIATE COLOR CHANGE AND PREVENT FLICKERING */
+            .nav-menu ul li a {
+                color: var(--text-color) !important;
+                transition: none !important;
+            }
+
+            .nav-menu ul li a:hover,
+            .nav-menu ul li a:active,
+            .nav-menu ul li a:focus,
+            .nav-menu ul li a.active {
+                color: #ffffff !important;
+                background: var(--accent-color) !important;
+            }
+        }
+
+        /* Force Hide Sidebar Footer on Desktop Inline Override */
+        @media (min-width: 769px) {
+            .sidebar-footer {
+                display: none !important;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- Global Background Animation -->
+    <!-- Global Background Animation -->
+    <div class="global-bg-animation">
+        <div class="hero-circle one"></div>
+        <div class="hero-circle two"></div>
+        <div class="hero-circle three"></div>
     </div>
+
+    <div class="sticky-nav-wrapper">
+        <header>
+            <div class="container">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <a href="{% url 'produtos:lista' %}" class="logo-link">
+                        <!-- Logo Removed -->
+                    </a>
+
+                    <!-- Server-side rendered status badge -->
+                    {% if store_settings.is_open %}
+                    <span id="store-status-badge"
+                        style="display: inline-flex; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.8em; align-items: center; color: white; background-color: #4caf50;">
+                        <i class="fas fa-door-open" style="margin-right: 5px;"></i> Aberto
+                    </span>
+                    {% else %}
+                    <span id="store-status-badge"
+                        style="display: inline-flex; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.8em; align-items: center; color: white; background-color: #d32f2f;">
+                        <i class="fas fa-lock" style="margin-right: 5px;"></i> Fechada
+                    </span>
+                    {% endif %}
+                </div>
+                <!-- Mobile Cart Icon (Visible on Mobile) -->
+                <a href="{% url 'carrinho:cart_detail' %}" class="mobile-cart-icon"
+                    style="display: none; position: relative; color: var(--text-color); font-size: 1.4rem; margin-right: 15px; margin-left: auto;">
+                    <i class="fas fa-shopping-cart"></i>
+                    {% if cart|length > 0 %}
+                    <span class="mobile-cart-badge">{{ cart|length }}</span>
+                    {% endif %}
+                </a>
+
+                <div class="menu-toggle" id="mobile-menu-btn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <nav class="nav-menu" id="nav-menu">
+
+
+                    <ul>
+
+
+                        <li><a href="{% url 'produtos:lista' %}"
+                                class="{% if request.resolver_match.view_name == 'produtos:lista' %}active{% endif %}">Início</a>
+                        </li>
+                        <li><a href="{% url 'sistema:about' %}"
+                                class="{% if request.resolver_match.view_name == 'sistema:about' %}active{% endif %}">Sobre
+                                Mim</a></li>
+                        <li>
+                            <a href="{% url 'chat:start_chat' %}"
+                                class="{% if has_active_chats and user.is_superuser %}pulse-alert{% endif %} {% if '/chat/' in request.path %}active{% endif %}">
+                                Fale Conosco
+                                {% if has_active_chats and user.is_superuser %}
+                                <i class="fas fa-exclamation-circle" style="font-size: 0.8em; margin-left: 5px;"></i>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'carrinho:cart_detail' %}"
+                                class="{% if '/carrinho/' in request.path %}active{% endif %}">
+                                Carrinho
+                                {% if cart|length > 0 %}
+                                <span class="badge">{{ cart|length }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        {% if user.is_authenticated %}
+                        {% if user.is_superuser %}
+                        <li><a href="{% url 'produtos:gerenciar' %}"
+                                class="{% if 'gerenciar' in request.path %}active{% endif %}">Gerenciar Loja</a></li>
+                        {% endif %}
+                        <li>
+                            <a href="{% url 'usuarios:profile' %}" id="user-profile-link"
+                                class="{% if '/usuarios/profile' in request.path %}active{% endif %}">
+                                Bem-vindo, {{ request.user.username }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'sistema:settings' %}" id="gear-trigger-v11"
+                                class="{% if request.resolver_match.view_name == 'sistema:settings' %}active{% endif %}">
+                                Configurações
+                            </a>
+                        </li>
+                        <li><a href="{% url 'usuarios:logout' %}">Sair</a></li>
+                        {% else %}
+                        <li><a href="{% url 'sistema:settings' %}" id="gear-trigger-v11-guest"
+                                class="{% if request.resolver_match.view_name == 'sistema:settings' %}active{% endif %}">
+                                Configurações</a>
+                        </li>
+                        <li><a href="{% url 'usuarios:login' %}"
+                                class="{% if '/usuarios/login' in request.path %}active{% endif %}">Entrar</a></li>
+                        <li><a href="{% url 'usuarios:register' %}"
+                                class="{% if '/usuarios/register' in request.path %}active{% endif %}">Cadastrar</a></li>
+                        {% endif %}
+                    </ul>
+
+                    <!-- Sidebar Footer (Mobile Only) -->
+                    <div class="sidebar-footer"
+                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; margin-top: auto;">
+                        <img src="{% static 'img/logo.png' %}?v=3" alt="YasMimos"
+                            style="width: 120px; margin-bottom: 5px; display: block; border-radius: 50%;">
+                        <p style="margin: 0; color: #777; font-size: 0.8rem; width: 100%; text-align: center;">Versão
+                            1.0</p>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <div class="delivery-warning">
+            <p>
+                {% if not store_settings.is_open %}
+                <span id="delivery-icon-container"><i class="fas fa-clock"></i></span>
+                <span id="delivery-notice-text">Voltamos em breve! (Ter, Qui e Sex)</span>
+                <button id="delivery-details-btn"
+                    style="display: none; margin-left: 10px; padding: 4px 10px; background: var(--accent-color); color: white; border: 1px solid white; border-radius: 15px; font-size: 0.85em; font-weight: bold; cursor: pointer; font-family: var(--font-main);">Ver
+                    Detalhes</button>
+                {% else %}
+                <span id="delivery-icon-container"><i class="fas fa-map-marker-alt"></i></span>
+                <span id="delivery-notice-text">{{ store_settings.delivery_notice }}</span>
+                {% if store_settings.delivery_details or store_settings.gps_enabled %}
+                <button id="delivery-details-btn"
+                    onclick="handleLocationClick('{{ store_settings.delivery_details|escapejs }}')"
+                    style="display: inline-block; margin-left: 10px; padding: 4px 10px; background: var(--accent-color); color: white; border: 1px solid white; border-radius: 15px; font-size: 0.85em; font-weight: bold; cursor: pointer; font-family: var(--font-main);">Ver
+                    Detalhes</button>
+                {% else %}
+                <button id="delivery-details-btn"
+                    style="display: none; margin-left: 10px; padding: 4px 10px; background: var(--accent-color); color: white; border: 1px solid white; border-radius: 15px; font-size: 0.85em; font-weight: bold; cursor: pointer; font-family: var(--font-main);">Ver
+                    Detalhes</button>
+                {% endif %}
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
 
     <main class="container">
         {% block content %}
@@ -55,112 +251,1015 @@
     </main>
 
     <footer>
+        <div class="footer-wave">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"
+                preserveAspectRatio="none" style="display: block; width: calc(100% + 1.3px); height: 50px;">
+                <path
+                    d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86 s 168.19-17.73,250.45 -0.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
+                    style="fill: var(--footer-wave-fill);" fill-opacity="1"></path>
+            </svg>
+        </div>
         <div class="container">
-            <div class="social">
-                <a href="https://www.instagram.com/yasmim_francn/" target="_blank"><i class="fab fa-instagram"></i></a>
+            <div class="footer-content">
+                <div class="footer-col footer-about">
+                    <div class="footer-logo">
+                        <img src="{% static 'img/logo.png' %}?v=3" alt="YasMimos"
+                            style="height: 80px; width: auto; border-radius: 50%;">
+                    </div>
+                    <p style="color: #666; font-size: 0.95rem;">
+                        Doces artesanais feitos com o coração. Transformando ingredientes selecionados em momentos de
+                        pura alegria.
+                    </p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Links Rápidos</h4>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'produtos:lista' %}">Início</a></li>
+                        <li><a href="{% url 'sistema:about' %}">Sobre Mim</a></li>
+                        <li><a href="{% url 'carrinho:cart_detail' %}">Meu Carrinho</a></li>
+                        {% if not user.is_authenticated %}
+                        <li><a href="{% url 'usuarios:register' %}">Criar Conta</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="footer-col" style="margin-bottom: 20px;">
+                    <h4>Siga-nos</h4>
+                    <div class="social-icons">
+                        <a href="https://www.instagram.com/yasmimo_s/" target="_blank"><i
+                                class="fab fa-instagram"></i></a>
+                        <a href="https://wa.me/5581983964906" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
             </div>
-            <p>&copy; {% now "Y" %} YasMimos.</p>
+
+            <div class="footer-bottom">
+                <p>&copy; {% now "Y" %} YasMimos. Todos os direitos reservados.</p>
+                <!-- Icons removed -->
+            </div>
         </div>
     </footer>
 
-    <!-- About Modal -->
-    <div id="about-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Sobre a YasMimos</h2>
-            <p>Olá! Sou a Yasmim, a confeiteira por trás da YasMimos.</p>
-            <p>Aqui, cada doce é feito com muito carinho e dedicação para tornar seus momentos ainda mais especiais. Especializada em brigadeiros gourmet, brownies e doces artesanais.</p>
-            <p>Obrigada por escolher a YasMimos!</p>
-        </div>
-    </div>
+    <!-- Styles moved to static/css/style.css -->
+
+    <!-- Modals removed in favor of dedicated pages -->
 
     <script src="{% static 'js/main.js' %}"></script>
-    
-    <!-- Store Status Global Check -->
-    <div id="store-closed-banner" style="display: none; background-color: #d32f2f; color: white; text-align: center; padding: 15px; position: fixed; bottom: 0; left: 0; width: 100%; z-index: 9999; box-shadow: 0 -2px 10px rgba(0,0,0,0.2);">
-        <i class="fas fa-lock" style="margin-right: 10px;"></i> 
-        <strong>A LOJA ESTÁ FECHADA NO MOMENTO.</strong>
-        <span style="font-size: 0.9em; opacity: 0.9; margin-left: 10px;">Não é possível realizar novos pedidos agora.</span>
-    </div>
+
+    <!-- Photo View Script Removed -->
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" referrerpolicy="no-referrer"
+        crossorigin="anonymous" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" referrerpolicy="no-referrer"
+        crossorigin="anonymous"></script>
 
     <script>
+        // Global variables to hold latest status
+        let globalGpsEnabled = false;
+        let globalLat = null;
+        let globalLng = null;
+        let globalLastUpdate = null; // Store last update time
+
         function checkStoreStatusGlobal() {
-            // Superusers bypass this check visually (optional, but good for testing if you want to see what users see, maybe keep it running but don't disable if superuser? No, task said superuser manages it. Let's rely on server side bypass for actions, but show banner maybe? Or hide banner? Let's hide banner for superuser to avoid annoyance, or make it subtle.)
-            // Actually request says: "Clientes não podem finalizar". 
-            const isSuperuser = "{{ user.is_superuser|yesno:'true,false' }}" === "true";
-            
-            if (isSuperuser) return; 
+            // Check status for everyone, including superusers
+            fetch("{% url 'sistema:get_status' %}")
+                .then(res => res.json())
+                .then(data => {
+                    // Store global state
+                    globalGpsEnabled = data.gps_enabled;
+                    globalLat = data.latitude;
+                    globalLng = data.longitude;
+                    globalLastUpdate = data.last_update;
 
-            fetch("{% url 'core:get_status' %}")
-            .then(res => res.json())
-            .then(data => {
-                const banner = document.getElementById('store-closed-banner');
-                const checkoutBtns = document.querySelectorAll('.checkout-btn-action'); 
-                
-                if (!data.is_open) {
-                    if (banner) banner.style.display = 'block';
-                    checkoutBtns.forEach(btn => {
-                        if (!btn.classList.contains('disabled')) {
-                            btn.classList.add('disabled');
-                            btn.style.pointerEvents = 'none';
-                            btn.style.backgroundColor = '#ccc';
-                            btn.style.borderColor = '#ccc';
-                            btn.innerHTML = '<i class="fas fa-lock"></i> Loja Fechada';
+                    const badge = document.getElementById('store-status-badge');
+                    const noticeText = document.getElementById('delivery-notice-text');
+                    const iconContainer = document.getElementById('delivery-icon-container');
+                    const detailsBtn = document.getElementById('delivery-details-btn');
+
+                    if (badge) {
+                        badge.style.display = 'inline-flex';
+                        if (!data.is_open) {
+                            badge.style.backgroundColor = '#d32f2f'; // Red
+                            badge.innerHTML = '<i class="fas fa-lock" style="margin-right: 5px;"></i> Fechada';
+
+                            if (noticeText) noticeText.innerText = 'Voltamos em breve! (Ter, Qui e Sex)';
+                            if (iconContainer) iconContainer.innerHTML = '<i class="fas fa-clock"></i>';
+                            if (detailsBtn) detailsBtn.style.display = 'none';
+
+                        } else {
+                            badge.style.backgroundColor = '#4caf50'; // Green
+                            badge.innerHTML = '<i class="fas fa-door-open" style="margin-right: 5px;"></i> Aberto';
+
+                            if (noticeText && data.notice) {
+                                if (noticeText.innerText !== data.notice) {
+                                    noticeText.innerText = data.notice;
+                                }
+                                if (iconContainer) iconContainer.innerHTML = '<i class="fas fa-map-marker-alt"></i>';
+
+                                // Handle Button Visibility & Action
+                                if (detailsBtn) {
+                                    const hasDetails = (data.details && data.details.trim() !== "") || (data.latitude && data.longitude);
+
+                                    if (hasDetails) {
+                                        detailsBtn.style.display = 'inline-block';
+                                        const detailsSafe = data.details ? data.details.replace(/'/g, "\\'") : "";
+                                        detailsBtn.setAttribute('onclick', `handleLocationClick('${detailsSafe}')`);
+
+                                        // Pulse Logic
+                                        if (data.gps_enabled) {
+                                            detailsBtn.style.animation = 'pulse-red 2s infinite';
+                                        } else {
+                                            detailsBtn.style.animation = 'none';
+                                        }
+                                    } else {
+                                        detailsBtn.style.display = 'none';
+                                    }
+                                }
+
+                                // Add Pulse Style if needed
+                                if (data.gps_enabled && !document.getElementById('pulse-style')) {
+                                    const style = document.createElement('style');
+                                    style.id = 'pulse-style';
+                                    style.innerHTML = `
+                                     @keyframes pulse-red {
+                                         0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+                                         70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+                                         100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+                                     }
+                                 `;
+                                    document.head.appendChild(style);
+                                }
+                            }
                         }
-                    });
-                    
-                    // Also disable the confirm button on order create page if present
-                    const confirmBtn = document.querySelector('form[action*="order_create"] button[type="submit"]');
-                    if (confirmBtn) {
-                        confirmBtn.disabled = true;
-                        confirmBtn.innerHTML = 'Loja Fechada';
-                        confirmBtn.style.backgroundColor = '#ccc';
                     }
 
-                } else {
-                    if (banner) banner.style.display = 'none';
-                    checkoutBtns.forEach(btn => {
-                        if (btn.classList.contains('disabled')) {
-                            btn.classList.remove('disabled');
-                            btn.style.pointerEvents = 'auto';
-                            btn.style.backgroundColor = ''; // Revert to CSS
-                            btn.style.borderColor = '';
-                            btn.innerHTML = btn.dataset.originalText || 'Finalizar Pedido';
+                    // Check for active chats (Superuser only)
+                    if (data.has_active_chats !== undefined) {
+                        const chatLink = document.querySelector('a[href="/chat/start/"]');
+                        if (chatLink) {
+                            if (data.has_active_chats) {
+                                chatLink.classList.add('pulse-alert');
+                                if (!chatLink.querySelector('.fa-exclamation-circle')) {
+                                    // Append icon if not exists
+                                    const icon = document.createElement('i');
+                                    icon.className = 'fas fa-exclamation-circle';
+                                    icon.style.fontSize = '0.8em';
+                                    icon.style.marginLeft = '5px';
+                                    chatLink.appendChild(icon);
+                                }
+                            } else {
+                                chatLink.classList.remove('pulse-alert');
+                                const icon = chatLink.querySelector('.fa-exclamation-circle');
+                                if (icon) icon.remove();
+                            }
                         }
-                    });
-                    
-                    const confirmBtn = document.querySelector('form[action*="order_create"] button[type="submit"]');
-                    if (confirmBtn) {
-                        confirmBtn.disabled = false;
-                        confirmBtn.innerHTML = 'Confirmar Pedido';
-                        confirmBtn.style.backgroundColor = '';
                     }
-                }
-            })
-            .catch(err => console.error("Status check failed", err));
+
+                    // Check for pending orders (Superuser only)
+                    if (data.has_pending_orders !== undefined) {
+                        // Find Gerenciar Loja link
+                        const manageLink = document.querySelector('a[href*="/produtos/gerenciar"]');
+
+                        if (manageLink) {
+                            // Inject CSS if needed
+                            if (!document.getElementById('blink-shake-style')) {
+                                const style = document.createElement('style');
+                                style.id = 'blink-shake-style';
+                                style.innerHTML = `
+                                  @keyframes blink-shake {
+                                      0%, 100% { background-color: transparent; color: inherit; transform: rotate(0deg); }
+                                      25% { transform: rotate(2deg); }
+                                      50% { background-color: #ff4757; color: white; transform: rotate(0deg); box-shadow: 0 0 15px rgba(255, 71, 87, 0.6); border-radius: 5px; }
+                                      75% { transform: rotate(-2deg); }
+                                  }
+                                  .blinking-red {
+                                      animation: blink-shake 1s infinite;
+                                  }
+                              `;
+                                document.head.appendChild(style);
+                            }
+
+                            // Apply class
+                            if (data.has_pending_orders) {
+                                // Check if we are physically looking at the orders tab (if it exists on this page)
+                                const ordersTab = document.getElementById('tab-orders');
+                                const isViewingOrders = ordersTab && ordersTab.classList.contains('active');
+
+                                if (!isViewingOrders) {
+                                    manageLink.classList.add('blinking-red');
+                                } else {
+                                    manageLink.classList.remove('blinking-red');
+                                }
+                            } else {
+                                manageLink.classList.remove('blinking-red');
+                            }
+                        }
+                    }
+                })
+                .catch(err => console.error("Status check failed", err));
         }
-        
+
+        function handleLocationClick(textDetails) {
+            if (globalGpsEnabled && globalLat && globalLng) {
+                showMapModal(globalLat, globalLng);
+            } else {
+                showLocationDetails(textDetails);
+            }
+        }
+
         // Mobile Menu Toggle
         const menuBtn = document.getElementById('mobile-menu-btn');
         const navMenu = document.getElementById('nav-menu');
-        
-        if (menuBtn) {
-            menuBtn.addEventListener('click', () => {
+
+        if (menuBtn && navMenu) {
+            menuBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent click from bubbling to document
                 navMenu.classList.toggle('active');
-                const icon = menuBtn.querySelector('i');
-                if (navMenu.classList.contains('active')) {
-                    icon.classList.remove('fa-bars');
-                    icon.classList.add('fa-times');
-                } else {
-                    icon.classList.remove('fa-times');
-                    icon.classList.add('fa-bars');
+                menuBtn.classList.toggle('open');
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function (event) {
+                const isClickInsideMenu = navMenu.contains(event.target);
+                const isClickOnBtn = menuBtn.contains(event.target);
+
+                if (!isClickInsideMenu && !isClickOnBtn && navMenu.classList.contains('active')) {
+                    navMenu.classList.remove('active');
+                    menuBtn.classList.remove('open');
                 }
+            });
+
+            // Prevent clicks inside menu from closing it
+            navMenu.addEventListener('click', function (e) {
+                e.stopPropagation();
             });
         }
 
         // Initial check and interval
         checkStoreStatusGlobal();
-        setInterval(checkStoreStatusGlobal, 5000);
+
+        // --- WEBSOCKET CONNECTION ---
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const socket = new WebSocket(wsProtocol + window.location.host + '/ws/store-status/');
+
+        socket.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+
+            // Reutilizamos a parte da lógica visual que você já construíu!
+            globalGpsEnabled = data.gps_enabled;
+            globalLat = data.latitude;
+            globalLng = data.longitude;
+            globalLastUpdate = data.last_update;
+
+            const badge = document.getElementById('store-status-badge');
+            const noticeText = document.getElementById('delivery-notice-text');
+            const iconContainer = document.getElementById('delivery-icon-container');
+            const detailsBtn = document.getElementById('delivery-details-btn');
+
+            if (badge) {
+                badge.style.display = 'inline-flex';
+                if (!data.is_open) {
+                    badge.style.backgroundColor = '#d32f2f';
+                    badge.innerHTML = '<i class="fas fa-lock" style="margin-right: 5px;"></i> Fechada';
+                    if (noticeText) noticeText.innerText = 'Voltamos em breve! (Ter, Qui e Sex)';
+                    if (iconContainer) iconContainer.innerHTML = '<i class="fas fa-clock"></i>';
+                    if (detailsBtn) detailsBtn.style.display = 'none';
+                } else {
+                    badge.style.backgroundColor = '#4caf50';
+                    badge.innerHTML = '<i class="fas fa-door-open" style="margin-right: 5px;"></i> Aberto';
+                    if (noticeText && data.notice) noticeText.innerText = data.notice;
+                    if (iconContainer) iconContainer.innerHTML = '<i class="fas fa-map-marker-alt"></i>';
+
+                    if (detailsBtn) {
+                        const hasDetails = (data.details && data.details.trim() !== "") || (data.latitude && data.longitude);
+                        if (hasDetails) {
+                            detailsBtn.style.display = 'inline-block';
+                            const detailsSafe = data.details ? data.details.replace(/'/g, "\\'") : "";
+                            detailsBtn.setAttribute('onclick', `handleLocationClick('${detailsSafe}')`);
+                            if (data.gps_enabled) {
+                                detailsBtn.style.animation = 'pulse-red 2s infinite';
+                            } else {
+                                detailsBtn.style.animation = 'none';
+                            }
+                        } else {
+                            detailsBtn.style.display = 'none';
+                        }
+                    }
+                }
+            }
+        };
+
+        socket.onclose = function (e) {
+            console.error("Store status socket closed unexpectedly");
+            // Fallback: se o socket cair, tenta verificar a cada 30 segundos
+            setInterval(checkStoreStatusGlobal, 30000);
+        };
+
+        // Scroll Animation Observer
+        document.addEventListener('DOMContentLoaded', function () {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        // Optional: Stop observing once visible if you don't want it to fade out again
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            const animateElements = document.querySelectorAll('.scroll-animate');
+            animateElements.forEach(el => observer.observe(el));
+        });
+
+        // Update header height variable for other sticky elements (like management tabs)
+        function updateHeaderHeightVar() {
+            const headerWrapper = document.querySelector('.sticky-nav-wrapper');
+            if (headerWrapper) {
+                const height = headerWrapper.offsetHeight;
+                document.documentElement.style.setProperty('--header-height', height + 'px');
+                // Also update body padding to prevent content from going under the fixed header
+                document.body.style.paddingTop = height + 'px';
+            }
+        }
+        window.addEventListener('load', updateHeaderHeightVar);
+        window.addEventListener('resize', updateHeaderHeightVar);
+
+        // --- REAL-TIME CART UPDATE ---
+        let lastCartHash = null; // Store the last known cart state hash
+
+        function checkCartStatus() {
+            // Using a simple fetch to get status
+            const statusUrl = "{% url 'carrinho:cart_status' %}";
+            fetch(statusUrl)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        updateCartUI(data.cart_count);
+
+                        // Check if we need to reload the cart page content
+                        if (window.location.pathname.includes('/carrinho/')) {
+                            if (lastCartHash === null) {
+                                lastCartHash = data.cart_hash;
+                            } else if (lastCartHash !== data.cart_hash) {
+                                // Cart changed while we are looking at it!
+                                // Reload the page to show new items (or we could fetch partial HTML)
+                                // "Sem dar F5" -> Automatic reload is acceptable if seamless, 
+                                // but full reload might be jarring.
+                                // Let's force a reload for now as it guarantees consistency.
+                                // To make it smoother, we could use a toast then reload, but instant is better.
+                                window.location.reload();
+                            }
+                        } else {
+                            // Update hash so when we visit cart page we are fresh
+                            lastCartHash = data.cart_hash;
+                        }
+                    }
+                })
+                .catch(err => {
+                    // Silent error
+                });
+        }
+
+        function updateCartUI(count) {
+            // Update Mobile Link
+            const mobileLink = document.querySelector('.mobile-cart-icon');
+            if (mobileLink) {
+                let badge = mobileLink.querySelector('.mobile-cart-badge');
+                if (count > 0) {
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'mobile-cart-badge';
+                        mobileLink.appendChild(badge);
+                    }
+                    if (badge.innerText != count) {
+                        badge.innerText = count;
+                        // Retrigger animation
+                        badge.style.animation = 'none';
+                        badge.offsetHeight;
+                        badge.style.animation = 'popIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
+                    }
+                } else {
+                    if (badge) badge.remove();
+                }
+            }
+
+            // Update Desktop Links (in Nav Menu)
+            // Use specific selector to avoid grabbing mobile one by accident if logic fails
+            const desktopNavLinks = document.querySelectorAll('.nav-menu a');
+            desktopNavLinks.forEach(link => {
+                if (link.href && link.href.includes('/carrinho/')) {
+                    let badge = link.querySelector('.badge');
+                    if (count > 0) {
+                        if (!badge) {
+                            badge = document.createElement('span');
+                            badge.className = 'badge';
+                            link.appendChild(badge); // Adds it to the end of <a> content
+                        }
+                        if (badge.innerText != count) badge.innerText = count;
+                    } else {
+                        if (badge) badge.remove();
+                    }
+                }
+            });
+        }
+
+        // Poll every 60 seconds for cart updates (instead of 2s, to save massive server load)
+        // O carrinho só muda se o próprio usuário adicionar algo em outra aba, não precisa a cada 2s
+        setInterval(checkCartStatus, 60000);
     </script>
+
+    <!-- Unified Location Modal -->
+    <div id="where-am-i-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div
+            style="background: var(--card-bg); padding: 0; border-radius: 20px; max-width: 95%; width: 600px; height: 80vh; max-height: 600px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column;">
+
+            <!-- Modal Header -->
+            <div
+                style="padding: 15px 20px; background: var(--accent-color); color: white; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+                <h3 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center;"><i
+                        class="fas fa-map-marked-alt" style="margin-right: 10px;"></i> Onde me encontrar</h3>
+                <button onclick="closeUnifiedModal()"
+                    style="background: none; border: none; color: white; font-size: 2rem; cursor: pointer; line-height: 0.8; padding: 0; margin-left: 10px;">&times;</button>
+            </div>
+
+            <!-- Scrollable Content Area -->
+            <div style="flex: 1; display: flex; flex-direction: column; overflow-y: auto;">
+
+                <!-- Text Details Section -->
+                <div id="unified-text-details"
+                    style="padding: 20px; text-align: center; border-bottom: 1px solid var(--input-border);">
+                    <p id="unified-location-text"
+                        style="color: var(--text-color); font-size: 1.2rem; font-weight: bold; margin: 0; white-space: pre-wrap;">
+                    </p>
+
+                    <!-- Moved Center Button Here -->
+                    <button id="btn-center-yasmim" onclick="centerOnYasmim()"
+                        style="display: none; margin-top: 15px; background: var(--bg-color); color: var(--accent-color); padding: 8px 15px; border: 2px solid var(--accent-color); border-radius: 20px; font-weight: bold; font-size: 0.9rem; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s; font-family: var(--font-main);">
+                        <i class="fas fa-search-location" style="margin-right: 6px;"></i> Onde está Yasmim?
+                    </button>
+                </div>
+
+                <!-- Map Section -->
+                <div id="unified-map-container"
+                    style="flex: 1; min-height: 300px; display: flex; flex-direction: column; position: relative;">
+                    <div id="leaflet-map" style="flex: 1; width: 100%; height: 100%;"></div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div id="map-footer-text"
+                style="padding: 10px; text-align: center; background: var(--input-bg); font-size: 0.9rem; color: var(--text-light); flex-shrink: 0; border-top: 1px solid var(--input-border);">
+                Atualizado recentemente • Procure pelo ícone <span style="font-size: 1.2rem;">🍪</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Store marker globally so we can access it for centering
+        let yasmimMarker = null;
+        let mapInstance = null;
+
+        function closeUnifiedModal() {
+            document.getElementById('where-am-i-modal').style.display = 'none';
+        }
+
+        function handleLocationClick(textDetails) {
+            const modal = document.getElementById('where-am-i-modal');
+            const textEl = document.getElementById('unified-location-text');
+            const mapContainer = document.getElementById('unified-map-container');
+            const centerBtn = document.getElementById('btn-center-yasmim');
+            const footer = document.getElementById('map-footer-text');
+
+            // 1. Set Text Logic
+            let hasText = (textDetails && textDetails.trim() !== "");
+            let hasMap = (globalLat && globalLng);
+
+            if (hasText) {
+                textEl.innerText = textDetails;
+                textEl.style.display = 'block';
+            } else {
+                textEl.style.display = 'none';
+            }
+
+            // Show container if we have Text OR Map (since button is inside container)
+            if (hasText || hasMap) {
+                document.getElementById('unified-text-details').style.display = 'block';
+            } else {
+                document.getElementById('unified-text-details').style.display = 'none';
+            }
+
+            // 2. Setup Map if coordinates exist
+            if (globalLat && globalLng) {
+                mapContainer.style.display = 'flex';
+                centerBtn.style.display = 'inline-flex';
+                footer.style.display = 'block';
+
+                // Update Footer Time
+                // Smaller version of the SVG for the footer
+                const cupcakeIconSmall = `
+                <span style="display: inline-block; vertical-align: middle; margin-left: 5px;">
+                    <svg width="24" height="24" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Cup -->
+                        <path d="M10 24 L13 36 L27 36 L30 24 Z" fill="#8d6e63" />
+                        <!-- Frosting -->
+                        <circle cx="14" cy="22" r="6" fill="#f48fb1" />
+                        <circle cx="26" cy="22" r="6" fill="#f48fb1" />
+                        <circle cx="20" cy="20" r="7" fill="#f48fb1" />
+                        <circle cx="20" cy="15" r="6" fill="#f06292" />
+                        <!-- Cherry -->
+                        <circle cx="20" cy="10" r="3" fill="#ef5350" />
+                    </svg>
+                </span>`;
+
+                if (globalLastUpdate) {
+                    footer.innerHTML = `Atualizado às <b>${globalLastUpdate}</b> • Procure pelo ícone ${cupcakeIconSmall}`;
+                } else {
+                    footer.innerHTML = `Localização salva • Procure pelo ícone ${cupcakeIconSmall}`;
+                }
+
+                modal.style.display = 'flex';
+
+                // Initialize Map (Little delay for modal render)
+                setTimeout(() => {
+                    initMap(globalLat, globalLng);
+                }, 100);
+
+            } else {
+                // No Map Data available yet
+                mapContainer.style.display = 'none';
+                centerBtn.style.display = 'none';
+                footer.style.display = 'none';
+                modal.style.display = 'flex';
+            }
+        }
+
+        function initMap(lat, lng) {
+            if (!mapInstance) {
+                mapInstance = L.map('leaflet-map').setView([lat, lng], 18);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(mapInstance);
+            } else {
+                mapInstance.setView([lat, lng], 18);
+                mapInstance.invalidateSize(); // Fix gray tiles issue
+            }
+
+            // Clear existing markers
+            mapInstance.eachLayer((layer) => {
+                if (layer instanceof L.Marker) {
+                    layer.remove();
+                }
+            });
+
+            // Custom Icon for Yasmim (Cupcake)
+            const cupcakeSvg = `
+            <svg width="45" height="45" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                   <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+                        <feOffset dx="0" dy="2" result="offsetblur"/>
+                        <feMerge> 
+                            <feMergeNode in="offsetblur"/>
+                            <feMergeNode in="SourceGraphic"/> 
+                        </feMerge>
+                    </filter>
+                </defs>
+                <g filter="url(#shadow)">
+                   <!-- Cup (Paper Liner) -->
+                   <path d="M10 24 L13 36 L27 36 L30 24 Z" fill="#8d6e63" />
+                   <path d="M10 24 L13 36 M14 24 L16 36 M18 24 L19 36 M22 24 L21 36 M26 24 L24 36 M30 24 L27 36" stroke="#6d4c41" stroke-width="0.5" fill="none" />
+                   
+                   <!-- Frosting (Layers) -->
+                   <circle cx="14" cy="22" r="6" fill="#f48fb1" />
+                   <circle cx="26" cy="22" r="6" fill="#f48fb1" />
+                   <circle cx="20" cy="20" r="7" fill="#f48fb1" />
+                   <circle cx="20" cy="15" r="6" fill="#f06292" />
+                   
+                   <!-- Cherry -->
+                   <circle cx="20" cy="10" r="3" fill="#ef5350" stroke="#b71c1c" stroke-width="0.5"/>
+                   <!-- Sprinkles -->
+                   <rect x="16" y="16" width="2" height="1" fill="white" transform="rotate(20 16 16)" />
+                   <rect x="22" y="18" width="2" height="1" fill="white" transform="rotate(-10 22 18)" />
+                   <rect x="19" y="13" width="2" height="1" fill="white" />
+                </g>
+            </svg>`;
+
+            const yasmimIcon = L.divIcon({
+                className: 'yasmim-marker',
+                html: `<div style="transform: translateY(-15px);">${cupcakeSvg}</div>`,
+                iconSize: [45, 45],
+                iconAnchor: [22, 45], // Anchored at the bottom center of the cup
+                popupAnchor: [0, -40]
+            });
+
+            // Google Maps Directions URL
+            const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
+
+            yasmimMarker = L.marker([lat, lng], { icon: yasmimIcon }).addTo(mapInstance);
+
+            // Default Popup Content
+            const popupContent = `
+                <div style="text-align: center; font-family: var(--font-main);">
+                    <b style="font-size: 1.1em; color: black;">Estou aqui!</b><br>
+                    <a href="${googleMapsUrl}" target="_blank" style="display: inline-block; margin-top: 5px; padding: 5px 10px; background: #4caf50; color: white; border-radius: 10px; text-decoration: none; font-size: 0.85em; font-weight: bold; font-family: var(--font-main);">
+                       <i class="fas fa-directions"></i> Traçar Rota
+                    </a>
+                </div>
+            `;
+
+            yasmimMarker.bindPopup(popupContent).openPopup();
+        }
+
+        function centerOnYasmim() {
+            if (mapInstance && yasmimMarker && globalLat && globalLng) {
+                mapInstance.flyTo([globalLat, globalLng], 18, {
+                    animate: true,
+                    duration: 1
+                });
+
+                // Change popup text temporarily
+                const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${globalLat},${globalLng}&travelmode=walking`;
+                const foundContent = `
+                    <div style="text-align: center; font-family: var(--font-main);">
+                        <b style="font-size: 1.2em; color: var(--accent-color);">Oi! Você me encontrou!</b><br>
+                        <a href="${googleMapsUrl}" target="_blank" style="display: inline-block; margin-top: 5px; padding: 5px 10px; background: #4caf50; color: white; border-radius: 10px; text-decoration: none; font-size: 0.85em; font-weight: bold; font-family: var(--font-main);">
+                           <i class="fas fa-directions"></i> Traçar Rota
+                        </a>
+                    </div>
+                `;
+
+                yasmimMarker.setPopupContent(foundContent).openPopup();
+                yasmimMarker.openPopup();
+            }
+        }
+
+        function closeMapModal() {
+            document.getElementById('map-modal').style.display = 'none';
+        }
+
+
+    </script>
+    <script>
+        // Theme Toggle Logic
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcons(newTheme);
+
+            // Update Meta Theme Color
+            const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+            if (metaThemeColor) {
+                metaThemeColor.setAttribute('content', newTheme === 'dark' ? '#121212' : '#FFC0CB');
+            }
+
+            // Remove blocking style if it exists, so we don't force dark mode forever if user switches
+            const forcedStyle = document.getElementById('force-dark-mode');
+            if (forcedStyle) {
+                forcedStyle.remove();
+            }
+        }
+
+        function updateThemeIcons(theme) {
+            const isDark = theme === 'dark';
+            const iconClass = isDark ? 'fa-sun' : 'fa-moon';
+            const color = isDark ? '#FEF08A' : 'var(--text-color)'; // Yellow sun, normal moon
+
+            // Desktop
+            const desktopBtn = document.querySelector('.theme-toggle-btn i');
+            if (desktopBtn) {
+                desktopBtn.className = `fas ${iconClass}`;
+                desktopBtn.style.color = isDark ? '#FEF08A' : '';
+            }
+
+            // Mobile
+            const mobileBtn = document.querySelector('.mobile-sidebar-theme-toggle i');
+            if (mobileBtn) {
+                mobileBtn.className = `fas ${iconClass}`;
+                mobileBtn.style.color = isDark ? '#FEF08A' : 'var(--text-color)';
+            }
+        }
+
+        // Initialize Icons and Meta on Load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            updateThemeIcons(savedTheme);
+
+            // Sync Meta Theme Color on Load (since the head script runs too early for this)
+            const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+            if (metaThemeColor) {
+                metaThemeColor.setAttribute('content', savedTheme === 'dark' ? '#121212' : '#FFC0CB');
+            }
+        });
+
+
+    </script>
+    <!-- Pending Order Sticky Popup -->
+    <div id="pending-order-popup"
+        style="display: none; position: fixed; bottom: 15px; left: 15px; z-index: 9999; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        <!-- Full Popup Content -->
+        <div id="pending-order-full"
+            style="background: var(--card-bg); padding: 8px 12px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 4px; width: 220px; border: 1px solid var(--glass-border); backdrop-filter: blur(12px); position: relative; transition: all 0.3s ease;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div
+                    style="background: var(--accent-color); color: white; width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0;">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div style="flex-grow: 1; min-width: 0;">
+                    <h4 id="pending-title"
+                        style="margin: 0; font-size: 0.75rem; color: var(--text-color); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        Pedido Pendente</h4>
+                    <p id="pending-desc"
+                        style="margin: 0; font-size: 0.65rem; color: var(--text-light); line-height: 1.1;">Pagamento
+                        aguardando.</p>
+                </div>
+                <button onclick="minimizePendingPopup()"
+                    style="background: none; border: none; color: var(--text-light); cursor: pointer; padding: 2px; font-size: 1rem; opacity: 0.4; transition: opacity 0.2s;"
+                    title="Minimizar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Animated List of Orders -->
+            <div id="pending-orders-list" class="pending-list-hidden">
+                <div style="padding-top: 6px;">
+                    <div id="pending-items-container" style="display: flex; flex-direction: column; gap: 4px;">
+                        <!-- Items injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <a id="pending-order-btn" href="#"
+                style="background: var(--accent-color); color: white; border-radius: 5px; font-size: 0.7rem; padding: 6px; text-decoration: none; font-weight: 700; text-align: center; transition: all 0.2s; display: block; margin-top: 2px;">
+                PAGAR AGORA
+            </a>
+        </div>
+
+        <!-- Minimized Tab -->
+        <div id="pending-order-minimized" onclick="restorePendingPopup()"
+            style="display: none; background: var(--accent-color); color: white; width: 38px; height: 38px; border-radius: 50%; box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3); cursor: pointer; align-items: center; justify-content: center; font-size: 1rem; border: 2px solid white; transition: all 0.3s ease;">
+            <i class="fas fa-wallet" style="animation: pulse-wallet 2s infinite;"></i>
+            <div id="pending-badge"
+                style="position: absolute; top: -2px; right: -2px; background: #FF3B30; color: white; font-size: 0.55rem; padding: 1px 4px; border-radius: 10px; font-weight: 800; border: 1px solid white;">
+                1</div>
+        </div>
+    </div>
+
+    
+
+    <script>
+        let isFetchingStatus = false;
+
+        async function checkPendingOrder() {
+            if (isFetchingStatus) return;
+
+            const userOrders = [];
+            // {% if pending_orders_list %}
+            // {% for order in pending_orders_list %}
+            userOrders.push({ id: "{{ order.id }}", total: "{{ order.total_amount }}" });
+            // {% endfor %}
+            // {% endif %}
+
+            let guestIdsStr = localStorage.getItem('yas_pending_order_ids') || "";
+            let guestIds = guestIdsStr ? guestIdsStr.split(',').filter(id => id && id.trim() !== "") : [];
+
+            let allOrders = [...userOrders];
+            guestIds.forEach(gid => {
+                if (!allOrders.find(o => o.id.toString() === gid.toString())) {
+                    allOrders.push({ id: gid, total: 'Visitante' });
+                }
+            });
+
+            if (allOrders.length > 0) {
+                isFetchingStatus = true;
+                const verifiedOrders = [];
+
+                for (const order of allOrders) {
+                    try {
+                        const response = await fetch('/pedidos/status/' + order.id + '/');
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.status === 'pending' || data.status === 'pending_manual') {
+                                verifiedOrders.push(order);
+                            } else {
+                                if (guestIds.includes(order.id.toString())) {
+                                    cleanupOrderIdLocally(order.id);
+                                }
+                            }
+                        } else if (response.status === 404) {
+                            cleanupOrderIdLocally(order.id);
+                        }
+                    } catch (e) {
+                        verifiedOrders.push(order);
+                    }
+                }
+                allOrders = verifiedOrders;
+                isFetchingStatus = false;
+            }
+
+            updatePendingUI(allOrders);
+        }
+
+        function updatePendingUI(allOrders) {
+            const totalCount = allOrders.length;
+            const wrapper = document.getElementById('pending-order-popup');
+            const currentPath = window.location.pathname;
+
+            if (!wrapper) return;
+
+            if (totalCount > 0) {
+                const latest = allOrders[0];
+                const badge = document.getElementById('pending-badge');
+                if (badge) badge.textContent = totalCount;
+
+                const title = document.getElementById('pending-title');
+                const desc = document.getElementById('pending-desc');
+                const list = document.getElementById('pending-orders-list');
+                const container = document.getElementById('pending-items-container');
+                const btn = document.getElementById('pending-order-btn');
+
+                if (totalCount > 1) {
+                    if (title) title.textContent = totalCount + " Pedidos";
+                    if (desc) desc.textContent = "Qual quer pagar?";
+
+                    if (list) {
+                        list.classList.add('active');
+                    }
+                    if (btn) btn.style.display = 'none';
+
+                    if (container) {
+                        const existingIds = Array.from(container.querySelectorAll('.pending-item-small'))
+                            .map(el => el.getAttribute('data-id').toString());
+
+                        container.querySelectorAll('.pending-item-small').forEach(el => {
+                            const id = el.getAttribute('data-id').toString();
+                            if (!allOrders.find(o => o.id.toString() === id)) {
+                                el.classList.add('pending-item-animating-out');
+                                setTimeout(() => el.remove(), 250);
+                            }
+                        });
+
+                        allOrders.forEach(o => {
+                            if (!existingIds.includes(o.id.toString())) {
+                                const item = document.createElement('a');
+                                item.href = '/pedidos/confirmed/' + o.id + '/';
+                                item.className = 'pending-item-small';
+                                item.setAttribute('data-id', o.id);
+                                item.innerHTML = `<span>#${o.id}</span><span style="font-weight:700;color:var(--accent-color)">${o.total !== 'Visitante' ? 'R$ ' + o.total : 'Pagar'}</span>`;
+                                container.appendChild(item);
+                            }
+                        });
+                    }
+                } else {
+                    if (title) title.textContent = "Pedido Pendente";
+                    if (desc) desc.textContent = "Pagamento aguardando.";
+                    if (list) list.classList.remove('active');
+                    if (btn) {
+                        btn.style.display = 'block';
+                        btn.href = '/pedidos/confirmed/' + latest.id + '/';
+                    }
+                }
+
+                const isOnAnyOrderPage = allOrders.some(o => currentPath.includes('/pedidos/confirmed/' + o.id + '/'));
+
+                if (isOnAnyOrderPage) {
+                    minimizePendingPopup(true, false);
+                } else if (sessionStorage.getItem('yas_pending_minimized') === 'true') {
+                    minimizePendingPopup(true, true);
+                } else {
+                    wrapper.style.display = 'block';
+                }
+            } else {
+                wrapper.style.display = 'none';
+            }
+        }
+
+        function cleanupOrderIdLocally(id) {
+            let ids = localStorage.getItem('yas_pending_order_ids');
+            if (ids) {
+                ids = ids.split(',').filter(i => i.toString() !== id.toString());
+                if (ids.length > 0) localStorage.setItem('yas_pending_order_ids', ids.join(','));
+                else localStorage.removeItem('yas_pending_order_ids');
+            }
+        }
+
+        function minimizePendingPopup(immediate = false, persist = true) {
+            const full = document.getElementById('pending-order-full');
+            const mini = document.getElementById('pending-order-minimized');
+            const wrapper = document.getElementById('pending-order-popup');
+            if (!full || !mini || !wrapper) return;
+
+            if (persist) sessionStorage.setItem('yas_pending_minimized', 'true');
+
+            if (immediate) {
+                full.style.display = 'none';
+                mini.style.display = 'flex';
+                wrapper.style.display = 'block';
+            } else {
+                full.style.opacity = '0';
+                full.style.transform = 'scale(0.95) translateY(10px)';
+                setTimeout(() => {
+                    full.style.display = 'none';
+                    mini.style.display = 'flex';
+                    mini.style.opacity = '0';
+                    mini.style.transform = 'scale(0.8)';
+                    setTimeout(() => {
+                        mini.style.opacity = '1';
+                        mini.style.transform = 'scale(1)';
+                    }, 50);
+                }, 300);
+            }
+        }
+
+        function restorePendingPopup() {
+            const full = document.getElementById('pending-order-full');
+            const mini = document.getElementById('pending-order-minimized');
+            if (!full || !mini) return;
+
+            sessionStorage.removeItem('yas_pending_minimized');
+            mini.style.transform = 'scale(0.8)';
+            mini.style.opacity = '0';
+            setTimeout(() => {
+                mini.style.display = 'none';
+                full.style.display = 'flex';
+                full.style.opacity = '0';
+                full.style.transform = 'scale(0.95) translateY(10px)';
+                setTimeout(() => {
+                    full.style.opacity = '1';
+                    full.style.transform = 'scale(1) translateY(0)';
+                }, 50);
+            }, 300);
+        }
+
+        document.addEventListener('DOMContentLoaded', checkPendingOrder);
+        setInterval(checkPendingOrder, 8000);
+    </script>
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" // Sync meta theme color const
+        metaThemeColor=document.querySelector('meta[name="theme-color" ]'); if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', newTheme==='dark' ? '#121212' : '#FFC0CB' ); } } </script>
+        <!-- Accessibility SVG Filters (Global) -->
+        <svg style="display: none;">
+            <defs>
+                <filter id="protanopia-filter">
+                    <feColorMatrix type="matrix"
+                        values="0.567, 0.433, 0, 0, 0 0.558, 0.442, 0, 0, 0 0, 0.242, 0.758, 0, 0 0, 0, 0, 1, 0" />
+                </filter>
+                <filter id="deuteranopia-filter">
+                    <feColorMatrix type="matrix"
+                        values="0.625, 0.375, 0, 0, 0 0.7, 0.3, 0, 0, 0 0, 0.3, 0.7, 0, 0 0, 0, 0, 1, 0" />
+                </filter>
+                <filter id="tritanopia-filter">
+                    <feColorMatrix type="matrix"
+                        values="0.95, 0.05, 0, 0, 0 0, 0.433, 0.567, 0, 0 0, 0.475, 0.525, 0, 0 0, 0, 0, 1, 0" />
+                </filter>
+            </defs>
+        </svg>
+
+        
+
+        <script>
+            (function () {
+                // APPLY SAVED ACCESSIBILITY SETTINGS IMMEDIATELY
+                try {
+                    // Classes
+                    const accClasses = ['high-contrast', 'dyslexia-font', 'extra-spacing', 'highlight-focus', 'highlight-links', 'reduce-motion', 'large-cursor', 'large-buttons', 'focus-mode'];
+                    accClasses.forEach(cls => {
+                        if (localStorage.getItem('acc_' + cls) === 'true') {
+                            document.body.classList.add(cls);
+                        }
+                    });
+
+                    // Font Size
+                    const fontSize = localStorage.getItem('acc_font_size');
+                    if (fontSize) document.body.classList.add(fontSize);
+
+                    // Zoom
+                    const zoom = localStorage.getItem('acc_zoom');
+                    if (zoom) document.body.style.zoom = zoom + '%';
+
+                    // Color Profile
+                    const colorProfile = localStorage.getItem('color_profile');
+                    if (colorProfile && colorProfile !== 'none') {
+                        document.documentElement.setAttribute('data-color-profile', colorProfile);
+                    }
+                } catch (e) { console.log('Accessibility load error', e); }
+            })();
+        </script>
+        
+        {% block extra_js %}{% endblock %}
 </body>
+
 </html>

@@ -1,18 +1,26 @@
-{% for product in products %}
+{% for produto in produtos %}
     <div class="product-card">
-        <div class="product-image">
-            {% if product.image %}
-                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+        <div class="product-image-container">
+            {% if produto.image %}
+                <img src="{{ produto.image.url }}" alt="{{ produto.name }}">
             {% else %}
-                <div style="height: 100%; display: flex; align-items: center; justify-content: center; background: #f0f0f0; color: #ccc;">Sem Imagem</div>
+                <div style="height: 100%; display: flex; align-items: center; justify-content: center; background: var(--input-bg); color: var(--text-light);">
+                    <i class="fas fa-image" style="font-size: 2rem; opacity: 0.5;"></i>
+                </div>
             {% endif %}
+            
+            <a href="{% url 'produtos:detalhes' produto.id produto.slug %}" class="card-overlay">
+                <span class="overlay-btn"><i class="far fa-eye"></i> Detalhes</span>
+            </a>
         </div>
         <div class="product-info">
-            <h3 class="product-title">{{ product.name }}</h3>
-            <p class="product-price">R$ {{ product.price }}</p>
-            <a href="{% url 'products:product_detail' product.id product.slug %}" class="btn">Ver Detalhes</a>
+            <h3 class="product-title">{{ produto.name }}</h3>
+            <span class="product-price">R$ {{ produto.price }}</span>
         </div>
     </div>
 {% empty %}
-    <p style="text-align: center; grid-column: 1/-1;">Nenhum produto encontrado.</p>
+    <p style="text-align: center; grid-column: 1/-1; padding: 40px; color: var(--text-light); font-size: 1.2rem;">
+        <i class="far fa-sad-tear" style="display: block; font-size: 3rem; margin-bottom: 20px; color: var(--input-border);"></i>
+        Nenhum produto encontrado nesta categoria.
+    </p>
 {% endfor %}
