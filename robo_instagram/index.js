@@ -7,22 +7,51 @@ async function connectToInstagram() {
 
     const username = process.env.IG_USERNAME;
     const password = process.env.IG_PASSWORD;
+    const sessionId = process.env.IG_SESSIONID;
 
-    if (!username || !password) {
-        console.error("❌ ERRO: IG_USERNAME e IG_PASSWORD não foram configurados no arquivo .env");
+    if (!username) {
+        console.error("❌ ERRO: IG_USERNAME não foi configurado no arquivo de ambiente");
         return;
     }
 
     ig.state.generateDevice(username);
 
-    // Tenta fazer o login
-    try {
-        console.log(`Tentando login no Instagram com a conta: ${username}...`);
-        await ig.account.login(username, password);
-        console.log('✅ Bot conectado ao Instagram com sucesso! Aguardando mensagens...');
-    } catch (e) {
-        console.error("❌ Falha ao fazer login no Instagram. Verifique se as credenciais estão corretas ou se o Instagram não bloqueou o acesso exigindo verificação por e-mail/SMS.", e.message);
-        return;
+    if (sessionId) {
+        console.log("Usando Session ID (Cookie) para pular a tela de login...");
+        try {
+            const cookieStr = JSON.stringify({
+                "cookies": [
+                    {
+                        "key": "sessionid",
+                        "value": sessionId,
+                        "domain": "i.instagram.com",
+                        "path": "/",
+                        "hostOnly": false,
+                        "creation": new Date().toISOString(),
+                        "lastAccessed": new Date().toISOString()
+                    }
+                ]
+            });
+            await ig.state.deserializeCookieJar(cookieStr);
+            console.log('✅ Bot conectado ao Instagram (via Cookie) com sucesso! Aguardando mensagens...');
+        } catch (e) {
+            console.error("❌ Falha ao restaurar sessão por Cookie.", e.message);
+            return;
+        }
+    } else {
+        if (!password) {
+            console.error("❌ ERRO: IG_PASSWORD não configurado (e nenhum Session ID foi fornecido).");
+            return;
+        }
+        // Tenta fazer o login
+        try {
+            console.log(`Tentando login no Instagram com a conta: ${username}...`);
+            await ig.account.login(username, password);
+            console.log('✅ Bot conectado ao Instagram com sucesso! Aguardando mensagens...');
+        } catch (e) {
+            console.error("❌ Falha ao fazer login no Instagram. Verifique se as credenciais estão corretas ou se o Instagram não bloqueou o acesso exigindo verificação por e-mail/SMS.", e.message);
+            return;
+        }
     }
 
     // Memória para controlar o estado do usuário
