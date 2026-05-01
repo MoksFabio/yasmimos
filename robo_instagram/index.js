@@ -17,54 +17,25 @@ async function connectToInstagram() {
 
     ig.state.generateDevice(username);
 
-    if (sessionId) {
-        console.log("Usando Session ID e CSRF Token para pular a tela de login...");
+    const fs = require('fs');
+    const statePath = __dirname + '/ig_state.json';
+
+    if (fs.existsSync(statePath)) {
+        console.log("📂 Restaurando sessão salva (ig_state.json) para contornar bloqueio de IP...");
         try {
-            const userId = sessionId.split('%3A')[0];
-            const cookieStr = JSON.stringify({
-                "cookies": [
-                    {
-                        "key": "sessionid",
-                        "value": sessionId,
-                        "domain": "i.instagram.com",
-                        "path": "/",
-                        "hostOnly": false,
-                        "creation": new Date().toISOString(),
-                        "lastAccessed": new Date().toISOString()
-                    },
-                    {
-                        "key": "csrftoken",
-                        "value": csrfToken,
-                        "domain": "i.instagram.com",
-                        "path": "/",
-                        "hostOnly": false,
-                        "creation": new Date().toISOString(),
-                        "lastAccessed": new Date().toISOString()
-                    },
-                    {
-                        "key": "ds_user_id",
-                        "value": userId,
-                        "domain": "i.instagram.com",
-                        "path": "/",
-                        "hostOnly": false,
-                        "creation": new Date().toISOString(),
-                        "lastAccessed": new Date().toISOString()
-                    }
-                ]
-            });
-            await ig.state.deserializeCookieJar(cookieStr);
-            ig.state.cookieUserId = userId; // Define o ID de usuário a partir do cookie
-            console.log('✅ Bot conectado ao Instagram (via Cookie) com sucesso! Aguardando mensagens...');
+            const stateStr = fs.readFileSync(statePath, 'utf8');
+            await ig.state.deserialize(stateStr);
+            console.log('✅ Bot conectado ao Instagram (via Sessão Salva) com sucesso! Aguardando mensagens...');
         } catch (e) {
-            console.error("❌ Falha ao restaurar sessão por Cookie.", e.message);
+            console.error("❌ Falha ao restaurar sessão salva.", e.message);
             return;
         }
     } else {
         if (!password) {
-            console.error("❌ ERRO: IG_PASSWORD não configurado (e nenhum Session ID foi fornecido).");
+            console.error("❌ ERRO: IG_PASSWORD não configurado no arquivo .env");
             return;
         }
-        // Tenta fazer o login
+        // Tenta fazer o login normal
         try {
             console.log(`Tentando login no Instagram com a conta: ${username}...`);
             await ig.account.login(username, password);
