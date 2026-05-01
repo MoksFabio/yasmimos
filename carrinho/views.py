@@ -279,7 +279,10 @@ def set_tip(request):
     tip_amount = request.POST.get('tip_amount', '0.00')
     try:
         from decimal import Decimal
-        carrinho.set_tip(Decimal(tip_amount))
+        parsed_tip = Decimal(tip_amount)
+        if parsed_tip < Decimal('0.00'):
+            parsed_tip = Decimal('0.00')
+        carrinho.set_tip(parsed_tip)
         is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.accepts('application/json')
         if is_ajax:
             return JsonResponse({

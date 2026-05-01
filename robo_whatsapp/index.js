@@ -267,7 +267,8 @@ async function connectToWhatsApp() {
                     }
                     const orderId = parseInt(orderIdStr, 10);
                     try {
-                        const orderInfo = await fetchApi(`/sistema/api/bot/order/${orderId}/`);
+                        const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
+                        const orderInfo = await fetchApi(`/sistema/api/bot/order/${orderId}/?bot_token=${botToken}`);
                         if (orderInfo.status === 'success') {
                             const captionText = `📦 *Status do Pedido #${orderInfo.order_id}*\n\n` +
                                 `Status atual: *${orderInfo.status_display}*\n` +

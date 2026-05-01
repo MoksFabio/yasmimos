@@ -375,6 +375,13 @@ def bot_store_info(request):
 
 @csrf_exempt
 def bot_order_status(request, order_id):
+    import os
+    from django.conf import settings
+    bot_token = request.GET.get('bot_token')
+    valid_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', os.environ.get('TELEGRAM_BOT_TOKEN', ''))
+    if bot_token != valid_token:
+        return JsonResponse({'status': 'error', 'message': 'Acesso negado'}, status=403)
+
     from pedidos.models import Order
     try:
         order = Order.objects.get(id=order_id)
