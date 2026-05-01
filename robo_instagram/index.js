@@ -33,6 +33,7 @@ async function connectToInstagram() {
                 ]
             });
             await ig.state.deserializeCookieJar(cookieStr);
+            ig.state.cookieUserId = sessionId.split('%3A')[0]; // Define o ID de usuário a partir do cookie
             console.log('✅ Bot conectado ao Instagram (via Cookie) com sucesso! Aguardando mensagens...');
         } catch (e) {
             console.error("❌ Falha ao restaurar sessão por Cookie.", e.message);
