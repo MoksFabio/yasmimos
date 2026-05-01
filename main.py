@@ -96,7 +96,7 @@ def main():
 
     # 5.1 INICIAR BOT DO INSTAGRAM (Segundo Plano)
     try:
-        if os.environ.get("IG_USERNAME") and os.environ.get("IG_PASSWORD"):
+        if os.environ.get("IG_USERNAME") and (os.environ.get("IG_PASSWORD") or os.environ.get("IG_SESSIONID")):
             ig_bot_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "robo_instagram")
             if os.path.exists(ig_bot_dir):
                 if not os.path.exists(os.path.join(ig_bot_dir, "node_modules")):
