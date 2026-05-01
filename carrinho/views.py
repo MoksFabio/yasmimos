@@ -276,7 +276,9 @@ def coupon_apply(request):
 @require_POST
 def set_tip(request):
     carrinho = Cart(request)
-    tip_amount = request.POST.get('tip_amount', '0.00')
+    tip_amount = request.POST.get('tip_amount', '0.00').strip().replace(',', '.')
+    if not tip_amount:
+        tip_amount = '0.00'
     try:
         from decimal import Decimal
         parsed_tip = Decimal(tip_amount)
