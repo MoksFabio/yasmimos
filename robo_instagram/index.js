@@ -8,6 +8,7 @@ async function connectToInstagram() {
     const username = process.env.IG_USERNAME;
     const password = process.env.IG_PASSWORD;
     const sessionId = process.env.IG_SESSIONID;
+    const csrfToken = process.env.IG_CSRFTOKEN || "missing_csrf";
 
     if (!username) {
         console.error("❌ ERRO: IG_USERNAME não foi configurado no arquivo de ambiente");
@@ -17,8 +18,9 @@ async function connectToInstagram() {
     ig.state.generateDevice(username);
 
     if (sessionId) {
-        console.log("Usando Session ID (Cookie) para pular a tela de login...");
+        console.log("Usando Session ID e CSRF Token para pular a tela de login...");
         try {
+            const userId = sessionId.split('%3A')[0];
             const cookieStr = JSON.stringify({
                 "cookies": [
                     {
@@ -29,11 +31,29 @@ async function connectToInstagram() {
                         "hostOnly": false,
                         "creation": new Date().toISOString(),
                         "lastAccessed": new Date().toISOString()
+                    },
+                    {
+                        "key": "csrftoken",
+                        "value": csrfToken,
+                        "domain": "i.instagram.com",
+                        "path": "/",
+                        "hostOnly": false,
+                        "creation": new Date().toISOString(),
+                        "lastAccessed": new Date().toISOString()
+                    },
+                    {
+                        "key": "ds_user_id",
+                        "value": userId,
+                        "domain": "i.instagram.com",
+                        "path": "/",
+                        "hostOnly": false,
+                        "creation": new Date().toISOString(),
+                        "lastAccessed": new Date().toISOString()
                     }
                 ]
             });
             await ig.state.deserializeCookieJar(cookieStr);
-            ig.state.cookieUserId = sessionId.split('%3A')[0]; // Define o ID de usuário a partir do cookie
+            ig.state.cookieUserId = userId; // Define o ID de usuário a partir do cookie
             console.log('✅ Bot conectado ao Instagram (via Cookie) com sucesso! Aguardando mensagens...');
         } catch (e) {
             console.error("❌ Falha ao restaurar sessão por Cookie.", e.message);
