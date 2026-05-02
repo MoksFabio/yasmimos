@@ -27,7 +27,6 @@ def create_squarecloud_update_zip():
         'chat',
         'fidelidade',
         'robo_whatsapp',
-        'robo_instagram',
         'YasMimos',
         # 'media' -> Excluded to avoid overwriting production images with local testing images
     ]
