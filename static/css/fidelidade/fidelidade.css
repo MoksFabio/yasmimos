@@ -50,12 +50,37 @@
             }
 
             .loyalty-grid-wrapper.is-admin {
-                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr);
+                display: grid;
+                grid-template-columns: minmax(350px, 1fr) minmax(500px, 2fr);
+                grid-template-areas: 
+                    "search manage"
+                    "create manage";
+                gap: 30px;
+                align-items: start;
+            }
+
+            .sections-column {
+                grid-area: search;
+            }
+
+            .admin-column {
+                grid-area: create;
             }
 
             .manage-section {
-                /* No grid-column span, keep it in the row */
+                grid-area: manage;
             }
+
+            @media (max-width: 1100px) {
+                .loyalty-grid-wrapper.is-admin {
+                    grid-template-columns: 1fr;
+                    grid-template-areas: 
+                        "search"
+                        "create"
+                        "manage";
+                }
+            }
+
 
             .loyalty-grid-wrapper.is-customer {
                 grid-template-columns: 1fr;

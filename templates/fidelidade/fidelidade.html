@@ -16,10 +16,8 @@
     </div>
 
 
-    <div class="loyalty-grid-wrapper {% if user.is_superuser %}is-admin{% else %}is-customer{% endif %}"
-        style="display: grid; gap: 30px; align-items: start;">
-
-        <link rel="stylesheet" href="{% static 'css/fidelidade/fidelidade.css' %}">
+    <link rel="stylesheet" href="{% static 'css/fidelidade/fidelidade.css' %}">
+    <div class="loyalty-grid-wrapper {% if user.is_superuser %}is-admin{% else %}is-customer{% endif %}">
         <!-- LEFT COLUMN: Search & Result -->
         <div class="sections-column">
             <!-- Search / Filter Section -->
