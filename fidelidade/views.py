@@ -115,9 +115,19 @@ def loyalty_stamp_remove(request, card_id):
 def loyalty_card_update(request, card_id):
     card = get_object_or_404(LoyaltyCard, id=card_id)
     if request.method == 'POST':
+        id_code = request.POST.get('id_code', '').strip().upper()
         name = request.POST.get('name', '').strip()
         phone = request.POST.get('phone', '').strip()
         
+        if not id_code:
+            messages.error(request, "O ID do cartão é obrigatório.")
+            return redirect('fidelidade:loyalty_card_page')
+            
+        if LoyaltyCard.objects.filter(id_code=id_code).exclude(id=card.id).exists():
+            messages.error(request, f"O ID '{id_code}' já está sendo usado por outro cartão.")
+            return redirect('fidelidade:loyalty_card_page')
+            
+        card.id_code = id_code
         card.customer_name = name
         card.customer_phone = phone
         card.save()

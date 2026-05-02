@@ -50,7 +50,11 @@
             }
 
             .loyalty-grid-wrapper.is-admin {
-                grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr);
+            }
+
+            .manage-section {
+                /* No grid-column span, keep it in the row */
             }
 
             .loyalty-grid-wrapper.is-customer {

@@ -5,7 +5,7 @@
 {% block title %}Cartão Fidelidade{% endblock %}
 
 {% block content %}
-<div class="loyalty-management-container" style="max-width: 1000px; margin: 0 auto; padding: 20px;">
+<div class="loyalty-management-container" style="max-width: 1400px; margin: 0 auto; padding: 20px;">
 
     <!-- Hero Section / Title -->
     <div style="text-align: center; margin-bottom: 30px;">
@@ -180,7 +180,7 @@
         <div class="admin-column">
             <!-- Create Section -->
             <div class="card-section"
-                style="background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px; border: 2px solid var(--accent-color);">
+                style="background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 2px solid var(--accent-color); height: 100%;">
                 <h3 style="margin-bottom: 20px; color: var(--text-color);"><i class="fas fa-plus-circle"
                         style="color: var(--accent-color);"></i> Registrar Novo Cartão</h3>
                 <form method="post" action="{% url 'fidelidade:loyalty_card_create' %}">
@@ -197,9 +197,10 @@
                     </div>
                 </form>
             </div>
+        </div>
 
             <!-- Full List Section: GERENCIAR CARTÕES -->
-            <div id="assetsListSection" class="card-section"
+            <div id="assetsListSection" class="card-section manage-section"
                 style="background: var(--card-bg); padding: 25px; border-radius: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.06); border: 1px solid var(--input-border); display: flex; flex-direction: column; overflow: hidden; transition: opacity 0.3s;">
                 <div
                     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
@@ -331,8 +332,7 @@
 
                 
             </div>
-        </div>
-        {% endif %}
+{% endif %}
     </div>
 
 </div>
@@ -806,6 +806,7 @@
         const modal = document.getElementById('editCardModal');
         const form = document.getElementById('editCardForm');
         document.getElementById('editCardCode').innerText = code;
+        document.getElementById('editIdInput').value = code;
         document.getElementById('editNameInput').value = name;
         document.getElementById('editPhoneInput').value = phone;
         
@@ -983,6 +984,11 @@
         <form id="editCardForm" method="post" action="">
             {% csrf_token %}
             <div style="display: grid; gap: 15px; margin-bottom: 25px;">
+                <div style="text-align: left;">
+                    <label style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 5px; display: block;">ID do Cartão</label>
+                    <input type="text" id="editIdInput" name="id_code" placeholder="ID do Físico"
+                        style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color);" required>
+                </div>
                 <div style="text-align: left;">
                     <label style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 5px; display: block;">Nome do Cliente</label>
                     <input type="text" id="editNameInput" name="name" placeholder="Nome Completo"
