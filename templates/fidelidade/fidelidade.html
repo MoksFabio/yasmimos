@@ -299,6 +299,11 @@
                                             <i class="fas fa-plus"></i>
                                         </button>
                                         <button
+                                            onclick="openEditCardModal('{{ l_card.id }}', '{{ l_card.id_code }}', '{{ l_card.customer_name|escapejs }}', '{{ l_card.customer_phone|escapejs }}')"
+                                            class="action-btn edit" title="Editar Dados" style="background: var(--accent-color); color: white;">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button
                                             onclick="tableRemoveStamp(this, '{{ l_card.id }}', '{{ l_card.id_code }}')"
                                             class="action-btn minus" title="Remover Selo">
                                             <i class="fas fa-minus"></i>
@@ -775,6 +780,7 @@
     window.onclick = function (event) {
         if (event.target == document.getElementById('deleteModal')) closeDeleteModal();
         if (event.target == document.getElementById('manualStampModal')) closeManualStampModal();
+        if (event.target == document.getElementById('editCardModal')) closeEditCardModal();
     }
 
     const sortSelect = document.getElementById('sortSelect');
@@ -794,6 +800,23 @@
                 bar.style.width = perc + "%";
             }, 100);
         });
+    }
+
+    function openEditCardModal(id, code, name, phone) {
+        const modal = document.getElementById('editCardModal');
+        const form = document.getElementById('editCardForm');
+        document.getElementById('editCardCode').innerText = code;
+        document.getElementById('editNameInput').value = name;
+        document.getElementById('editPhoneInput').value = phone;
+        
+        // Dynamic action URL
+        form.action = `/fidelidade/update/${id}/`;
+        
+        modal.style.display = 'flex';
+    }
+
+    function closeEditCardModal() {
+        document.getElementById('editCardModal').style.display = 'none';
     }
 
     // Run on load
@@ -943,6 +966,42 @@
             <button onclick="confirmRemoveStamp()"
                 style="flex:1; padding:12px 0; border-radius:12px; border:none; background:#ffc107; color:white; font-weight:bold; cursor:pointer; box-shadow:0 4px 10px rgba(255,193,7,0.3);">Remover</button>
         </div>
+    </div>
+</div>
+
+<!-- Edit Card Modal -->
+<div id="editCardModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:20000; align-items:center; justify-content:center; backdrop-filter: blur(8px);">
+    <div
+        style="background:var(--card-bg); padding:30px; border-radius:25px; max-width:450px; width:90%; border: 1px solid var(--input-border); animation: modalPop 0.3s forwards;">
+        <div
+            style="width: 70px; height: 70px; background: rgba(255, 64, 129, 0.1); color: var(--accent-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px;">
+            <i class="fas fa-edit"></i></div>
+        <h3 style="margin-bottom:10px; color:var(--text-color); text-align: center;">Editar Cartão <span id="editCardCode"></span></h3>
+        <p style="color:var(--text-light); margin-bottom: 25px; font-size: 0.9rem; text-align: center;">Atualize as informações do cliente abaixo.</p>
+        
+        <form id="editCardForm" method="post" action="">
+            {% csrf_token %}
+            <div style="display: grid; gap: 15px; margin-bottom: 25px;">
+                <div style="text-align: left;">
+                    <label style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 5px; display: block;">Nome do Cliente</label>
+                    <input type="text" id="editNameInput" name="name" placeholder="Nome Completo"
+                        style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color);">
+                </div>
+                <div style="text-align: left;">
+                    <label style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 5px; display: block;">WhatsApp</label>
+                    <input type="tel" id="editPhoneInput" name="phone" placeholder="Ex: 81988776655"
+                        style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color);">
+                </div>
+            </div>
+            
+            <div style="display:flex; gap:15px; justify-content:center;">
+                <button type="button" onclick="closeEditCardModal()"
+                    style="flex:1; padding:12px 0; border-radius:12px; border:1px solid var(--input-border); background:var(--input-bg); color:var(--text-light); font-weight:600; cursor:pointer;">Cancelar</button>
+                <button type="submit"
+                    style="flex:1; padding:12px 0; border-radius:12px; border:none; background:var(--accent-color); color:white; font-weight:bold; cursor:pointer; box-shadow:0 4px 10px rgba(255,64,129,0.3);">Salvar</button>
+            </div>
+        </form>
     </div>
 </div>
 

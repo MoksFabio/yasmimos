@@ -112,6 +112,21 @@ def loyalty_stamp_remove(request, card_id):
     return redirect('fidelidade:loyalty_card_page')
 
 @user_passes_test(lambda u: u.is_superuser)
+def loyalty_card_update(request, card_id):
+    card = get_object_or_404(LoyaltyCard, id=card_id)
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        
+        card.customer_name = name
+        card.customer_phone = phone
+        card.save()
+        
+        messages.success(request, f"Dados do cartão {card.id_code} atualizados!")
+        
+    return redirect('fidelidade:loyalty_card_page')
+
+@user_passes_test(lambda u: u.is_superuser)
 def loyalty_card_delete(request, card_id):
     card = get_object_or_404(LoyaltyCard, id=card_id)
     id_code = card.id_code
