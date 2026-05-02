@@ -4,27 +4,6 @@
 {% block title %}Fale Conosco{% endblock %}
 {% block content %}
 <div class="container" style="padding: 40px 0;">
-    {% if messages %}
-    <div id="alert-container">
-        {% for message in messages %}
-        <div class="alert-msg alert-{{ message.tags }}">
-            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %}"></i>
-            {{ message }}
-        </div>
-        {% endfor %}
-    </div>
-    <script>
-        setTimeout(() => {
-            const container = document.getElementById('alert-container');
-            if (container) {
-                container.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                container.style.opacity = '0';
-                container.style.transform = 'translateY(-20px)';
-                setTimeout(() => container.remove(), 500);
-            }
-        }, 5000);
-    </script>
-    {% endif %}
 
     <h2 style="font-family: var(--font-serif); margin-bottom: 30px; color: var(--text-color);">Painel de Atendimento
     </h2>

@@ -246,6 +246,39 @@
 
 
     <main class="container">
+        {% if messages %}
+        <div id="global-alert-container" style="position: fixed; top: 100px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; max-width: 350px; width: 90%;">
+            {% for message in messages %}
+            <div class="alert-msg alert-{{ message.tags }}" style="background: var(--card-bg); padding: 15px 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; border: 1px solid var(--input-border); animation: slideIn 0.5s ease forwards; position: relative; overflow: hidden;">
+                <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: {% if message.tags == 'success' %}#4caf50{% elif message.tags == 'error' %}#f44336{% else %}var(--accent-color){% endif %}; width: 100%; animation: progressTimer 5s linear forwards;"></div>
+                <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}" style="color: {% if message.tags == 'success' %}#4caf50{% elif message.tags == 'error' %}#f44336{% else %}var(--accent-color){% endif %}; font-size: 1.2rem;"></i>
+                <div style="flex: 1; font-size: 0.9rem; color: var(--text-color); font-weight: 500;">{{ message }}</div>
+                <button onclick="this.parentElement.remove()" style="background: none; border: none; color: var(--text-light); cursor: pointer; font-size: 1.2rem; padding: 0 5px;">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        <style>
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes progressTimer {
+                from { width: 100%; }
+                to { width: 0%; }
+            }
+        </style>
+        <script>
+            setTimeout(() => {
+                const container = document.getElementById('global-alert-container');
+                if (container) {
+                    container.style.transition = 'opacity 0.5s ease';
+                    container.style.opacity = '0';
+                    setTimeout(() => container.remove(), 500);
+                }
+            }, 5000);
+        </script>
+        {% endif %}
+
         {% block content %}
         {% endblock %}
     </main>
