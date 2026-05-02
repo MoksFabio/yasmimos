@@ -178,7 +178,7 @@
         <div class="admin-column">
             <!-- Create Section -->
             <div class="card-section"
-                style="background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 2px solid var(--accent-color); height: 100%;">
+                style="background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--input-border); height: 100%;">
                 <h3 style="margin-bottom: 20px; color: var(--text-color);"><i class="fas fa-plus-circle"
                         style="color: var(--accent-color);"></i> Registrar Novo Cartão</h3>
                 <form method="post" action="{% url 'fidelidade:loyalty_card_create' %}">
@@ -274,8 +274,7 @@
                                             <span
                                                 style="font-size: 0.7rem; font-weight: normal; color: var(--text-light);">/7</span>
                                         </div>
-                                        <div
-                                            style="width: 70px; height: 7px; background: rgba(0,0,0,0.05); border-radius: 10px; overflow: hidden; flex-shrink: 0;">
+                                        <div class="progress-container">
                                             <div id="progress-bar-{{ l_card.id }}" data-stamps="{{ l_card.stamps }}"
                                                 class="init-progress"
                                                 style="width: 0%; height: 100%; background: var(--accent-color); transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 10px;">

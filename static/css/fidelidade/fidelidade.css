@@ -55,7 +55,7 @@
                 grid-template-areas: 
                     "search manage"
                     "create manage";
-                gap: 30px;
+                gap: 40px; /* Increased gap */
                 align-items: start;
             }
 
@@ -65,10 +65,21 @@
 
             .admin-column {
                 grid-area: create;
+                margin-bottom: 20px; /* Extra space on mobile/stacked */
             }
 
             .manage-section {
                 grid-area: manage;
+            }
+
+            /* Progress Bar Styling */
+            .progress-container {
+                width: 150px; /* Much larger on desktop */
+                height: 8px;
+                background: rgba(0,0,0,0.05);
+                border-radius: 10px;
+                overflow: hidden;
+                flex-shrink: 0;
             }
 
             @media (max-width: 1100px) {
@@ -78,6 +89,11 @@
                         "search"
                         "create"
                         "manage";
+                    gap: 30px;
+                }
+                
+                .progress-container {
+                    width: 70px; /* Restore small width for mobile */
                 }
             }
 
