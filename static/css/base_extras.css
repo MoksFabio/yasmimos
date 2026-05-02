@@ -1,186 +1,225 @@
 @media (max-width: 768px) {
-            #pending-order-popup {
-                bottom: 15px !important;
-                left: 15px !important;
-            }
-        }
+    #pending-order-popup {
+        bottom: 15px !important;
+        left: 15px !important;
+    }
+}
 
-        @keyframes pulse-wallet {
-            0% {
-                transform: scale(1);
-            }
+@keyframes pulse-wallet {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
 
-            50% {
-                transform: scale(1.1);
-            }
+.pending-list-hidden {
+    display: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    margin-top: 2px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 0;
+    opacity: 0;
+}
 
-            100% {
-                transform: scale(1);
-            }
-        }
+.pending-list-hidden.active {
+    display: block;
+    max-height: 180px;
+    opacity: 1;
+    margin-top: 4px;
+}
 
-        .pending-list-hidden {
-            display: none;
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
-            margin-top: 2px;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            max-height: 0;
-            opacity: 0;
-        }
+.pending-item-small {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 8px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 5px;
+    text-decoration: none;
+    color: var(--text-color);
+    font-size: 0.65rem;
+    transition: all 0.25s ease;
+    transform-origin: center;
+}
 
-        .pending-list-hidden.active {
-            display: block;
-            max-height: 180px;
-            opacity: 1;
-            margin-top: 4px;
-        }
+.pending-item-small:hover {
+    background: rgba(233, 30, 99, 0.06);
+    transform: scale(1.02);
+}
 
-        .pending-item-small {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 8px;
-            background: rgba(0, 0, 0, 0.02);
-            border-radius: 5px;
-            text-decoration: none;
-            color: var(--text-color);
-            font-size: 0.65rem;
-            transition: all 0.25s ease;
-            transform-origin: center;
-        }
-
-        .pending-item-small:hover {
-            background: rgba(233, 30, 99, 0.06);
-            transform: scale(1.02);
-        }
-
-        .pending-item-animating-out {
-            opacity: 0;
-            transform: scale(0.8) translateY(-10px);
-            filter: blur(4px);
-            margin-bottom: -30px;
-            pointer-events: none;
-        }
+.pending-item-animating-out {
+    opacity: 0;
+    transform: scale(0.8) translateY(-10px);
+    filter: blur(4px);
+    margin-bottom: -30px;
+    pointer-events: none;
+}
 
 /* ==================== */
 
 /* --- GLOBAL ACCESSIBILITY STYLES --- */
 
-            /* High Contrast */
-            .high-contrast {
-                --bg-color: #ffffff !important;
-                --text-color: #000000 !important;
-                --card-bg: #ffffff !important;
-                filter: contrast(120%);
-            }
+/* High Contrast */
+.high-contrast {
+    --bg-color: #ffffff !important;
+    --text-color: #000000 !important;
+    --card-bg: #ffffff !important;
+    filter: contrast(120%);
+}
 
-            [data-theme="dark"] .high-contrast {
-                --bg-color: #000000 !important;
-                --text-color: #ffff00 !important;
-                /* Yellow specifically good for dark contrast */
-                --card-bg: #000000 !important;
-            }
+[data-theme="dark"] .high-contrast {
+    --bg-color: #000000 !important;
+    --text-color: #ffff00 !important;
+    --card-bg: #000000 !important;
+}
 
-            /* Dyslexic Font - Fallback to generic sans-serif if not loaded, really demands a font file */
-            @font-face {
-                font-family: 'OpenDyslexic';
-                src: url('https://cdn.jsdelivr.net/npm/opendyslexic@2.1.0-beta/open-dyslexic-regular.woff') format('woff');
-                font-weight: normal;
-                font-style: normal;
-                font-display: swap;
-            }
+/* Dyslexic Font */
+@font-face {
+    font-family: 'OpenDyslexic';
+    src: url('https://cdn.jsdelivr.net/npm/opendyslexic@2.1.0-beta/open-dyslexic-regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
 
-            .dyslexia-font,
-            .dyslexia-font * {
-                font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif !important;
-                line-height: 1.6 !important;
-            }
+.dyslexia-font,
+.dyslexia-font * {
+    font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif !important;
+    line-height: 1.6 !important;
+}
 
-            /* Spacing */
-            .extra-spacing,
-            .extra-spacing * {
-                letter-spacing: 0.1em !important;
-                line-height: 1.8 !important;
-                word-spacing: 0.2em !important;
-            }
+/* Spacing */
+.extra-spacing,
+.extra-spacing * {
+    letter-spacing: 0.1em !important;
+    line-height: 1.8 !important;
+    word-spacing: 0.2em !important;
+}
 
-            /* Focus Highlight */
-            .highlight-focus *:focus {
-                outline: 4px solid #ffeb3b !important;
-                outline-offset: 2px !important;
-                box-shadow: 0 0 10px #ffeb3b !important;
-            }
+/* Focus Highlight */
+.highlight-focus *:focus {
+    outline: 4px solid #ffeb3b !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 10px #ffeb3b !important;
+}
 
-            /* Highlight Links */
-            .highlight-links a,
-            .highlight-links button {
-                text-decoration: underline !important;
-                text-decoration-thickness: 2px !important;
-                text-underline-offset: 4px !important;
-            }
+/* Highlight Links */
+.highlight-links a,
+.highlight-links button {
+    text-decoration: underline !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 4px !important;
+}
 
-            /* Reduce Motion */
-            .reduce-motion *,
-            .reduce-motion *::before,
-            .reduce-motion *::after {
-                animation: none !important;
-                transition: none !important;
-                scroll-behavior: auto !important;
-            }
+/* Reduce Motion */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+}
 
-            /* Large Cursor */
-            .large-cursor,
-            .large-cursor * {
-                cursor: default !important;
-                /* In a real app, use a custom large SVG cursor url */
-            }
+/* Large Cursor */
+.large-cursor,
+.large-cursor * {
+    cursor: default !important;
+}
 
-            /* Large Buttons */
-            .large-buttons button,
-            .large-buttons .btn,
-            .large-buttons a {
-                min-height: 48px !important;
-                min-width: 48px !important;
-                /* Touch target size */
-                padding: 12px 24px !important;
-            }
+/* Large Buttons */
+.large-buttons button,
+.large-buttons .btn,
+.large-buttons a {
+    min-height: 48px !important;
+    min-width: 48px !important;
+    padding: 12px 24px !important;
+}
 
-            /* Font Sizes */
-            .font-lg {
-                font-size: 110% !important;
-            }
+/* Font Sizes */
+.font-lg { font-size: 110% !important; }
+.font-xl { font-size: 125% !important; }
+.font-xxl { font-size: 150% !important; }
 
-            .font-xl {
-                font-size: 125% !important;
-            }
+/* Color Blindness Filters */
+html[data-color-profile="protanopia"] { filter: url(#protanopia-filter); }
+html[data-color-profile="deuteranopia"] { filter: url(#deuteranopia-filter); }
+html[data-color-profile="tritanopia"] { filter: url(#tritanopia-filter); }
 
-            .font-xxl {
-                font-size: 150% !important;
-            }
+/* Focus Mode */
+body.focus-mode header,
+body.focus-mode footer,
+body.focus-mode .delivery-warning,
+body.focus-mode .hero-wrapper {
+    display: none !important;
+}
 
-            /* Color Blindness Filters */
-            html[data-color-profile="protanopia"] {
-                filter: url(#protanopia-filter);
-            }
+body.focus-mode .container {
+    max-width: 900px;
+    margin-top: 20px;
+}
 
-            html[data-color-profile="deuteranopia"] {
-                filter: url(#deuteranopia-filter);
-            }
+/* --- STICKY HEADER & BODY --- */
+.sticky-nav-wrapper {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    z-index: 9999 !important;
+}
 
-            html[data-color-profile="tritanopia"] {
-                filter: url(#tritanopia-filter);
-            }
+body {
+    padding-top: 100px !important;
+}
 
-            /* Focus Mode already handled in settings.html styles but repeated here for coverage */
-            body.focus-mode header,
-            body.focus-mode footer,
-            body.focus-mode .delivery-warning,
-            body.focus-mode .hero-wrapper {
-                display: none !important;
-            }
+@media (max-width: 768px) {
+    body {
+        padding-top: 120px !important;
+    }
+    .nav-menu ul {
+        flex-grow: 1 !important;
+    }
+    .nav-menu ul li a {
+        color: var(--text-color) !important;
+        transition: none !important;
+    }
+    .nav-menu ul li a:hover,
+    .nav-menu ul li a:active,
+    .nav-menu ul li a:focus,
+    .nav-menu ul li a.active {
+        color: #ffffff !important;
+        background: var(--accent-color) !important;
+    }
+}
 
-            body.focus-mode .container {
-                max-width: 900px;
-                margin-top: 20px;
-            }
+@media (min-width: 769px) {
+    .sidebar-footer {
+        display: none !important;
+    }
+}
+
+/* --- GLOBAL TOAST NOTIFICATIONS --- */
+.alert-msg.alert-success .progress-bar-timer { background: #4caf50; }
+.alert-msg.alert-error .progress-bar-timer { background: #f44336; }
+.alert-msg.alert-info .progress-bar-timer { background: var(--accent-color); }
+.alert-msg.alert-warning .progress-bar-timer { background: #ff9800; }
+
+.alert-msg.alert-success .alert-icon { color: #4caf50; }
+.alert-msg.alert-error .alert-icon { color: #f44336; }
+.alert-msg.alert-info .alert-icon { color: var(--accent-color); }
+.alert-msg.alert-warning .alert-icon { color: #ff9800; }
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes progressTimer {
+    from { width: 100%; }
+    to { width: 0%; }
+}

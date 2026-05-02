@@ -52,53 +52,6 @@
             });
         }
     </script>
-    <style>
-        /* CRITICAL: Force Fixed Header */
-        .sticky-nav-wrapper {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            z-index: 9999 !important;
-        }
-
-        body {
-            padding-top: 100px !important;
-            /* Default desktop padding */
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding-top: 120px !important;
-                /* Mobile padding for header + warning */
-            }
-
-            /* Force Sidebar Footer to Bottom */
-            .nav-menu ul {
-                flex-grow: 1 !important;
-            }
-            /* FORCE IMMEDIATE COLOR CHANGE AND PREVENT FLICKERING */
-            .nav-menu ul li a {
-                color: var(--text-color) !important;
-                transition: none !important;
-            }
-
-            .nav-menu ul li a:hover,
-            .nav-menu ul li a:active,
-            .nav-menu ul li a:focus,
-            .nav-menu ul li a.active {
-                color: #ffffff !important;
-                background: var(--accent-color) !important;
-            }
-        }
-
-        /* Force Hide Sidebar Footer on Desktop Inline Override */
-        @media (min-width: 769px) {
-            .sidebar-footer {
-                display: none !important;
-            }
-        }
-    </style>
 
 </head>
 
@@ -257,26 +210,6 @@
             </div>
             {% endfor %}
         </div>
-        <style>
-            .alert-msg.alert-success .progress-bar-timer { background: #4caf50; }
-            .alert-msg.alert-error .progress-bar-timer { background: #f44336; }
-            .alert-msg.alert-info .progress-bar-timer { background: var(--accent-color); }
-            .alert-msg.alert-warning .progress-bar-timer { background: #ff9800; }
-
-            .alert-msg.alert-success .alert-icon { color: #4caf50; }
-            .alert-msg.alert-error .alert-icon { color: #f44336; }
-            .alert-msg.alert-info .alert-icon { color: var(--accent-color); }
-            .alert-msg.alert-warning .alert-icon { color: #ff9800; }
-
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes progressTimer {
-                from { width: 100%; }
-                to { width: 0%; }
-            }
-        </style>
         <script>
             setTimeout(() => {
                 const container = document.getElementById('global-alert-container');
