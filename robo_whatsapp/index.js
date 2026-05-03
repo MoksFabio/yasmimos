@@ -160,8 +160,8 @@ async function connectToWhatsApp() {
                 // 1. Tela de avaliação (AWAITING_REVIEW): 1-5 são notas.
                 // 2. Tela de ID de Pedido (AWAITING_ORDER_ID): Pode ser um ID curto.
                 if (/^[1-8]$/.test(textStr)) {
-                    if (userData.state === 'AWAITING_REVIEW' && /^[1-5]$/.test(textStr)) {
-                        // Mantém em AWAITING_REVIEW
+                    if (userData.state === 'AWAITING_REVIEW' && /^\d+$/.test(textStr)) {
+                        // Mantém em AWAITING_REVIEW (notas, inclusive > 5)
                     } else if (userData.state === 'AWAITING_ORDER_ID') {
                         // Mantém em AWAITING_ORDER_ID para processar o número do pedido
                     } else {
@@ -251,7 +251,14 @@ async function connectToWhatsApp() {
                     }
                 }
                 else if (userData.state === 'AWAITING_REVIEW') {
-                    await sock.sendMessage(remoteJid, { text: "Recebemos sua avaliação! Muito obrigado pelo feedback, ele nos ajuda a melhorar sempre. 🥰\n\nTenha um mimoso dia! ✨" });
+                    const rating = parseInt(textStr, 10);
+                    let responseText = "Recebemos sua avaliação! Muito obrigado pelo feedback, ele nos ajuda a melhorar sempre. 🥰\n\nTenha um mimoso dia! ✨";
+                    
+                    if (rating > 5) {
+                        responseText = `UAU! Uma nota ${rating}?! 😱💙\n\nVocê acaba de fazer o dia da YasMimos mil vezes mais doce! Muito, mas MUITO obrigado por esse carinho imenso. Ficamos extremamente felizes em saber que superamos suas expectativas! 🥰🧁✨\n\nTenha um dia absolutamente maravilhoso! ✨`;
+                    }
+                    
+                    await sock.sendMessage(remoteJid, { text: responseText });
                     userData.state = 'START';
                     welcomeSent.delete(remoteJid);
                     userStates.set(remoteJid, userData);
