@@ -5,56 +5,65 @@
 <link rel="stylesheet" href="{% static 'css/produtos/lista.css' %}">
 
 <section class="hero-wrapper">
-    <!-- Animated Floating Circles moved to base.html -->
-
-    
-
-    <div class="container hero-content hero-content-grid">
-        <div class="hero-image-side">
-            <img src="{% static 'img/logo.png' %}?v=3" alt="YasMimos Destaque" class="hero-large-img">
-        </div>
-
-        <div class="hero-text-side">
-            <h1 class="hero-title">Bem-vindo à YasMimos</h1>
-            <p class="hero-subtitle">Doces artesanais feitos com amor para tornar cada momento especial. Experimente a
-                doçura em cada detalhe.</p>
-
-            <div class="badges-container"
-                style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 10px; flex-wrap: wrap;">
-                <!-- Pix Badge -->
-                <div
-                    style="display: flex; align-items: center; gap: 8px; background: var(--glass-bg); padding: 8px 16px; border-radius: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); backdrop-filter: blur(5px);">
-                    <i class="fa-brands fa-pix" style="color: #32BCAD; font-size: 1.2rem;"></i>
-                    <span style="font-weight: 600; color: var(--text-color); font-size: 0.9rem;">Aceitamos Pix</span>
-                </div>
-
-                <!-- Card Badge -->
-                <div
-                    style="display: flex; align-items: center; gap: 8px; background: var(--glass-bg); padding: 8px 16px; border-radius: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); backdrop-filter: blur(5px);">
-                    <i class="fas fa-credit-card" style="color: #FF9800; font-size: 1.2rem;"></i>
-                    <span style="font-weight: 600; color: var(--text-color); font-size: 0.9rem;">Crédito/Débito</span>
-                </div>
-
-                <!-- Cash Badge -->
-                <div
-                    style="display: flex; align-items: center; gap: 8px; background: var(--glass-bg); padding: 8px 16px; border-radius: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); backdrop-filter: blur(5px);">
-                    <i class="fas fa-money-bill-wave" style="color: #4CAF50; font-size: 1.2rem;"></i>
-                    <span style="font-weight: 600; color: var(--text-color); font-size: 0.9rem;">Dinheiro</span>
-                </div>
-            </div>
-
-            <!-- Loyalty Card Button -->
-            <div class="loyalty-btn-container" style="margin-top: 20px; width: 100%; display: flex; justify-content: flex-end;">
-                <a href="{% url 'fidelidade:loyalty_card_page' %}" class="btn loyalty-btn-home" 
-                   style="display: inline-flex; align-items: center; gap: 10px; padding: 12px 28px; border-radius: 50px; font-weight: 600; background: var(--accent-color); color: white; border: none; box-shadow: 0 10px 20px rgba(233, 30, 99, 0.2); transition: all 0.3s; text-decoration: none; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                    <i class="fas fa-id-card"></i> Cartão Fidelidade
-                </a>
-            </div>
-
+    <div class="container">
+        <div class="hero-modern-card scroll-animate visible">
+            <!-- Decorative Background Elements inside the card -->
+            <div class="hero-blob hero-blob-1"></div>
+            <div class="hero-blob hero-blob-2"></div>
             
+            <div class="hero-grid-modern">
+                <div class="hero-text-section">
+                    <div class="hero-top-badge">
+                        <i class="fas fa-crown"></i> Doceria Artesanal
+                    </div>
+                    
+                    <h1 class="hero-title-modern">
+                        Sabor que <span class="gradient-text">encanta</span>, <br>
+                        momentos que <span class="gradient-text">marcam</span>.
+                    </h1>
+                    
+                    <p class="hero-desc-modern">
+                        Descubra nossos doces artesanais, preparados diariamente com ingredientes selecionados e muito amor. A experiência perfeita para o seu dia.
+                    </p>
+                    
+                    <div class="hero-actions-modern">
+                        <button class="btn-modern-primary" onclick="document.getElementById('product-grid-section').scrollIntoView({behavior: 'smooth', block: 'start'})">
+                            <i class="fas fa-shopping-bag"></i> Ver Cardápio
+                        </button>
+                        <a href="{% url 'fidelidade:loyalty_card_page' %}" class="btn-modern-secondary">
+                            <i class="fas fa-star"></i> Clube Fidelidade
+                        </a>
+                    </div>
+                    
+                    <div class="hero-payments">
+                        <span class="payment-badge"><i class="fa-brands fa-pix" style="color:#32BCAD"></i> Pix</span>
+                        <span class="payment-badge"><i class="fas fa-credit-card" style="color:#FF9800"></i> Cartões</span>
+                        <span class="payment-badge"><i class="fas fa-money-bill-wave" style="color:#4CAF50"></i> Dinheiro</span>
+                    </div>
+                </div>
+                
+                <div class="hero-image-section">
+                    <div class="image-wrapper-glass">
+                        <img src="{% static 'img/logo.png' %}?v=3" alt="YasMimos" class="hero-logo-float">
+                        
+                        <!-- Floating small badges around the image -->
+                        <div class="floating-badge badge-1">
+                            <i class="fas fa-heart"></i> Feito com Amor
+                        </div>
+                        <div class="floating-badge badge-2">
+                            <i class="fas fa-leaf"></i> Ingredientes Premium
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
+
+<div class="menu-section-header" style="text-align: center; margin: 40px 0 20px;">
+    <h2 style="font-family: var(--font-serif); font-size: 2.5rem; color: var(--text-color); margin-bottom: 10px;">Nosso Cardápio</h2>
+    <p style="color: var(--text-light); font-size: 1.1rem;">Escolha a sua categoria favorita e aproveite</p>
+</div>
 
 <div class="categories-wrapper" id="categories-scroll">
     <div class="container" style="display: inline-block; width: auto; padding: 0;">
